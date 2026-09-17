@@ -65,8 +65,11 @@ export default function InventoryPage() {
     loadData();
   }, []);
 
-  const canViewBuyPrice = user?.role === "admin" || user?.permissions?.canViewBuyPrice !== false;
-  const canExportExcel = user?.role === "admin" || user?.permissions?.canExportExcel !== false;
+  const userRole = (user?.role || "").toLowerCase();
+  const isManager = userRole === "manager";
+  // Manager can never see buy price
+  const canViewBuyPrice = !isManager && (userRole === "admin" || user?.permissions?.canViewBuyPrice === true);
+  const canExportExcel = userRole === "admin" || user?.permissions?.canExportExcel !== false;
 
   const filteredProducts = products.filter((p) => {
     const q = searchQuery.toLowerCase().trim();
@@ -129,16 +132,21 @@ export default function InventoryPage() {
 
   // CSV Export Handler
   const handleExportCsv = () => {
-    const exportData = filteredProducts.map((p) => ({
-      SKU: p.sku,
-      Name: p.name,
-      Category: p.categoryName || "General",
-      CostPrice: p.costPrice,
-      SellingPrice: p.sellingPrice,
-      StockQuantity: p.stockQuantity,
-      MinAlert: p.minStockAlert,
-      Unit: p.unit,
-    }));
+    const exportData = filteredProducts.map((p) => {
+      const row: Record<string, unknown> = {
+        SKU: p.sku,
+        Name: p.name,
+        Category: p.categoryName || "General",
+      };
+      if (canViewBuyPrice) {
+        row.CostPrice = p.costPrice;
+      }
+      row.SellingPrice = p.sellingPrice;
+      row.StockQuantity = p.stockQuantity;
+      row.MinAlert = p.minStockAlert;
+      row.Unit = p.unit;
+      return row;
+    });
     downloadCsvFile(exportData, `Inventarioya_Inventory_${new Date().toISOString().split("T")[0]}`);
   };
 
@@ -214,7 +222,7 @@ export default function InventoryPage() {
                   <th className="py-3 px-4">SKU</th>
                   <th className="py-3 px-4">Product Name</th>
                   <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Cost Price</th>
+                  {canViewBuyPrice && <th className="py-3 px-4">Cost Price</th>}
                   <th className="py-3 px-4">Selling Price</th>
                   <th className="py-3 px-4">Stock Level</th>
                   <th className="py-3 px-4">Status</th>
@@ -228,13 +236,11 @@ export default function InventoryPage() {
                       <td className="py-3 px-4 font-mono text-slate-400 font-medium">{p.sku}</td>
                       <td className="py-3 px-4 font-semibold text-white">{p.name}</td>
                       <td className="py-3 px-4 text-slate-300">{p.categoryName || "General"}</td>
-                      <td className="py-3 px-4 text-slate-400">
-                        {canViewBuyPrice ? (
-                          formatCurrency(p.costPrice)
-                        ) : (
-                          <span className="font-mono text-slate-600 select-none">••••</span>
-                        )}
-                      </td>
+                      {canViewBuyPrice && (
+                        <td className="py-3 px-4 text-slate-400 font-mono">
+                          {formatCurrency(p.costPrice)}
+                        </td>
+                      )}
                       <td className="py-3 px-4 font-bold text-white">
                         {formatCurrency(p.sellingPrice)}
                       </td>
@@ -320,19 +326,21 @@ export default function InventoryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">Cost Price (৳)</label>
-                  <input
-                    type="number"
-                    required
-                    value={newProduct.costPrice}
-                    onChange={(e) =>
-                      setNewProduct({ ...newProduct, costPrice: Number(e.target.value) })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
+              <div className={`grid ${canViewBuyPrice ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
+                {canViewBuyPrice && (
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">Cost Price (৳)</label>
+                    <input
+                      type="number"
+                      required
+                      value={newProduct.costPrice}
+                      onChange={(e) =>
+                        setNewProduct({ ...newProduct, costPrice: Number(e.target.value) })
+                      }
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Selling Price (৳)</label>
                   <input
@@ -421,7 +429,11 @@ export default function InventoryPage() {
             </div>
 
             <p className="text-xs text-slate-400 mb-4">
-              Upload a .csv file containing columns: <span className="text-white font-mono">name, sku, costPrice, sellingPrice, stockQuantity, unit</span>.
+              Upload a .csv file containing columns:{" "}
+              <span className="text-white font-mono">
+                name, sku{canViewBuyPrice ? ", costPrice" : ""}, sellingPrice, stockQuantity, unit
+              </span>
+              .
             </p>
 
             <form onSubmit={handleImportCsv} className="space-y-4">
