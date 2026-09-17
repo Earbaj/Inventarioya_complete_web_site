@@ -316,21 +316,21 @@ export default function PosTerminalPage() {
 
     try {
       const payload = {
+        customerId: selectedCustomer?.id || "walk-in",
         customerName: customerName || "Walk-in Customer",
-        customerPhone: customerPhone || undefined,
+        customerPhone: customerPhone || "",
         items: cart.map((item) => ({
-          productId: item.id,
-          productName: item.name,
-          quantity: item.cartQuantity,
-          price: item.sellingPrice,
-          total: item.lineTotal,
+          itemId: item.id,
+          name: item.name,
+          quantity: Number(item.cartQuantity),
+          unitPrice: Number(item.sellingPrice),
         })),
-        subtotal,
-        discount: discountAmount,
-        tax: taxAmount,
-        grandTotal,
-        paidAmount,
-        dueAmount,
+        subtotal: Number(subtotal),
+        discount: Number(discountAmount),
+        tax: Number(taxAmount),
+        grandTotal: Number(grandTotal),
+        paidAmount: Number(paidAmount),
+        dueAmount: Number(dueAmount),
         paymentMethod: dueAmount === grandTotal ? "DUE" : paymentMethod,
         cashierName: AuthService.getCurrentUser()?.name || "Active Cashier",
       };
@@ -376,8 +376,10 @@ export default function PosTerminalPage() {
       setDiscountAmount(0);
       setPaymentMethod("CASH");
       setIsMobileCartOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("POS Checkout failed", err);
+      const msg = err.message || "Checkout failed. Please check network and stock.";
+      setStockWarning(msg);
     } finally {
       setIsCheckingOut(false);
     }

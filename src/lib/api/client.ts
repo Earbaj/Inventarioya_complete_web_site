@@ -602,27 +602,63 @@ export const SalesService = {
 
   async createSale(saleData: any): Promise<Invoice> {
     try {
-      const res = await apiClient.post(ApiEndpoints.sales, saleData);
-      return res.data;
-    } catch {
-      const newInvoice: Invoice = {
-        id: "inv_" + Date.now(),
-        invoiceNumber: "INV-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000),
+      const formattedItems = (saleData.items || []).map((item: any) => ({
+        itemId: item.itemId || item.productId || item.id,
+        name: item.name || item.productName || "Item",
+        quantity: Number(item.quantity || 1),
+        unitPrice: Number(item.unitPrice ?? item.price ?? item.sellingPrice ?? 0),
+      }));
+
+      const payload = {
+        customerId: saleData.customerId || "walk-in",
         customerName: saleData.customerName || "Walk-in Customer",
-        customerPhone: saleData.customerPhone || "N/A",
-        items: saleData.items || [],
-        subtotal: saleData.subtotal || 0,
-        discount: saleData.discount || 0,
-        tax: saleData.tax || 0,
-        grandTotal: saleData.grandTotal || 0,
-        paidAmount: typeof saleData.paidAmount === "number" ? saleData.paidAmount : (saleData.grandTotal || 0),
-        dueAmount: typeof saleData.dueAmount === "number" ? saleData.dueAmount : 0,
+        customerPhone: saleData.customerPhone || "",
+        items: formattedItems,
+        subtotal: Number(saleData.subtotal || 0),
+        discount: Number(saleData.discount || 0),
+        tax: Number(saleData.tax || 0),
+        grandTotal: Number(saleData.grandTotal || 0),
+        paidAmount: Number(saleData.paidAmount || 0),
+        dueAmount: Number(saleData.dueAmount || 0),
         paymentMethod: saleData.paymentMethod || "CASH",
         cashierName: saleData.cashierName || "Active Cashier",
-        createdAt: new Date().toISOString(),
-        status: (saleData.dueAmount || 0) > 0 ? (saleData.paidAmount > 0 ? "PARTIAL" : "DUE") : "PAID",
       };
-      return newInvoice;
+
+      const res = await apiClient.post(ApiEndpoints.sales, payload);
+      const data = res.data;
+
+      const normalizedInvoice: Invoice = {
+        id: data.id || "inv_" + Date.now(),
+        invoiceNumber: data.invoiceNumber || data.invoiceNo || "INV-" + Date.now(),
+        customerName: data.customerName || saleData.customerName || "Walk-in Customer",
+        customerPhone: data.customerPhone || saleData.customerPhone || "",
+        items: (data.items || formattedItems).map((i: any) => ({
+          productId: i.itemId || i.productId || i.id,
+          productName: i.name || i.productName || "Product",
+          quantity: Number(i.quantity || 1),
+          price: Number(i.unitPrice ?? i.price ?? 0),
+          total: Number(i.totalPrice ?? i.total ?? (Number(i.quantity || 1) * Number(i.unitPrice ?? i.price ?? 0))),
+        })),
+        subtotal: Number(data.subtotal || saleData.subtotal || 0),
+        discount: Number(data.discount || saleData.discount || 0),
+        tax: Number(data.tax || saleData.tax || 0),
+        grandTotal: Number(data.grandTotal || data.netGrandTotal || saleData.grandTotal || 0),
+        paidAmount: Number(data.paidAmount ?? saleData.paidAmount ?? 0),
+        dueAmount: Number(data.dueAmount ?? saleData.dueAmount ?? 0),
+        paymentMethod: (data.paymentMethod || saleData.paymentMethod || "CASH") as any,
+        cashierName: data.createdByName || data.servedBy?.name || saleData.cashierName || "Active Cashier",
+        createdAt: data.date || data.createdAt || new Date().toISOString(),
+        status: (data.paymentStatus ? data.paymentStatus.toUpperCase() : (Number(data.dueAmount || 0) > 0 ? (Number(data.paidAmount || 0) > 0 ? "PARTIAL" : "DUE") : "PAID")) as any,
+      };
+
+      return normalizedInvoice;
+    } catch (error: any) {
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 
