@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { ThermalReceipt } from "@/components/pos/ThermalReceipt";
 import {
   TrendingUp,
+  TrendingDown,
   ShoppingCart,
   DollarSign,
   AlertTriangle,
@@ -19,6 +20,8 @@ import {
   Sparkles,
   Plus,
   ArrowRight,
+  Package,
+  ReceiptText,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -32,100 +35,225 @@ import {
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentSales, setRecentSales] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   useEffect(() => {
-    async function loadStats() {
+    async function loadData() {
       try {
-        console.log("Fetching /api/dashboard/stats...");
-        const data = await DashboardService.getStats();
-        console.log("📊 [Dashboard Page Received Stats Data]:", data);
-        setStats(data);
+        console.log("Fetching /api/dashboard/stats and /api/sales...");
+        const [statsData, salesData] = await Promise.all([
+          DashboardService.getStats(),
+          SalesService.getSales(),
+        ]);
+        console.log("📊 [Dashboard Stats Data Received]:", statsData);
+        setStats(statsData);
+        setRecentSales(
+          statsData?.recentSales && statsData.recentSales.length > 0
+            ? statsData.recentSales
+            : (salesData || []).slice(0, 7)
+        );
       } catch (err) {
-        console.error("❌ [Dashboard Page Failed to load stats]:", err);
+        console.error("❌ [Dashboard Page Failed to load data]:", err);
       } finally {
         setLoading(false);
       }
     }
-    loadStats();
+    loadData();
   }, []);
+
+  const totalSales = Number(stats?.totalSalesRevenue ?? stats?.totalRevenue ?? 0);
+  const totalPaid = Number(stats?.totalPaidCollected ?? 0);
+  const totalDue = Number(stats?.totalDueAmount ?? stats?.totalDueBalance ?? 0);
+  const customerDue = Number(stats?.totalCustomerDue ?? 0);
+  const totalExpenses = Number(stats?.totalExpenses ?? 0);
+  const netProfit = Number(stats?.netProfit ?? 0);
+  const isProfit = netProfit >= 0;
+
+  const totalItems = stats?.totalItemsCount ?? 0;
+  const lowStock = stats?.lowStockCount ?? stats?.lowStockItems ?? 0;
+  const totalCustomers = stats?.totalCustomersCount ?? stats?.totalCustomers ?? 0;
+  const totalInvoices = stats?.totalInvoicesCount ?? stats?.todayOrders ?? 0;
+
+  const collectionRatio = totalSales > 0 ? Math.round((totalPaid / totalSales) * 100) : 0;
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Store Analytics & Executive Overview" />
 
       <main className="p-6 space-y-6 max-w-7xl">
-        {/* KPI Cards Grid */}
+        {/* Primary Financial KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+          {/* Card 1: Total Sales Revenue */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Today's Sales</span>
+              <span className="text-xs font-semibold text-slate-400">Total Sales Revenue</span>
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <ShoppingCart className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-extrabold text-white">
-                {formatCurrency(stats?.todaySales ?? 34250)}
+              <p className="text-2xl font-black text-white tracking-tight">
+                {formatCurrency(totalSales)}
               </p>
-              <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1 font-medium">
-                <TrendingUp className="w-3 h-3" />
-                <span>+14.2% from yesterday ({stats?.todayOrders ?? 28} orders)</span>
-              </p>
+              <div className="mt-1 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Invoices Created</span>
+                <span className="font-bold text-emerald-400">{totalInvoices} Orders</span>
+              </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+          {/* Card 2: Cash Collected */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Monthly Revenue</span>
+              <span className="text-xs font-semibold text-slate-400">Collected Cash & Digital</span>
               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                 <DollarSign className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-extrabold text-white">
-                {formatCurrency(stats?.monthlyRevenue ?? 1245000)}
+              <p className="text-2xl font-black text-white tracking-tight">
+                {formatCurrency(totalPaid)}
               </p>
-              <p className="text-[11px] text-indigo-400 mt-1 flex items-center gap-1 font-medium">
-                <span>Net Profit: {formatCurrency(stats?.netProfit ?? 342000)}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Low Stock Alert</span>
-              <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4" />
+              <div className="mt-1 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Collection Rate</span>
+                <span className="font-bold text-indigo-400">{collectionRatio}% of sales</span>
               </div>
             </div>
-            <div className="mt-3">
-              <p className="text-2xl font-extrabold text-rose-400">
-                {stats?.lowStockItems ?? 3} Items
-              </p>
-              <Link href="/dashboard/inventory" className="text-[11px] text-rose-400 hover:underline mt-1 block">
-                Restock needed urgently &rarr;
-              </Link>
-            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+          {/* Card 3: Total Due Amount */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Customer Dues</span>
+              <span className="text-xs font-semibold text-slate-400">Total Market Due</span>
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
                 <Wallet className="w-4 h-4" />
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-extrabold text-white">
-                {formatCurrency(stats?.totalDueBalance ?? 18500)}
+              <p className="text-2xl font-black text-amber-400 tracking-tight">
+                {formatCurrency(totalDue)}
               </p>
-              <Link href="/dashboard/customers" className="text-[11px] text-amber-400 hover:underline mt-1 block">
-                View customer ledger & credit &rarr;
-              </Link>
+              <div className="mt-1 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Customer Due</span>
+                <Link
+                  href="/dashboard/customers"
+                  className="font-bold text-amber-300 hover:underline"
+                >
+                  {formatCurrency(customerDue)} &rarr;
+                </Link>
+              </div>
             </div>
           </div>
+
+          {/* Card 4: Net Profit or Loss */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-400">
+                {isProfit ? "Net Profit" : "Net P&L (Deficit)"}
+              </span>
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  isProfit
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "bg-rose-500/10 text-rose-400"
+                }`}
+              >
+                {isProfit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              </div>
+            </div>
+            <div className="mt-3">
+              <p
+                className={`text-2xl font-black tracking-tight ${
+                  isProfit ? "text-emerald-400" : "text-rose-400"
+                }`}
+              >
+                {formatCurrency(netProfit)}
+              </p>
+              <div className="mt-1 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Total Expenses</span>
+                <span className="font-semibold text-slate-300">
+                  {formatCurrency(totalExpenses)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Store Operations Metrics (Counts & Urgencies) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Link
+            href="/dashboard/inventory"
+            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                <Package className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">
+                  {totalItems}
+                </p>
+                <p className="text-[11px] text-slate-400">Catalog Products</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/inventory"
+            className={`p-4 rounded-xl border transition-all group ${
+              lowStock > 0
+                ? "bg-rose-500/5 border-rose-500/30 hover:border-rose-500/50"
+                : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-rose-400">
+                  {lowStock}
+                </p>
+                <p className="text-[11px] text-slate-400">Low Stock Alert</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/customers"
+            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
+                  {totalCustomers}
+                </p>
+                <p className="text-[11px] text-slate-400">Active Customers</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/sales"
+            className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                <ReceiptText className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
+                  {totalInvoices}
+                </p>
+                <p className="text-[11px] text-slate-400">Sales Invoices</p>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Sales Trend Chart & AI Banner */}
@@ -190,13 +318,13 @@ export default function DashboardOverviewPage() {
                 <span>Gemini AI Smart Advisor</span>
               </div>
               <h4 className="text-base font-bold text-white mb-2">
-                Stockout Warning: Cooking Oil
+                Restock Alert: {lowStock} Items Under Stock Limit
               </h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Rupchanda Soyabean Oil 5L stock is down to 8 units. Based on current weekend velocity, it will run out in 4 days.
+                You have {lowStock} out of {totalItems} items approaching critical inventory thresholds. Automated replenishment is recommended.
               </p>
               <div className="mt-4 p-3 rounded-xl bg-slate-900/80 border border-indigo-500/20 text-xs text-indigo-300">
-                Recommended Action: Generate PO for 40 units to supplier Meghna Group.
+                Current Net Profit is {formatCurrency(netProfit)} with {formatCurrency(totalExpenses)} in shop expenses recorded.
               </div>
             </div>
 
@@ -224,7 +352,9 @@ export default function DashboardOverviewPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-white">Recent POS Invoices</h3>
-              <p className="text-xs text-slate-400">Latest transactions from this branch register</p>
+              <p className="text-xs text-slate-400">
+                Latest transactions from this store register ({recentSales.length} showing)
+              </p>
             </div>
             <Link
               href="/dashboard/sales"
@@ -249,7 +379,14 @@ export default function DashboardOverviewPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {(stats?.recentSales || []).map((inv) => (
+                {recentSales.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-slate-500">
+                      No invoices found yet.
+                    </td>
+                  </tr>
+                ) : (
+                  recentSales.map((inv) => (
                   <tr key={inv.id} className="hover:bg-slate-800/40 transition-colors">
                     <td className="py-3 px-4 font-mono font-medium text-indigo-400">
                       {inv.invoiceNumber}
@@ -286,7 +423,8 @@ export default function DashboardOverviewPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -48,14 +48,26 @@ export interface Shop {
 }
 
 export interface DashboardStats {
-  todaySales: number;
-  todayOrders: number;
-  totalRevenue: number;
-  totalCustomers: number;
-  lowStockItems: number;
-  monthlyRevenue: number;
-  netProfit: number;
-  totalDueBalance: number;
+  // Direct backend response keys from /api/dashboard/stats:
+  totalSalesRevenue?: string | number;
+  totalPaidCollected?: string | number;
+  totalDueAmount?: string | number;
+  totalExpenses?: string | number;
+  netProfit?: string | number;
+  totalItemsCount?: number;
+  lowStockCount?: number;
+  totalCustomersCount?: number;
+  totalCustomerDue?: string | number;
+  totalInvoicesCount?: number;
+
+  // Fallbacks & chart data:
+  todaySales?: number;
+  todayOrders?: number;
+  totalRevenue?: number;
+  totalCustomers?: number;
+  lowStockItems?: number;
+  monthlyRevenue?: number;
+  totalDueBalance?: number;
   recentSales?: Invoice[];
   salesChartData?: { date: string; amount: number; orders: number }[];
 }
