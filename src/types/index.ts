@@ -33,18 +33,23 @@ export interface AuthResponse {
 
 export interface Shop {
   id: string;
+  shopId?: string;
   name: string;
   ownerName?: string;
-  email?: string;
+  email: string;
   phone?: string;
+  role?: string;
   address?: string;
   logoUrl?: string;
+  subscriptionTier?: "free" | "standard" | "premium" | string;
   subscriptionPlan?: string;
   subscriptionStatus?: "active" | "trial" | "expired" | "pending";
+  subscriptionExpiresAt?: string | null;
   expiresAt?: string;
-  createdAt?: string;
+  managerCount?: number;
   branchesCount?: number;
   totalSales?: number;
+  createdAt?: string;
 }
 
 export interface DashboardStats {
@@ -73,11 +78,22 @@ export interface DashboardStats {
 }
 
 export interface SuperAdminStats {
-  totalShops: number;
-  activeSubscriptions: number;
-  pendingVerifications: number;
-  totalPlatformRevenue: number;
-  monthlyGrowthRate: number;
+  // Direct backend keys from /api/dashboard/superadmin:
+  totalRegisteredShops?: number;
+  totalManagersCount?: number;
+  freeTierShopsCount?: number;
+  premiumTierShopsCount?: number;
+  pendingPaymentRequestsCount?: number;
+  totalSubscriptionRevenue?: string | number;
+  platformTotalItems?: number;
+  platformTotalSales?: number;
+
+  // Fallback compatibility keys:
+  totalShops?: number;
+  activeSubscriptions?: number;
+  pendingVerifications?: number;
+  totalPlatformRevenue?: number;
+  monthlyGrowthRate?: number;
   recentRegistrations?: Shop[];
 }
 

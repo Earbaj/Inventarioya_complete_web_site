@@ -555,15 +555,22 @@ export const DashboardService = {
   async getSuperAdminStats(): Promise<SuperAdminStats> {
     try {
       const res = await apiClient.get(ApiEndpoints.superAdminDashboard);
-      return res.data;
+      return res.data?.data || res.data;
     } catch {
       return {
-        totalShops: 148,
-        activeSubscriptions: 132,
-        pendingVerifications: 5,
-        totalPlatformRevenue: 1285000,
-        monthlyGrowthRate: 18.4,
-        recentRegistrations: mockShopsList,
+        totalRegisteredShops: 5,
+        totalManagersCount: 0,
+        freeTierShopsCount: 4,
+        premiumTierShopsCount: 1,
+        pendingPaymentRequestsCount: 0,
+        totalSubscriptionRevenue: "1000",
+        platformTotalItems: 14,
+        platformTotalSales: 27,
+        totalShops: 5,
+        activeSubscriptions: 1,
+        pendingVerifications: 0,
+        totalPlatformRevenue: 1000,
+        monthlyGrowthRate: 20,
       };
     }
   },
