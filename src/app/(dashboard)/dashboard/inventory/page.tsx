@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { InventoryService } from "@/lib/api/client";
+import { InventoryService, AuthService } from "@/lib/api/client";
 import { ProductItem, Category } from "@/types";
 import { formatCurrency, downloadCsvFile } from "@/lib/utils";
 import {
@@ -44,7 +44,10 @@ export default function InventoryPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importStatus, setImportStatus] = useState<string>("");
 
+  const [user, setUser] = useState<any>(null);
+
   useEffect(() => {
+    setUser(AuthService.getCurrentUser());
     async function loadData() {
       try {
         const [prods, cats] = await Promise.all([
@@ -61,6 +64,9 @@ export default function InventoryPage() {
     }
     loadData();
   }, []);
+
+  const canViewBuyPrice = user?.role === "admin" || user?.permissions?.canViewBuyPrice !== false;
+  const canExportExcel = user?.role === "admin" || user?.permissions?.canExportExcel !== false;
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
@@ -175,13 +181,15 @@ export default function InventoryPage() {
               Import CSV
             </button>
 
-            <button
-              onClick={handleExportCsv}
-              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
-              Export CSV
-            </button>
+            {canExportExcel && (
+              <button
+                onClick={handleExportCsv}
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                Export CSV
+              </button>
+            )}
 
             <button
               onClick={() => setShowAddModal(true)}
@@ -216,7 +224,13 @@ export default function InventoryPage() {
                       <td className="py-3 px-4 font-mono text-slate-400 font-medium">{p.sku}</td>
                       <td className="py-3 px-4 font-semibold text-white">{p.name}</td>
                       <td className="py-3 px-4 text-slate-300">{p.categoryName || "General"}</td>
-                      <td className="py-3 px-4 text-slate-400">{formatCurrency(p.costPrice)}</td>
+                      <td className="py-3 px-4 text-slate-400">
+                        {canViewBuyPrice ? (
+                          formatCurrency(p.costPrice)
+                        ) : (
+                          <span className="font-mono text-slate-600 select-none">••••</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4 font-bold text-white">
                         {formatCurrency(p.sellingPrice)}
                       </td>

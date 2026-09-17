@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { SalesService } from "@/lib/api/client";
+import { SalesService, AuthService } from "@/lib/api/client";
 import { Invoice } from "@/types";
 import { formatCurrency, formatDate, downloadCsvFile } from "@/lib/utils";
 import { ThermalReceipt } from "@/components/pos/ThermalReceipt";
@@ -24,7 +24,10 @@ export default function SalesHistoryPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [user, setUser] = useState<any>(null);
+
   useEffect(() => {
+    setUser(AuthService.getCurrentUser());
     async function loadSales() {
       try {
         const data = await SalesService.getSales();
@@ -37,6 +40,9 @@ export default function SalesHistoryPage() {
     }
     loadSales();
   }, []);
+
+  const canExportExcel = user?.role === "admin" || user?.permissions?.canExportExcel !== false;
+  const canProcessReturn = user?.role === "admin" || user?.permissions?.canProcessReturn !== false;
 
   const filteredInvoices = invoices.filter((inv) => {
     const matchesSearch =
@@ -97,13 +103,15 @@ export default function SalesHistoryPage() {
             </select>
           </div>
 
-          <button
-            onClick={handleExportCsv}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
-          >
-            <Download className="w-4 h-4 text-indigo-400" />
-            Export Sales to CSV
-          </button>
+          {canExportExcel && (
+            <button
+              onClick={handleExportCsv}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+            >
+              <Download className="w-4 h-4 text-indigo-400" />
+              Export Sales to CSV
+            </button>
+          )}
         </div>
 
         {/* Invoices List Table */}

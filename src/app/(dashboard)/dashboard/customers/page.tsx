@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { AIService } from "@/lib/api/client";
+import { AIService, AuthService } from "@/lib/api/client";
 import { AICustomerCreditScore } from "@/types";
 import { formatCurrency, downloadCsvFile } from "@/lib/utils";
 import { Users, Search, Download, Sparkles, Phone, ShieldCheck, X, FileSpreadsheet } from "lucide-react";
@@ -30,6 +30,14 @@ export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomerScore, setSelectedCustomerScore] = useState<AICustomerCreditScore | null>(null);
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    setUser(AuthService.getCurrentUser());
+  }, []);
+
+  const canExportExcel = user?.role === "admin" || user?.permissions?.canExportExcel !== false;
+  const canEditCustomers = user?.role === "admin" || user?.permissions?.canEditCustomers !== false;
 
   const filtered = customers.filter(
     (c) =>
@@ -77,13 +85,15 @@ export default function CustomersPage() {
             />
           </div>
 
-          <button
-            onClick={handleExportCustomers}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors"
-          >
-            <Download className="w-4 h-4 text-emerald-400" />
-            Export Customers & Due Balances
-          </button>
+          {canExportExcel && (
+            <button
+              onClick={handleExportCustomers}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <Download className="w-4 h-4 text-emerald-400" />
+              Export Customers & Due Balances
+            </button>
+          )}
         </div>
 
         {/* Customers Table */}
@@ -132,13 +142,17 @@ export default function CustomersPage() {
                       </button>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleExportLedger(cust)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-                        title="Export Statement"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
+                      {canExportExcel ? (
+                        <button
+                          onClick={() => handleExportLedger(cust)}
+                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                          title="Export Statement"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <span className="text-slate-600 text-xs">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}

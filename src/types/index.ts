@@ -1,7 +1,16 @@
 export type UserRole = "superadmin" | "admin" | "manager";
 
+export interface UserPermissions {
+  canProcessReturn?: boolean;
+  canExportExcel?: boolean;
+  canEditCustomers?: boolean;
+  canViewBuyPrice?: boolean;
+  [key: string]: any;
+}
+
 export interface User {
-  id: string;
+  id?: string;
+  uid?: string;
   name: string;
   email: string;
   phone?: string;
@@ -9,7 +18,9 @@ export interface User {
   shopId?: string;
   shopName?: string;
   branchId?: string;
-  permissions?: string[];
+  subscriptionTier?: "free" | "standard" | "premium" | string;
+  subscriptionExpiresAt?: string;
+  permissions?: UserPermissions;
   avatarUrl?: string;
   createdAt?: string;
 }

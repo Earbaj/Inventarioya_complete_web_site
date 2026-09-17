@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { ApiEndpoints } from "./endpoints";
 import {
   AuthResponse,
+  User,
   DashboardStats,
   SuperAdminStats,
   ProductItem,
@@ -169,16 +170,24 @@ apiClient.interceptors.response.use(
    MOCK DEMO DATA GENERATORS (Active when Render backend is asleep/offline)
 ========================================================================= */
 
-const mockUser = {
-  id: "usr_001",
-  name: "Rahim Uddin",
-  email: "owner@inventarioya.com",
+const mockUser: User = {
+  uid: "58c93fae-503c-4570-92e1-94bf2f9b1b96",
+  id: "58c93fae-503c-4570-92e1-94bf2f9b1b96",
+  name: "Earbaj",
+  email: "earbaj@admin.com",
   phone: "+880 1711-223344",
-  role: "admin" as const,
-  shopId: "shop_001",
+  role: "admin",
+  shopId: "58c93fae-503c-4570-92e1-94bf2f9b1b96",
   shopName: "Dhaka Mega Superstore",
   branchId: "br_001",
-  permissions: ["all"],
+  subscriptionTier: "premium",
+  subscriptionExpiresAt: "2026-09-30T07:49:25.819Z",
+  permissions: {
+    canProcessReturn: true,
+    canExportExcel: true,
+    canEditCustomers: true,
+    canViewBuyPrice: true,
+  },
 };
 
 export const mockCategories: Category[] = [
@@ -486,6 +495,17 @@ export const AuthService = {
         if (cached) return JSON.parse(cached);
       }
       return mockUser;
+    }
+  },
+
+  getCurrentUser(): User | null {
+    if (typeof window === "undefined") return null;
+    const str = localStorage.getItem(USER_KEY);
+    if (!str) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return null;
     }
   },
 
