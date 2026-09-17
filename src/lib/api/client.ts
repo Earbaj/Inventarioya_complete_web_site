@@ -651,7 +651,46 @@ export const InventoryService = {
   async getProducts(): Promise<ProductItem[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.items);
-      return res.data?.data || res.data || mockProducts;
+      const rawList = res.data?.data || res.data || mockProducts;
+      if (!Array.isArray(rawList)) return mockProducts;
+
+      return rawList.map((raw: any) => {
+        const costPrice = Number(raw.buyPrice ?? raw.costPrice ?? 0);
+        const sellingPrice = Number(raw.sellPrice ?? raw.sellingPrice ?? 0);
+        const stockQuantity = Number(raw.stockQuantity ?? 0);
+        const minStockAlert = Number(
+          raw.lowStockThreshold ?? raw.reorderLevel ?? raw.minStockAlert ?? 5
+        );
+        const categoryName = raw.category || raw.categoryName || "General";
+        const skuCode =
+          raw.sku && raw.sku.trim() !== ""
+            ? raw.sku
+            : raw.code && raw.code.trim() !== ""
+            ? raw.code
+            : "SKU-" + (raw.id ? raw.id.substring(0, 6).toUpperCase() : "ITEM");
+
+        return {
+          id: raw.id,
+          name: raw.name || "Unnamed Item",
+          sku: skuCode,
+          code: raw.code || raw.sku || "",
+          barcode: raw.barcode || raw.code || raw.sku || "",
+          categoryId: raw.categoryId || raw.category || "General",
+          categoryName: categoryName,
+          category: categoryName,
+          costPrice,
+          sellingPrice,
+          stockQuantity,
+          minStockAlert,
+          lowStockThreshold: minStockAlert,
+          unit: raw.unit || "Piece",
+          isLowStock:
+            raw.isLowStock !== undefined
+              ? Boolean(raw.isLowStock)
+              : stockQuantity <= minStockAlert,
+          imageUrl: raw.imageUrl,
+        };
+      });
     } catch {
       return mockProducts;
     }
@@ -659,8 +698,42 @@ export const InventoryService = {
 
   async createProduct(payload: Partial<ProductItem>): Promise<ProductItem> {
     try {
-      const res = await apiClient.post(ApiEndpoints.items, payload);
-      return res.data;
+      const backendPayload = {
+        name: payload.name,
+        sku: payload.sku || "",
+        code: payload.sku || "",
+        category: payload.categoryName || (payload as any).category || "General",
+        sellPrice: String(payload.sellingPrice ?? 0),
+        buyPrice: String(payload.costPrice ?? 0),
+        stockQuantity: Number(payload.stockQuantity ?? 0),
+        unit: payload.unit || "Piece",
+        lowStockThreshold: Number(payload.minStockAlert ?? 5),
+        reorderLevel: Number(payload.minStockAlert ?? 5),
+        costPrice: payload.costPrice,
+        sellingPrice: payload.sellingPrice,
+        categoryName: payload.categoryName,
+        minStockAlert: payload.minStockAlert,
+      };
+      const res = await apiClient.post(ApiEndpoints.items, backendPayload);
+      const raw = res.data?.data || res.data;
+      const categoryName = raw.category || raw.categoryName || payload.categoryName || "General";
+      return {
+        id: raw.id || "prod_" + Date.now(),
+        name: raw.name || payload.name,
+        sku: raw.sku || raw.code || payload.sku || "SKU-NEW",
+        costPrice: Number(raw.buyPrice ?? raw.costPrice ?? payload.costPrice ?? 0),
+        sellingPrice: Number(raw.sellPrice ?? raw.sellingPrice ?? payload.sellingPrice ?? 0),
+        stockQuantity: Number(raw.stockQuantity ?? payload.stockQuantity ?? 0),
+        minStockAlert: Number(raw.lowStockThreshold ?? raw.minStockAlert ?? 5),
+        unit: raw.unit || payload.unit || "Piece",
+        categoryName: categoryName,
+        category: categoryName,
+        isLowStock: Boolean(
+          raw.isLowStock ??
+            Number(raw.stockQuantity ?? payload.stockQuantity ?? 0) <=
+              Number(raw.lowStockThreshold ?? raw.minStockAlert ?? 5)
+        ),
+      };
     } catch {
       return {
         id: "prod_" + Date.now(),
@@ -670,7 +743,7 @@ export const InventoryService = {
         sellingPrice: payload.sellingPrice || 0,
         stockQuantity: payload.stockQuantity || 0,
         minStockAlert: payload.minStockAlert || 5,
-        unit: payload.unit || "pcs",
+        unit: payload.unit || "Piece",
         categoryName: payload.categoryName || "General",
       };
     }

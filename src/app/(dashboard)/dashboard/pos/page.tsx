@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { InventoryService, SalesService } from "@/lib/api/client";
+import { InventoryService, SalesService, AuthService } from "@/lib/api/client";
 import { ProductItem, Category, CartItem, Invoice } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { ThermalReceipt } from "@/components/pos/ThermalReceipt";
@@ -63,18 +63,31 @@ export default function PosTerminalPage() {
     loadData();
   }, []);
 
-  // Filter products by category & search term (name / SKU / barcode)
+  // Filter products by category & search term (name / SKU / barcode / category)
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const matchCat = selectedCategory === "all" || p.categoryId === selectedCategory;
-      const q = searchQuery.toLowerCase();
+      const selectedCatObj = categories.find((c) => c.id === selectedCategory);
+      const targetCatName = selectedCatObj ? selectedCatObj.name.toLowerCase() : selectedCategory.toLowerCase();
+      const productCatName = (p.categoryName || (p as any).category || "").toLowerCase();
+
+      const matchCat =
+        selectedCategory === "all" ||
+        p.categoryId === selectedCategory ||
+        productCatName === targetCatName;
+
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return matchCat;
+
       const matchSearch =
         p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        (p.barcode && p.barcode.includes(q));
+        (p.sku && p.sku.toLowerCase().includes(q)) ||
+        ((p as any).code && (p as any).code.toLowerCase().includes(q)) ||
+        (p.barcode && p.barcode.includes(q)) ||
+        productCatName.includes(q);
+
       return matchCat && matchSearch;
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedCategory, searchQuery, categories]);
 
   // Cart Calculations
   const subtotal = useMemo(() => {
@@ -165,7 +178,7 @@ export default function PosTerminalPage() {
         paidAmount,
         dueAmount,
         paymentMethod,
-        cashierName: "Sabbir Hossain",
+        cashierName: AuthService.getCurrentUser()?.name || "Active Cashier",
       };
 
       const newInvoice = await SalesService.createSale(payload);
@@ -256,8 +269,15 @@ export default function PosTerminalPage() {
                     )}
 
                     <div>
-                      <span className="text-[10px] font-mono text-slate-500">{product.sku}</span>
-                      <h4 className="text-xs font-semibold text-white mt-0.5 line-clamp-2 group-hover:text-indigo-300">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[10px] font-mono text-slate-500 truncate">
+                          {product.sku && product.sku.trim() !== "" ? product.sku : "SKU-N/A"}
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 font-medium shrink-0">
+                          {product.categoryName || (product as any).category || "General"}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-semibold text-white line-clamp-2 group-hover:text-indigo-300">
                         {product.name}
                       </h4>
                     </div>
@@ -268,12 +288,18 @@ export default function PosTerminalPage() {
                       </span>
                       <span
                         className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                          isLowStock
-                            ? "bg-rose-500/20 text-rose-400"
-                            : "bg-slate-800 text-slate-400"
+                          product.stockQuantity <= 0
+                            ? "bg-rose-500/20 text-rose-400 font-bold"
+                            : isLowStock
+                            ? "bg-amber-500/20 text-amber-400 font-semibold"
+                            : "bg-slate-800 text-slate-300"
                         }`}
                       >
-                        {product.stockQuantity} {product.unit}
+                        {product.stockQuantity <= 0
+                          ? "Out of Stock (0)"
+                          : isLowStock
+                          ? `Low (${product.stockQuantity})`
+                          : `${product.stockQuantity} ${product.unit}`}
                       </span>
                     </div>
                   </div>

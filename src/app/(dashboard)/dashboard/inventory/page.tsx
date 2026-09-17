@@ -69,10 +69,14 @@ export default function InventoryPage() {
   const canExportExcel = user?.role === "admin" || user?.permissions?.canExportExcel !== false;
 
   const filteredProducts = products.filter((p) => {
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCat = selectedCat === "ALL" || p.categoryName === selectedCat;
+      !q ||
+      p.name.toLowerCase().includes(q) ||
+      (p.sku && p.sku.toLowerCase().includes(q)) ||
+      ((p as any).code && (p as any).code.toLowerCase().includes(q));
+    const catName = (p.categoryName || (p as any).category || "General").toLowerCase();
+    const matchesCat = selectedCat === "ALL" || catName === selectedCat.toLowerCase();
     return matchesSearch && matchesCat;
   });
 

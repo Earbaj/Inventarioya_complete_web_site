@@ -109,13 +109,20 @@ export interface ProductItem {
   id: string;
   name: string;
   sku: string;
+  code?: string;
   barcode?: string;
   categoryId?: string;
   categoryName?: string;
+  category?: string;
   costPrice: number;
   sellingPrice: number;
+  sellPrice?: string | number;
+  buyPrice?: string | number;
   stockQuantity: number;
   minStockAlert: number;
+  lowStockThreshold?: number;
+  reorderLevel?: number;
+  isLowStock?: boolean;
   unit: string; // e.g. "pcs", "kg", "box"
   imageUrl?: string;
 }
