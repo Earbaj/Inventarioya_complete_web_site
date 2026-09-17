@@ -292,3 +292,27 @@ export interface AIBusinessAdvice {
     potentialImpact: string;
   }[];
 }
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  address?: string;
+  openingBalance?: string | number;
+  closingBalance?: string | number;
+  totalPurchases?: number;
+  totalDue?: number;
+  createdAt?: string;
+}
+
+export interface PaginatedCustomersResponse {
+  data: Customer[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}

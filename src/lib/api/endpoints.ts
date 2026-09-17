@@ -56,6 +56,12 @@ export const ApiEndpoints = {
   importCsv: `${API_BASE_URL}/api/items/import-csv`,
 
   // ===========================================================================
+  // CUSTOMER ENDPOINTS
+  // ===========================================================================
+  customers: `${API_BASE_URL}/api/customers`,
+  customerById: (id: string) => `${API_BASE_URL}/api/customers/${id}`,
+
+  // ===========================================================================
   // STAFF & MANAGER ENDPOINTS
   // ===========================================================================
   staff: `${API_BASE_URL}/api/staff`,

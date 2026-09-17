@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { InventoryService, SalesService, AuthService } from "@/lib/api/client";
-import { ProductItem, Category, CartItem, Invoice } from "@/types";
+import { InventoryService, SalesService, AuthService, CustomerService } from "@/lib/api/client";
+import { ProductItem, Category, CartItem, Invoice, Customer } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { ThermalReceipt } from "@/components/pos/ThermalReceipt";
 import {
@@ -23,6 +23,8 @@ import {
   Package,
   X,
   AlertTriangle,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
 
 export default function PosTerminalPage() {
@@ -34,6 +36,35 @@ export default function PosTerminalPage() {
   const [loading, setLoading] = useState(true);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
+
+  // Customer selection & pagination state
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerMeta, setCustomerMeta] = useState<{
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  }>({
+    total: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 1,
+    hasNextPage: false,
+  });
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [isLoadingMoreCustomers, setIsLoadingMoreCustomers] = useState(false);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    openingBalance: 0,
+  });
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
 
   // Customer & Billing details
   const [customerName, setCustomerName] = useState("Walk-in Customer");
@@ -55,15 +86,19 @@ export default function PosTerminalPage() {
     }
   }, [stockWarning]);
 
+  // Load initial products, categories, and customers
   useEffect(() => {
     async function loadData() {
       try {
-        const [prods, cats] = await Promise.all([
+        const [prods, cats, custs] = await Promise.all([
           InventoryService.getProducts(),
           InventoryService.getCategories(),
+          CustomerService.getCustomers({ page: 1, limit: 20 }),
         ]);
         setProducts(prods);
         setCategories(cats);
+        setCustomers(custs.data);
+        setCustomerMeta(custs.meta);
       } catch (err) {
         console.error("Failed to load POS data", err);
       } finally {
@@ -72,6 +107,80 @@ export default function PosTerminalPage() {
     }
     loadData();
   }, []);
+
+  // Fetch customers with debounce & pagination
+  const fetchCustomers = async (search = "", page = 1, append = false) => {
+    if (append) {
+      setIsLoadingMoreCustomers(true);
+    } else {
+      setIsLoadingCustomers(true);
+    }
+
+    try {
+      const res = await CustomerService.getCustomers({ search, page, limit: 20 });
+      if (append) {
+        setCustomers((prev) => [...prev, ...res.data]);
+      } else {
+        setCustomers(res.data);
+      }
+      setCustomerMeta(res.meta);
+    } catch (err) {
+      console.error("Failed to load customers", err);
+    } finally {
+      setIsLoadingCustomers(false);
+      setIsLoadingMoreCustomers(false);
+    }
+  };
+
+  // Debounced search for customers
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers(customerSearch, 1, false);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [customerSearch]);
+
+  const loadMoreCustomers = () => {
+    if (!customerMeta.hasNextPage || isLoadingMoreCustomers) return;
+    fetchCustomers(customerSearch, customerMeta.page + 1, true);
+  };
+
+  const handleSelectCustomer = (cust: Customer | null) => {
+    if (cust) {
+      setSelectedCustomer(cust);
+      setCustomerName(cust.name);
+      setCustomerPhone(cust.phone || "");
+    } else {
+      setSelectedCustomer(null);
+      setCustomerName("Walk-in Customer");
+      setCustomerPhone("");
+    }
+    setIsCustomerDropdownOpen(false);
+  };
+
+  const handleCreateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustomerForm.name || !newCustomerForm.phone) return;
+    setIsCreatingCustomer(true);
+
+    try {
+      const created = await CustomerService.createCustomer({
+        name: newCustomerForm.name,
+        phone: newCustomerForm.phone,
+        address: newCustomerForm.address,
+        openingBalance: Number(newCustomerForm.openingBalance || 0),
+      });
+
+      setCustomers((prev) => [created, ...prev]);
+      handleSelectCustomer(created);
+      setShowAddCustomerModal(false);
+      setNewCustomerForm({ name: "", phone: "", address: "", openingBalance: 0 });
+    } catch (err) {
+      console.error("Failed to create customer", err);
+    } finally {
+      setIsCreatingCustomer(false);
+    }
+  };
 
   // Filter products by category & search term (name / SKU / barcode / category)
   const filteredProducts = useMemo(() => {
@@ -241,8 +350,9 @@ export default function PosTerminalPage() {
         })
       );
 
-      // Reset Cart
+      // Reset Cart & Customer
       setCart([]);
+      setSelectedCustomer(null);
       setCustomerName("Walk-in Customer");
       setCustomerPhone("");
       setDiscountAmount(0);
@@ -433,28 +543,189 @@ export default function PosTerminalPage() {
             )}
           </div>
 
-          {/* Customer input fields */}
-          <div className="p-3 border-b border-slate-800 bg-slate-950/40 space-y-2">
-            <div className="relative">
-              <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Customer Name"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
+          {/* Customer Selection & Searchable Combobox */}
+          <div className="p-3 border-b border-slate-800 bg-slate-950/40 relative">
+            <div className="flex items-center justify-between gap-1 mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <User className="w-3 h-3 text-indigo-400" />
+                Customer / Ledger
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAddCustomerModal(true)}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                New Customer
+              </button>
             </div>
-            <div className="relative">
-              <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Customer Phone (for SMS/Ledger)"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
+
+            {/* Selected Customer Trigger Box */}
+            <div
+              onClick={() => setIsCustomerDropdownOpen((prev) => !prev)}
+              className="w-full bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 cursor-pointer transition-all flex items-center justify-between gap-2"
+            >
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-white truncate">
+                      {selectedCustomer ? selectedCustomer.name : customerName || "Walk-in Customer"}
+                    </p>
+                    {selectedCustomer && Number(selectedCustomer.closingBalance || 0) < 0 && (
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
+                        Due: {formatCurrency(Math.abs(Number(selectedCustomer.closingBalance)))}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {selectedCustomer
+                      ? selectedCustomer.phone || "No phone"
+                      : customerPhone ? `${customerPhone} (Custom)` : "General Customer (No ledger)"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 text-slate-400 shrink-0">
+                {selectedCustomer && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectCustomer(null);
+                    }}
+                    className="p-1 hover:text-white rounded hover:bg-slate-800 transition-colors"
+                    title="Reset to Walk-in Customer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isCustomerDropdownOpen ? "rotate-180" : ""}`} />
+              </div>
             </div>
+
+            {/* Searchable Dropdown with Infinite/Paginated Scroll */}
+            {isCustomerDropdownOpen && (
+              <div className="absolute left-3 right-3 top-full mt-1.5 z-50 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-72">
+                {/* Search Input */}
+                <div className="p-2 border-b border-slate-800 bg-slate-950/90">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      autoFocus
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                      placeholder="Search customer by name or phone..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    />
+                    {isLoadingCustomers && (
+                      <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin absolute right-2.5 top-1/2 -translate-y-1/2" />
+                    )}
+                  </div>
+                </div>
+
+                {/* List Container */}
+                <div className="overflow-y-auto flex-1 divide-y divide-slate-800/60">
+                  {/* Pinned Walk-in Customer Option */}
+                  <div
+                    onClick={() => handleSelectCustomer(null)}
+                    className={`px-3 py-2 hover:bg-slate-800/70 cursor-pointer flex items-center justify-between transition-colors ${
+                      !selectedCustomer ? "bg-indigo-950/40 border-l-2 border-indigo-500" : ""
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-semibold text-white flex items-center gap-1.5">
+                        Walk-in Customer
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">Cash Sale</span>
+                      </p>
+                      <p className="text-[10px] text-slate-400">Default general walk-in buyer</p>
+                    </div>
+                    {!selectedCustomer && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />}
+                  </div>
+
+                  {/* Customer Rows */}
+                  {customers.map((c) => {
+                    const isSelected = selectedCustomer?.id === c.id;
+                    const dueNum = Number(c.closingBalance || 0);
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => handleSelectCustomer(c)}
+                        className={`px-3 py-2 hover:bg-slate-800/70 cursor-pointer flex items-center justify-between transition-colors ${
+                          isSelected ? "bg-indigo-950/40 border-l-2 border-indigo-500" : ""
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-white truncate">{c.name}</p>
+                          <p className="text-[10px] text-slate-400 font-mono">{c.phone}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {dueNum < 0 ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400">
+                              Due: {formatCurrency(Math.abs(dueNum))}
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-slate-500">No Due</span>
+                          )}
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Empty Search Result */}
+                  {customers.length === 0 && !isLoadingCustomers && (
+                    <div className="p-4 text-center text-slate-500 text-xs">
+                      No customer found for &quot;{customerSearch}&quot;
+                    </div>
+                  )}
+
+                  {/* Pagination: Load More Button */}
+                  {customerMeta.hasNextPage && (
+                    <div className="p-2 text-center bg-slate-950/50">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadMoreCustomers();
+                        }}
+                        disabled={isLoadingMoreCustomers}
+                        className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 disabled:opacity-50 py-1 px-3 rounded hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5"
+                      >
+                        {isLoadingMoreCustomers ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Loading more...
+                          </>
+                        ) : (
+                          `Load more (${customers.length} of ${customerMeta.total})`
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer with summary & add new customer */}
+                <div className="p-2 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">
+                    Total: <strong className="text-white">{customerMeta.total}</strong> customers
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomerDropdownOpen(false);
+                      setShowAddCustomerModal(true);
+                    }}
+                    className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Quick Add
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Cart Items List */}
@@ -621,6 +892,101 @@ export default function PosTerminalPage() {
           invoice={completedInvoice}
           onClose={() => setCompletedInvoice(null)}
         />
+      )}
+
+      {/* Quick Add Customer Modal */}
+      {showAddCustomerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-indigo-400" />
+                <h3 className="text-sm font-bold text-white">Add New Customer</h3>
+              </div>
+              <button
+                onClick={() => setShowAddCustomerModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCustomer} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Customer Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newCustomerForm.name}
+                  onChange={(e) => setNewCustomerForm({ ...newCustomerForm, name: e.target.value })}
+                  placeholder="e.g. Rahim Chowdhury"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Phone Number *</label>
+                <input
+                  type="text"
+                  required
+                  value={newCustomerForm.phone}
+                  onChange={(e) => setNewCustomerForm({ ...newCustomerForm, phone: e.target.value })}
+                  placeholder="e.g. 01712345678"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Address (Optional)</label>
+                <input
+                  type="text"
+                  value={newCustomerForm.address}
+                  onChange={(e) => setNewCustomerForm({ ...newCustomerForm, address: e.target.value })}
+                  placeholder="e.g. Mirpur, Dhaka"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-medium mb-1">Opening Due Balance (৳)</label>
+                <input
+                  type="number"
+                  value={newCustomerForm.openingBalance}
+                  onChange={(e) =>
+                    setNewCustomerForm({
+                      ...newCustomerForm,
+                      openingBalance: Number(e.target.value),
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddCustomerModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingCustomer}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold shadow-md text-xs flex items-center gap-1.5 transition-all"
+                >
+                  {isCreatingCustomer ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )}
+                  Save & Select
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { AIService, AuthService } from "@/lib/api/client";
+import { AIService, AuthService, CustomerService } from "@/lib/api/client";
 import { AICustomerCreditScore } from "@/types";
 import { formatCurrency, downloadCsvFile } from "@/lib/utils";
 import { Users, Search, Download, Sparkles, Phone, ShieldCheck, X, FileSpreadsheet } from "lucide-react";
@@ -34,6 +34,30 @@ export default function CustomersPage() {
 
   useEffect(() => {
     setUser(AuthService.getCurrentUser());
+    async function loadCustomers() {
+      try {
+        const res = await CustomerService.getCustomers({ limit: 50 });
+        if (res.data && res.data.length > 0) {
+          const mapped: CustomerLedger[] = res.data.map((c) => {
+            const dueNum = Number(c.closingBalance || c.totalDue || 0);
+            const totalSpent = Number(c.totalPurchases || 0);
+            return {
+              id: c.id,
+              name: c.name,
+              phone: c.phone,
+              totalPurchases: totalSpent,
+              totalDue: dueNum < 0 ? Math.abs(dueNum) : 0,
+              lastPurchaseDate: c.createdAt ? c.createdAt.split("T")[0] : "2026-09-17",
+              status: dueNum < -1000 ? "RISK" : totalSpent > 25000 ? "VIP" : "GOOD",
+            };
+          });
+          setCustomers(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load customers", err);
+      }
+    }
+    loadCustomers();
   }, []);
 
   const canExportExcel = user?.role === "admin" || user?.permissions?.canExportExcel !== false;
