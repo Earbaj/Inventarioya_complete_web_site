@@ -29,7 +29,12 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Invalid email or password");
+      const serverMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Invalid email or password. Please check your credentials.";
+      setError(serverMsg);
     } finally {
       setLoading(false);
     }

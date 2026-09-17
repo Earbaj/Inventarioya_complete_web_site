@@ -432,39 +432,25 @@ export const mockManualPayments: ManualPaymentSubmission[] = [
 
 export const AuthService = {
   async login(payload: { email: string; password: string; role?: string }): Promise<AuthResponse> {
-    try {
-      const res = await apiClient.post(ApiEndpoints.login, payload);
-      if (res.data?.token) {
-        localStorage.setItem(TOKEN_KEY, res.data.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(res.data.user || mockUser));
-      }
-      return res.data;
-    } catch (err) {
-      // Fallback demo auth for smooth experience
-      const role = payload.email.includes("superadmin") ? "superadmin" : "admin";
-      const demoUser = { ...mockUser, email: payload.email, role: role as any };
-      const demoToken = "demo_jwt_token_" + Date.now();
+    const res = await apiClient.post(ApiEndpoints.login, payload);
+    if (res.data?.token) {
       if (typeof window !== "undefined") {
-        localStorage.setItem(TOKEN_KEY, demoToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
+        localStorage.setItem(TOKEN_KEY, res.data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
       }
-      return { token: demoToken, user: demoUser };
     }
+    return res.data;
   },
 
   async register(payload: any): Promise<AuthResponse> {
-    try {
-      const res = await apiClient.post(ApiEndpoints.register, payload);
-      return res.data;
-    } catch (err) {
-      const demoUser = { ...mockUser, name: payload.name || payload.shopName, email: payload.email };
-      const demoToken = "demo_jwt_token_" + Date.now();
+    const res = await apiClient.post(ApiEndpoints.register, payload);
+    if (res.data?.token) {
       if (typeof window !== "undefined") {
-        localStorage.setItem(TOKEN_KEY, demoToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
+        localStorage.setItem(TOKEN_KEY, res.data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
       }
-      return { token: demoToken, user: demoUser };
     }
+    return res.data;
   },
 
   async forgotPassword(payload: { email: string }): Promise<{ message: string; success: boolean }> {
