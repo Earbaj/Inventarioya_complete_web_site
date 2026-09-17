@@ -615,12 +615,12 @@ export const SalesService = {
         discount: saleData.discount || 0,
         tax: saleData.tax || 0,
         grandTotal: saleData.grandTotal || 0,
-        paidAmount: saleData.paidAmount || saleData.grandTotal || 0,
-        dueAmount: saleData.dueAmount || 0,
+        paidAmount: typeof saleData.paidAmount === "number" ? saleData.paidAmount : (saleData.grandTotal || 0),
+        dueAmount: typeof saleData.dueAmount === "number" ? saleData.dueAmount : 0,
         paymentMethod: saleData.paymentMethod || "CASH",
         cashierName: saleData.cashierName || "Active Cashier",
         createdAt: new Date().toISOString(),
-        status: (saleData.dueAmount || 0) > 0 ? "DUE" : "PAID",
+        status: (saleData.dueAmount || 0) > 0 ? (saleData.paidAmount > 0 ? "PARTIAL" : "DUE") : "PAID",
       };
       return newInvoice;
     }

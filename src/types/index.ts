@@ -151,7 +151,7 @@ export interface Invoice {
   grandTotal: number;
   paidAmount: number;
   dueAmount: number;
-  paymentMethod: "CASH" | "CARD" | "BKASH" | "NAGAD" | "BANK";
+  paymentMethod: "CASH" | "CARD" | "BKASH" | "NAGAD" | "BANK" | "DUE";
   cashierName: string;
   branchName?: string;
   createdAt: string;

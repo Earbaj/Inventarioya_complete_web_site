@@ -71,7 +71,7 @@ export default function PosTerminalPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [taxRate, setTaxRate] = useState<number>(0); // 0% or 5% etc
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "BKASH" | "NAGAD">("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "BKASH" | "NAGAD" | "DUE">("CASH");
   const [paidAmount, setPaidAmount] = useState<number>(0);
 
   // Completed Invoice for Receipt Printing
@@ -221,10 +221,14 @@ export default function PosTerminalPage() {
     return Math.max(0, subtotal - discountAmount + taxAmount);
   }, [subtotal, discountAmount, taxAmount]);
 
-  // Auto-fill paid amount to match grandTotal initially
+  // Auto-fill paid amount to match grandTotal initially or 0 when DUE is selected
   useEffect(() => {
-    setPaidAmount(grandTotal);
-  }, [grandTotal]);
+    if (paymentMethod === "DUE") {
+      setPaidAmount(0);
+    } else {
+      setPaidAmount(grandTotal);
+    }
+  }, [grandTotal, paymentMethod]);
 
   const dueAmount = Math.max(0, grandTotal - paidAmount);
   const changeAmount = Math.max(0, paidAmount - grandTotal);
@@ -327,7 +331,7 @@ export default function PosTerminalPage() {
         grandTotal,
         paidAmount,
         dueAmount,
-        paymentMethod,
+        paymentMethod: dueAmount === grandTotal ? "DUE" : paymentMethod,
         cashierName: AuthService.getCurrentUser()?.name || "Active Cashier",
       };
 
@@ -350,12 +354,27 @@ export default function PosTerminalPage() {
         })
       );
 
+      // Update customer closing balance locally if due exists
+      if (selectedCustomer && dueAmount > 0) {
+        setCustomers((prevCusts) =>
+          prevCusts.map((c) => {
+            if (c.id === selectedCustomer.id) {
+              const currentBal = Number(c.closingBalance || 0);
+              const updatedBal = currentBal - dueAmount;
+              return { ...c, closingBalance: updatedBal.toFixed(2) };
+            }
+            return c;
+          })
+        );
+      }
+
       // Reset Cart & Customer
       setCart([]);
       setSelectedCustomer(null);
       setCustomerName("Walk-in Customer");
       setCustomerPhone("");
       setDiscountAmount(0);
+      setPaymentMethod("CASH");
       setIsMobileCartOpen(false);
     } catch (err) {
       console.error("POS Checkout failed", err);
@@ -785,21 +804,36 @@ export default function PosTerminalPage() {
           {/* Calculation & Payment Tender */}
           <div className="p-4 border-t border-slate-800 bg-slate-950/60 space-y-3">
             {/* Payment Method Pills */}
-            <div className="grid grid-cols-4 gap-1">
-              {(["CASH", "CARD", "BKASH", "NAGAD"] as const).map((method) => (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => setPaymentMethod(method)}
-                  className={`py-1 rounded text-[10px] font-bold transition-colors ${
-                    paymentMethod === method
-                      ? "bg-indigo-600 text-white shadow"
-                      : "bg-slate-800 text-slate-400 hover:text-white"
-                  }`}
-                >
-                  {method}
-                </button>
-              ))}
+            <div className="grid grid-cols-5 gap-1">
+              {(["CASH", "CARD", "BKASH", "NAGAD", "DUE"] as const).map((method) => {
+                const isSelected = paymentMethod === method;
+                const isDue = method === "DUE";
+                return (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod(method);
+                      if (method === "DUE") {
+                        setPaidAmount(0);
+                      } else if (paidAmount === 0) {
+                        setPaidAmount(grandTotal);
+                      }
+                    }}
+                    className={`py-1 rounded text-[10px] font-bold transition-all ${
+                      isSelected
+                        ? isDue
+                          ? "bg-rose-600 text-white shadow-md shadow-rose-600/30 ring-1 ring-rose-400"
+                          : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                        : isDue
+                        ? "bg-rose-950/40 text-rose-300 border border-rose-800/60 hover:bg-rose-900/40"
+                        : "bg-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {method === "DUE" ? "DUE (বাকি)" : method}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Discount & Subtotals */}
@@ -825,38 +859,95 @@ export default function PosTerminalPage() {
             </div>
 
             {/* Paid & Due Inputs */}
-            <div className="flex items-center justify-between gap-2 pt-1">
-              <span className="text-xs text-slate-400">Received (৳):</span>
-              <input
-                type="number"
-                min={0}
-                value={paidAmount}
-                onChange={(e) => setPaidAmount(Number(e.target.value))}
-                className="w-28 bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-right text-xs text-white font-bold focus:outline-none"
-              />
-            </div>
+            <div className="space-y-2 pt-1 border-t border-slate-800/60">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-300 font-medium">Cash / Paid (৳):</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaidAmount(grandTotal);
+                        if (paymentMethod === "DUE") setPaymentMethod("CASH");
+                      }}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                    >
+                      Full Paid
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPaidAmount(0);
+                        setPaymentMethod("DUE");
+                      }}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
+                    >
+                      Full Due
+                    </button>
+                  </div>
+                </div>
 
-            {dueAmount > 0 && (
-              <div className="flex justify-between text-xs text-rose-400 font-semibold">
-                <span>Remaining Due:</span>
-                <span>{formatCurrency(dueAmount)}</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={paidAmount}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setPaidAmount(val);
+                    if (val === 0) {
+                      setPaymentMethod("DUE");
+                    } else if (paymentMethod === "DUE") {
+                      setPaymentMethod("CASH");
+                    }
+                  }}
+                  className="w-28 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right text-xs text-white font-bold focus:outline-none focus:border-indigo-500"
+                />
               </div>
-            )}
-            {changeAmount > 0 && (
-              <div className="flex justify-between text-xs text-indigo-400 font-semibold">
-                <span>Return Change:</span>
-                <span>{formatCurrency(changeAmount)}</span>
-              </div>
-            )}
+
+              {dueAmount > 0 && (
+                <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-semibold">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    Remaining Due:
+                  </span>
+                  <span className="font-bold text-rose-300 font-mono text-sm">{formatCurrency(dueAmount)}</span>
+                </div>
+              )}
+
+              {changeAmount > 0 && (
+                <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-semibold">
+                  <span>Return Change:</span>
+                  <span className="font-bold text-white font-mono text-sm">{formatCurrency(changeAmount)}</span>
+                </div>
+              )}
+
+              {dueAmount > 0 && !selectedCustomer && (
+                <p className="text-[10px] text-amber-400/90 leading-tight">
+                  ⚠️ Note: Unregistered customer. To record this ৳{dueAmount} due in customer ledger, please select or add a customer above.
+                </p>
+              )}
+            </div>
 
             {/* Checkout Button */}
             <button
               onClick={handleCheckout}
               disabled={cart.length === 0 || isCheckingOut}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+              className={`w-full py-3 text-white text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+                dueAmount > 0 && paidAmount === 0
+                  ? "bg-rose-600 hover:bg-rose-500 shadow-rose-600/30"
+                  : dueAmount > 0
+                  ? "bg-amber-600 hover:bg-amber-500 shadow-amber-600/30"
+                  : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30"
+              }`}
             >
               <Printer className="w-4 h-4" />
-              {isCheckingOut ? "Processing Invoice..." : `Complete & Print Invoice (${formatCurrency(grandTotal)})`}
+              {isCheckingOut
+                ? "Processing Invoice..."
+                : dueAmount > 0 && paidAmount === 0
+                ? `Complete Due Sale (${formatCurrency(grandTotal)})`
+                : dueAmount > 0
+                ? `Partial Sale (Paid: ${formatCurrency(paidAmount)} · Due: ${formatCurrency(dueAmount)})`
+                : `Complete & Print Invoice (${formatCurrency(grandTotal)})`}
             </button>
           </div>
         </div>
