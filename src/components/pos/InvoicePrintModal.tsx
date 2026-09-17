@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Invoice } from "@/types";
 import { formatCurrency, formatDate, downloadCsvFile } from "@/lib/utils";
+import { AuthService } from "@/lib/api/client";
 import {
   Printer,
   X,
@@ -28,6 +29,12 @@ export function InvoicePrintModal({
   initialMode = "a4",
 }: InvoicePrintModalProps) {
   const [printMode, setPrintMode] = useState<"a4" | "thermal">(initialMode);
+
+  const user = AuthService.getCurrentUser();
+  const shopName = user?.shopName || "Dhaka Mega Superstore";
+  const shopAddress = "Road 27, Dhanmondi, Dhaka-1209";
+  const shopPhone = user?.phone || "+880 1711-223344";
+  const shopEmail = user?.email || "support@inventarioya.com";
 
   const handlePrint = () => {
     window.print();
@@ -132,22 +139,14 @@ export function InvoicePrintModal({
               <div className="border-b-2 border-slate-900 pb-5">
                 <div className="flex justify-between items-start gap-4">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-black flex items-center justify-center text-sm">
-                        IY
-                      </div>
-                      <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">
-                        Dhaka Mega Superstore
-                      </h1>
-                    </div>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+                      {shopName}
+                    </h1>
                     <p className="text-[11px] text-slate-600 font-medium mt-1">
-                      Powered by Inventarioya Enterprise Cloud POS
+                      {shopAddress}
                     </p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      Road 27, Dhanmondi, Dhaka-1209 | Phone: +880 1711-223344
-                    </p>
-                    <p className="text-[10px] text-slate-500">
-                      BIN / Tax ID: 001928472-0101 | Email: support@inventarioya.com
+                      Phone: {shopPhone} | Email: {shopEmail}
                     </p>
                   </div>
 
@@ -208,9 +207,6 @@ export function InvoicePrintModal({
                     </p>
                   ) : (
                     <p className="text-[10px] text-slate-500 italic mt-0.5">Counter / Walk-in Sale</p>
-                  )}
-                  {invoice.customerId && invoice.customerId !== "walk-in" && (
-                    <p className="text-[9px] text-slate-400 font-mono mt-1">ID: {invoice.customerId}</p>
                   )}
                 </div>
 
@@ -284,74 +280,67 @@ export function InvoicePrintModal({
                 </table>
               </div>
 
-              {/* Bill Financial Calculations & Totals */}
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pt-2">
-                {/* Notes & Payment Method Details */}
-                <div className="space-y-2 text-slate-600 text-[11px] max-w-sm">
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
-                    <p className="font-semibold text-slate-800 uppercase text-[10px]">
-                      Payment & Terms:
-                    </p>
-                    <p className="text-[10px]">
-                      Method: <span className="font-bold text-slate-900">{invoice.paymentMethod}</span>
-                    </p>
-                    <p className="text-[10px]">
-                      Goods once sold cannot be returned without original printed or digital tax invoice.
-                    </p>
-                    {invoice.isReturned && invoice.isReturned !== "none" && (
-                      <p className="text-[10px] text-amber-700 font-bold">
-                        Return Status: {invoice.isReturned.toUpperCase()} (Refunded: {formatCurrency(invoice.totalRefunded || 0)})
-                      </p>
+              {/* Bill Financial Calculations & Totals (Full Row) */}
+              <div className="pt-2 w-full">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 w-full">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3.5 border-b border-slate-200 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase font-semibold text-slate-500 block">Subtotal</span>
+                      <span className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(invoice.subtotal)}</span>
+                    </div>
+                    {Number(invoice.discount) > 0 ? (
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold text-emerald-700 block">Discount</span>
+                        <span className="text-sm font-bold text-emerald-700 font-mono">-{formatCurrency(invoice.discount)}</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">Discount</span>
+                        <span className="text-sm font-medium text-slate-500 font-mono">৳ 0</span>
+                      </div>
                     )}
-                  </div>
-                </div>
-
-                {/* Totals Table */}
-                <div className="w-full sm:w-72 bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Subtotal:</span>
-                    <span className="font-mono font-medium">{formatCurrency(invoice.subtotal)}</span>
-                  </div>
-
-                  {Number(invoice.discount) > 0 && (
-                    <div className="flex justify-between text-emerald-700 font-medium">
-                      <span>Discount:</span>
-                      <span className="font-mono">-{formatCurrency(invoice.discount)}</span>
+                    {Number(invoice.tax) > 0 ? (
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold text-slate-500 block">VAT / Tax</span>
+                        <span className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(invoice.tax)}</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">VAT / Tax</span>
+                        <span className="text-sm font-medium text-slate-500 font-mono">৳ 0</span>
+                      </div>
+                    )}
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-600 block">Payment Method</span>
+                      <span className="text-sm font-extrabold text-slate-900">{invoice.paymentMethod || "CASH"}</span>
                     </div>
-                  )}
-
-                  {Number(invoice.tax) > 0 && (
-                    <div className="flex justify-between text-slate-600">
-                      <span>VAT / Tax:</span>
-                      <span className="font-mono">{formatCurrency(invoice.tax)}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center text-sm font-black text-slate-900 pt-2 border-t border-slate-300">
-                    <span>Net Grand Total:</span>
-                    <span className="font-mono text-indigo-700 text-base">
-                      {formatCurrency(invoice.grandTotal)}
-                    </span>
                   </div>
 
-                  <div className="flex justify-between text-slate-700 pt-1">
-                    <span>Paid Amount ({invoice.paymentMethod}):</span>
-                    <span className="font-mono font-bold text-emerald-700">
-                      {formatCurrency(invoice.paidAmount)}
-                    </span>
-                  </div>
+                  {/* Net Grand Total, Paid & Due Highlight Row */}
+                  <div className="pt-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-4 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">Paid Amount</span>
+                        <span className="text-base font-bold text-emerald-700 font-mono">{formatCurrency(invoice.paidAmount)}</span>
+                      </div>
+                      <div className="h-7 w-px bg-slate-200 hidden sm:block" />
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold block text-slate-500">Due Balance (বাকি)</span>
+                        {Number(invoice.dueAmount) > 0 ? (
+                          <span className="text-base font-black text-rose-600 font-mono">{formatCurrency(invoice.dueAmount)}</span>
+                        ) : (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded inline-block">Cleared (৳ 0)</span>
+                        )}
+                      </div>
+                    </div>
 
-                  {Number(invoice.dueAmount) > 0 ? (
-                    <div className="flex justify-between items-center text-rose-600 font-black pt-1 border-t border-dashed border-rose-200">
-                      <span>Outstanding Due (বাকি):</span>
-                      <span className="font-mono text-sm">{formatCurrency(invoice.dueAmount)}</span>
+                    <div className="bg-white border border-slate-300 rounded-xl px-5 py-2 text-right shadow-xs">
+                      <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider block">Net Grand Total</span>
+                      <span className="text-2xl font-black text-indigo-700 font-mono leading-none mt-0.5 block">
+                        {formatCurrency(invoice.grandTotal)}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="flex justify-between items-center text-emerald-700 font-semibold pt-1 border-t border-dashed border-slate-200 text-[11px]">
-                      <span>Due Balance:</span>
-                      <span>Cleared (৳0)</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
