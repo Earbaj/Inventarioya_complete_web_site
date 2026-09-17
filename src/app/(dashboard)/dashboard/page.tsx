@@ -147,32 +147,57 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
 
-          {/* Card 4: Net Profit or Loss */}
+          {/* Card 4: Net Profit or Net Loss */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-400">
-                {isProfit ? "Net Profit" : "Net P&L (Deficit)"}
+                {netProfit > 0
+                  ? "Net Profit (নিট লাভ)"
+                  : netProfit < 0
+                  ? "Net Loss (ঘাটতি / ক্ষতি)"
+                  : "Net Balance (সমান)"}
               </span>
               <div
                 className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  isProfit
+                  netProfit > 0
                     ? "bg-emerald-500/10 text-emerald-400"
-                    : "bg-rose-500/10 text-rose-400"
+                    : netProfit < 0
+                    ? "bg-rose-500/10 text-rose-400"
+                    : "bg-slate-800 text-slate-300"
                 }`}
               >
-                {isProfit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {netProfit >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               </div>
             </div>
             <div className="mt-3">
-              <p
-                className={`text-2xl font-black tracking-tight ${
-                  isProfit ? "text-emerald-400" : "text-rose-400"
-                }`}
-              >
-                {formatCurrency(netProfit)}
-              </p>
+              <div className="flex items-center gap-2">
+                <p
+                  className={`text-2xl font-black tracking-tight ${
+                    netProfit > 0
+                      ? "text-emerald-400"
+                      : netProfit < 0
+                      ? "text-rose-400"
+                      : "text-slate-200"
+                  }`}
+                >
+                  {formatCurrency(Math.abs(netProfit))}
+                </p>
+                <span
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    netProfit > 0
+                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                      : netProfit < 0
+                      ? "bg-rose-500/15 text-rose-400 border border-rose-500/20"
+                      : "bg-slate-800 text-slate-400 border border-slate-700"
+                  }`}
+                >
+                  {netProfit > 0 ? "Profit (লাভ)" : netProfit < 0 ? "Loss (ঘাটতি)" : "Balanced"}
+                </span>
+              </div>
               <div className="mt-1 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">Total Expenses</span>
+                <span className="text-slate-400">
+                  {netProfit < 0 ? "Loss after Expenses" : "Shop Expenses"}
+                </span>
                 <span className="font-semibold text-slate-300">
                   {formatCurrency(totalExpenses)}
                 </span>
@@ -324,7 +349,9 @@ export default function DashboardOverviewPage() {
                 You have {lowStock} out of {totalItems} items approaching critical inventory thresholds. Automated replenishment is recommended.
               </p>
               <div className="mt-4 p-3 rounded-xl bg-slate-900/80 border border-indigo-500/20 text-xs text-indigo-300">
-                Current Net Profit is {formatCurrency(netProfit)} with {formatCurrency(totalExpenses)} in shop expenses recorded.
+                {netProfit < 0
+                  ? `Current financial overview shows a Net Deficit / Loss of ${formatCurrency(Math.abs(netProfit))} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`
+                  : `Current financial overview shows a Net Profit of ${formatCurrency(netProfit)} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`}
               </div>
             </div>
 
