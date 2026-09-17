@@ -1,4 +1,4 @@
-export type UserRole = "superadmin" | "admin" | "manager" | "staff" | "cashier";
+export type UserRole = "superadmin" | "admin" | "manager";
 
 export interface User {
   id: string;
@@ -160,7 +160,7 @@ export interface StaffMember {
   name: string;
   email: string;
   phone: string;
-  role: "manager" | "staff" | "cashier";
+  role: "admin" | "manager";
   branchId?: string;
   branchName?: string;
   permissions: string[];

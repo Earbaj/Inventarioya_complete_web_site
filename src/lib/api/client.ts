@@ -190,9 +190,9 @@ export const mockBranches: Branch[] = [
 ];
 
 export const mockStaff: StaffMember[] = [
-  { id: "stf_1", name: "Sabbir Hossain", email: "sabbir@dhakasuper.com", phone: "+880 1715-889900", role: "cashier", branchId: "br_001", branchName: "Main Flagship Branch", permissions: ["sales_create", "sales_read", "print_receipt"], isActive: true },
+  { id: "stf_1", name: "Sabbir Hossain", email: "sabbir@dhakasuper.com", phone: "+880 1715-889900", role: "manager", branchId: "br_001", branchName: "Main Flagship Branch", permissions: ["sales_create", "sales_read", "print_receipt"], isActive: true },
   { id: "stf_2", name: "Kazi Farhad", email: "farhad@dhakasuper.com", phone: "+880 1812-990011", role: "manager", branchId: "br_002", branchName: "Mirpur Retail Outlet", permissions: ["sales_create", "sales_read", "inventory_edit", "suppliers_manage", "expenses_manage"], isActive: true },
-  { id: "stf_3", name: "Tasnim Anjum", email: "tasnim@dhakasuper.com", phone: "+880 1914-112233", role: "staff", branchId: "br_001", branchName: "Main Flagship Branch", permissions: ["inventory_read", "sales_create"], isActive: true },
+  { id: "stf_3", name: "Tasnim Anjum", email: "tasnim@dhakasuper.com", phone: "+880 1914-112233", role: "admin", branchId: "br_001", branchName: "Main Flagship Branch", permissions: ["inventory_read", "sales_create"], isActive: true },
 ];
 
 export const mockPackages: SubscriptionPackage[] = [
@@ -702,7 +702,7 @@ export const StaffService = {
         name: payload.name || "Staff Member",
         email: payload.email || "staff@shop.com",
         phone: payload.phone || "+880 1700-000000",
-        role: payload.role || "cashier",
+        role: payload.role || "manager",
         branchName: payload.branchName || "Main Branch",
         permissions: payload.permissions || ["sales_create"],
         isActive: true,

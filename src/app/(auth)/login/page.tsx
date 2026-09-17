@@ -24,9 +24,8 @@ export default function LoginPage() {
 
       if (userRole === "superadmin") {
         router.push("/superadmin");
-      } else if (userRole === "cashier") {
-        router.push("/dashboard/pos");
       } else {
+        // "admin" or "manager" navigate to dashboard
         router.push("/dashboard");
       }
     } catch (err: any) {

@@ -28,7 +28,7 @@ export default function StaffPage() {
     name: "",
     email: "",
     phone: "",
-    role: "cashier",
+    role: "manager",
     branchName: "Main Flagship Branch",
     permissions: ["sales_create", "sales_read", "print_receipt"],
   });
@@ -55,7 +55,7 @@ export default function StaffPage() {
         name: "",
         email: "",
         phone: "",
-        role: "cashier",
+        role: "manager",
         branchName: "Main Flagship Branch",
         permissions: ["sales_create", "sales_read", "print_receipt"],
       });
@@ -294,9 +294,8 @@ export default function StaffPage() {
                     onChange={(e) => setNewStaff({ ...newStaff, role: e.target.value as any })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="cashier">Cashier</option>
                     <option value="manager">Manager</option>
-                    <option value="staff">Staff</option>
+                    <option value="admin">Admin</option>
                   </select>
                 </div>
               </div>
