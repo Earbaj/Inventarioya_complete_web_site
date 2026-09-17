@@ -39,9 +39,9 @@ export default function SettingsPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Shop Settings & Owner Profile" />
 
-      <main className="p-6 space-y-6 max-w-4xl">
+      <main className="p-4 sm:p-6 space-y-6 max-w-4xl">
         {/* Profile Card */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-lg font-bold">
               {user?.name ? user.name[0] : "R"}
@@ -81,7 +81,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Danger Zone: Account Deletion */}
-        <div className="rounded-2xl bg-rose-950/20 border border-rose-500/30 p-6">
+        <div className="rounded-2xl bg-rose-950/20 border border-rose-500/30 p-5 sm:p-6">
           <div className="flex items-center gap-3 mb-2">
             <ShieldAlert className="w-5 h-5 text-rose-400" />
             <h3 className="text-sm font-bold text-rose-300">Danger Zone: Permanent Account Deletion</h3>
@@ -92,7 +92,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center gap-1.5"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition-colors flex items-center gap-1.5"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete Account (DELETE /api/auth/me)
@@ -103,7 +103,7 @@ export default function SettingsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-rose-500/50 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+          <div className="bg-slate-900 border border-rose-500/50 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-sm font-bold text-white mb-2">Confirm Account Destruction</h3>
             <p className="text-xs text-slate-300 mb-4">
               Please type <span className="text-rose-400 font-mono font-bold">DELETE MY ACCOUNT</span> below to proceed with immediate purge.

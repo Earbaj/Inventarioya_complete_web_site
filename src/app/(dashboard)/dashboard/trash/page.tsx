@@ -81,7 +81,7 @@ export default function TrashPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Recycle Bin & Data Retention Recovery" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {statusMessage && (
           <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -113,7 +113,7 @@ export default function TrashPage() {
         {/* Trash Items Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[650px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Entity Type</th>

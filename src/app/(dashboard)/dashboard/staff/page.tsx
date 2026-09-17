@@ -104,15 +104,15 @@ export default function StaffPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Staff Accounts & Granular Permissions" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
-        <div className="flex items-center justify-between">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-white">Active Shop Employees</h3>
             <p className="text-xs text-slate-400">Manage cashiers, shift managers, and access privileges</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4" />
             Add Staff Member
@@ -122,7 +122,7 @@ export default function StaffPage() {
         {/* Staff Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[650px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Name</th>

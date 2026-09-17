@@ -9,6 +9,8 @@ import {
   Building2,
   CreditCard,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { AuthService } from "@/lib/api/client";
 
@@ -20,6 +22,7 @@ export default function SuperAdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser();
@@ -38,11 +41,28 @@ export default function SuperAdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-slate-950 flex text-slate-100 relative">
+      {/* Mobile Drawer Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden transition-opacity"
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* SuperAdmin Sidebar */}
-      <aside className="w-64 bg-slate-900 border-r border-amber-500/20 flex flex-col h-screen sticky top-0">
-        <div className="h-16 px-6 border-b border-amber-500/20 flex items-center justify-between">
-          <Link href="/superadmin" className="flex items-center gap-2.5">
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-amber-500/20 flex flex-col h-screen transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        }`}
+      >
+        <div className="h-16 px-5 border-b border-amber-500/20 flex items-center justify-between">
+          <Link
+            href="/superadmin"
+            onClick={() => setIsMobileOpen(false)}
+            className="flex items-center gap-2.5"
+          >
             <div className="w-9 h-9 rounded-xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-600/30">
               <ShieldAlert className="w-5 h-5 text-white" />
             </div>
@@ -53,6 +73,15 @@ export default function SuperAdminLayout({
               </span>
             </div>
           </Link>
+
+          {/* Close button on mobile */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="flex-1 px-3 py-4 space-y-1">
@@ -63,6 +92,7 @@ export default function SuperAdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setIsMobileOpen(false)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                   isActive
                     ? "bg-amber-600 text-white shadow"
@@ -101,12 +131,23 @@ export default function SuperAdminLayout({
       {/* Main Content Area with Header Bar */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-slate-800 bg-slate-900/50 backdrop-blur px-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-semibold text-slate-300">
-              Platform Backend Online (v1.0.0)
-            </span>
+        <header className="h-14 border-b border-slate-800 bg-slate-900/50 backdrop-blur px-4 sm:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-semibold text-slate-300 truncate">
+                Platform Backend Online
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

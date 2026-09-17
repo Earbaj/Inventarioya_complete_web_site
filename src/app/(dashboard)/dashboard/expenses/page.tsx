@@ -64,7 +64,7 @@ export default function ExpensesPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Shop Expenses & Operational Costs" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* KPI & Actions */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-4">
@@ -89,7 +89,7 @@ export default function ExpensesPage() {
         {/* Expenses Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[650px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Date</th>
@@ -134,7 +134,7 @@ export default function ExpensesPage() {
       {/* Add Expense Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white">Record Shop Expense</h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">

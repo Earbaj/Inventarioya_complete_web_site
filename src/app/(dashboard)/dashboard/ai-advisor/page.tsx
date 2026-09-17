@@ -44,15 +44,15 @@ export default function AiAdvisorPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Gemini AI Business Intelligence & Forecasting" />
 
-      <main className="p-6 space-y-8 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-7xl">
         {/* Banner */}
-        <div className="rounded-3xl bg-gradient-to-r from-purple-950/80 via-indigo-950/70 to-slate-900 border border-purple-500/30 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xl">
+        <div className="rounded-3xl bg-gradient-to-r from-purple-950/80 via-indigo-950/70 to-slate-900 border border-purple-500/30 p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-xl">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Google Gemini 1.5 Flash Analytics Engine</span>
             </div>
-            <h2 className="text-2xl font-extrabold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white">
               Autonomous Demand & Growth Intelligence
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
@@ -63,7 +63,7 @@ export default function AiAdvisorPage() {
           <button
             onClick={fetchAIIntelligence}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition-all shrink-0"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition-all shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             Re-run Gemini Analysis

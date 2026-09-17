@@ -75,10 +75,10 @@ export default function SalesHistoryPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Sales History & Invoicing Records" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* Controls & Search */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 max-w-xl">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -94,7 +94,7 @@ export default function SalesHistoryPage() {
               aria-label="Filter by Status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
+              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
             >
               <option value="ALL">All Status</option>
               <option value="PAID">Paid</option>
@@ -106,7 +106,7 @@ export default function SalesHistoryPage() {
           {canExportExcel && (
             <button
               onClick={handleExportCsv}
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm shrink-0"
             >
               <Download className="w-4 h-4 text-indigo-400" />
               Export Sales to CSV
@@ -117,7 +117,7 @@ export default function SalesHistoryPage() {
         {/* Invoices List Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[750px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Invoice #</th>

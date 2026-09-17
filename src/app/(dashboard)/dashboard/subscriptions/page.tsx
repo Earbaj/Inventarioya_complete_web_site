@@ -75,11 +75,11 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Subscription Plan & Billing Center" />
+      <DashboardHeader title="Shop Subscription & Cloud Tier" />
 
-      <main className="p-6 space-y-8 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-7xl">
         {/* Current Active Plan Card */}
-        <div className="rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-900 border border-indigo-500/40 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+        <div className="rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-900 border border-indigo-500/40 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
               ACTIVE PLAN
@@ -89,7 +89,7 @@ export default function SubscriptionsPage() {
               Validity: Next renewal on October 1, 2026 • 3 Store Branches • AI Analytics Enabled
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <p className="text-xl font-bold text-white">৳2,499 / mo</p>
             <p className="text-[11px] text-emerald-400 font-medium">Automatic Backups Active</p>
           </div>
@@ -188,7 +188,7 @@ export default function SubscriptionsPage() {
             )}
 
             <form onSubmit={handleSubmitManualPayment} className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">Payment Method</label>
                   <select

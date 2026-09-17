@@ -45,7 +45,7 @@ export default function AdminShopsPage() {
   );
 
   return (
-    <main className="p-8 space-y-6 max-w-7xl">
+    <main className="p-4 sm:p-8 space-y-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -57,7 +57,7 @@ export default function AdminShopsPage() {
               Back to Overview
             </Link>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Registered Merchant Directory
           </h1>
           <p className="text-xs text-slate-400">
@@ -65,7 +65,7 @@ export default function AdminShopsPage() {
           </p>
         </div>
 
-        <div className="relative w-72">
+        <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -80,7 +80,7 @@ export default function AdminShopsPage() {
       {/* Shops Table */}
       <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[750px] text-left text-xs">
             <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
               <tr>
                 <th className="py-3 px-4">Merchant / Shop</th>

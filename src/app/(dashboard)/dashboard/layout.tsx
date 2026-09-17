@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { AuthService } from "@/lib/api/client";
+import { SidebarProvider } from "@/context/SidebarContext";
 
 export default function DashboardLayout({
   children,
@@ -22,11 +23,13 @@ export default function DashboardLayout({
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        {children}
+    <SidebarProvider>
+      <div className="min-h-screen bg-slate-950 flex text-slate-100 relative">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+          {children}
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

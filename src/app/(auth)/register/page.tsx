@@ -47,7 +47,7 @@ export default function RegisterPage() {
           <p className="text-xs text-slate-400 mt-1">Get 14-day free access to Cloud POS & AI suite</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl relative z-10">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl relative z-10">
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
               {error}

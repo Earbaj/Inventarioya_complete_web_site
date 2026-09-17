@@ -142,10 +142,10 @@ export default function InventoryPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Inventory Catalog & Stock Control" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* Actions & Filters */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 max-w-md">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 max-w-xl">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -161,7 +161,7 @@ export default function InventoryPage() {
               aria-label="Filter by Category"
               value={selectedCat}
               onChange={(e) => setSelectedCat(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none"
+              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
             >
               <option value="ALL">All Categories</option>
               {categories.map((c) => (
@@ -172,10 +172,10 @@ export default function InventoryPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setShowImportModal(true)}
-              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
+              className="flex-1 sm:flex-initial justify-center px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
             >
               <Upload className="w-3.5 h-3.5 text-amber-400" />
               Import CSV
@@ -184,7 +184,7 @@ export default function InventoryPage() {
             {canExportExcel && (
               <button
                 onClick={handleExportCsv}
-                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
+                className="flex-1 sm:flex-initial justify-center px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
                 Export CSV
@@ -193,7 +193,7 @@ export default function InventoryPage() {
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
+              className="w-full sm:w-auto justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
             >
               <Plus className="w-4 h-4" />
               New Product
@@ -204,7 +204,7 @@ export default function InventoryPage() {
         {/* Product Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[750px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">SKU</th>
@@ -263,7 +263,7 @@ export default function InventoryPage() {
       {/* Add Product Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white">Add New Product to Inventory</h3>
               <button
@@ -402,7 +402,7 @@ export default function InventoryPage() {
       {/* CSV Import Modal */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-5 h-5 text-amber-400" />

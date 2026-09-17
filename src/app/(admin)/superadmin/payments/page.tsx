@@ -46,7 +46,7 @@ export default function AdminPendingPaymentsPage() {
   };
 
   return (
-    <main className="p-8 space-y-6 max-w-7xl">
+    <main className="p-4 sm:p-8 space-y-6 max-w-7xl">
       <div>
         <h1 className="text-xl font-bold text-white tracking-tight">
           Pending Subscription Payment Verifications
@@ -66,7 +66,7 @@ export default function AdminPendingPaymentsPage() {
       {/* Queue Table */}
       <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[750px] text-left text-xs">
             <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
               <tr>
                 <th className="py-3 px-4">Shop Name</th>

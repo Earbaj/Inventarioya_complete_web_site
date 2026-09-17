@@ -21,6 +21,7 @@ import {
   Sparkles,
   ArrowRight,
   Package,
+  X,
 } from "lucide-react";
 
 export default function PosTerminalPage() {
@@ -30,6 +31,7 @@ export default function PosTerminalPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   // Customer & Billing details
   const [customerName, setCustomerName] = useState("Walk-in Customer");
@@ -174,6 +176,7 @@ export default function PosTerminalPage() {
       setCustomerName("Walk-in Customer");
       setCustomerPhone("");
       setDiscountAmount(0);
+      setIsMobileCartOpen(false);
     } catch (err) {
       console.error("POS Checkout failed", err);
     } finally {
@@ -185,9 +188,9 @@ export default function PosTerminalPage() {
     <div className="flex-1 flex flex-col h-screen overflow-hidden">
       <DashboardHeader title="High-Speed Cloud POS Terminal" />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Left Side: Product Browser & Catalog */}
-        <div className="flex-1 flex flex-col p-4 overflow-hidden border-r border-slate-800">
+        <div className="flex-1 flex flex-col p-3 sm:p-4 overflow-hidden border-r border-slate-800 pb-20 lg:pb-4">
           {/* Search Bar & Barcode Scanner */}
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 relative">
@@ -280,11 +283,31 @@ export default function PosTerminalPage() {
           </div>
         </div>
 
+        {/* Mobile Cart Backdrop */}
+        {isMobileCartOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-slate-950/75 backdrop-blur-sm lg:hidden transition-opacity"
+            onClick={() => setIsMobileCartOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Right Side: Active Cart & Checkout Panel */}
-        <div className="w-96 bg-slate-900 flex flex-col h-full border-l border-slate-800 shadow-xl">
+        <div
+          className={`fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-slate-900 flex flex-col h-full border-l border-slate-800 shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+            isMobileCartOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+          }`}
+        >
           {/* Cart Header */}
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsMobileCartOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors"
+                aria-label="Close cart"
+              >
+                <X className="w-5 h-5" />
+              </button>
               <ShoppingCart className="w-4 h-4 text-emerald-400" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-white">
                 Active Register Cart ({cart.reduce((s, i) => s + i.cartQuantity, 0)})
@@ -452,6 +475,30 @@ export default function PosTerminalPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Bottom Cart Bar on Mobile */}
+      {cart.length > 0 && !isMobileCartOpen && (
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-30">
+          <button
+            onClick={() => setIsMobileCartOpen(true)}
+            className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white p-3.5 rounded-2xl shadow-2xl flex items-center justify-between border border-indigo-400/30 transition-all active:scale-95"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold text-xs">
+                {cart.reduce((s, i) => s + i.cartQuantity, 0)}
+              </div>
+              <div className="text-left">
+                <p className="text-xs font-semibold leading-tight">View Cart ({cart.length} items)</p>
+                <p className="text-[11px] text-indigo-200 font-mono">{formatCurrency(grandTotal)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold bg-white text-indigo-950 px-3.5 py-1.5 rounded-xl shadow">
+              <span>Review & Pay</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Thermal Receipt Print Modal */}
       {completedInvoice && (

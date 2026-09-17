@@ -17,7 +17,7 @@ export function LandingNavbar() {
           <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
             Inventarioya
           </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-medium">
+          <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-medium">
             Cloud POS & AI
           </span>
         </Link>

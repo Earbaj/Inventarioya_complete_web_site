@@ -82,7 +82,7 @@ export default function DashboardOverviewPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Store Analytics & Executive Overview" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* Primary Financial KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total Sales Revenue */}
@@ -284,13 +284,13 @@ export default function DashboardOverviewPage() {
         {/* Sales Trend Chart & AI Banner */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Revenue Chart */}
-          <div className="lg:col-span-2 p-6 rounded-2xl bg-slate-900 border border-slate-800">
-            <div className="flex items-center justify-between mb-4">
+          <div className="lg:col-span-2 p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-white">Weekly Sales Velocity</h3>
                 <p className="text-xs text-slate-400">Daily sales revenue trends across all branch checkouts</p>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-medium">
+              <span className="self-start sm:self-auto text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-medium">
                 Last 7 Days
               </span>
             </div>
@@ -336,7 +336,7 @@ export default function DashboardOverviewPage() {
           </div>
 
           {/* Quick AI & POS Action Widget */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-purple-950/40 border border-indigo-500/30 flex flex-col justify-between">
+          <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-purple-950/40 border border-indigo-500/30 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 text-purple-400 text-xs font-bold mb-2">
                 <Sparkles className="w-4 h-4" />
@@ -375,8 +375,8 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* Recent Invoices Table */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
               <h3 className="text-sm font-bold text-white">Recent POS Invoices</h3>
               <p className="text-xs text-slate-400">
@@ -392,7 +392,7 @@ export default function DashboardOverviewPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[700px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold">
                 <tr>
                   <th className="py-3 px-4">Invoice #</th>

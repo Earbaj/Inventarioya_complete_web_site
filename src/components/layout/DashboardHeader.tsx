@@ -10,20 +10,32 @@ import {
   CheckCircle,
   Sparkles,
   ExternalLink,
+  Menu,
 } from "lucide-react";
+import { useSidebar } from "@/context/SidebarContext";
 
 export function DashboardHeader({ title }: { title: string }) {
   const [selectedBranch, setSelectedBranch] = useState("Main Flagship (Dhanmondi)");
+  const { toggle } = useSidebar();
 
   return (
-    <header className="h-16 bg-slate-900 border-b border-slate-800 px-6 flex items-center justify-between sticky top-0 z-30">
-      <div>
-        <h1 className="text-lg font-bold text-white tracking-tight">{title}</h1>
+    <header className="h-16 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={toggle}
+          aria-label="Toggle navigation menu"
+          className="lg:hidden p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <h1 className="text-sm sm:text-base md:text-lg font-bold text-white tracking-tight truncate max-w-[170px] sm:max-w-xs md:max-w-none">
+          {title}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Branch Switcher */}
-        <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Branch Switcher (hidden on mobile, visible on tablet/desktop) */}
+        <div className="hidden md:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
           <Store className="w-3.5 h-3.5 text-indigo-400" />
           <select
             aria-label="Active Branch"

@@ -44,15 +44,15 @@ export default function BranchesPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <DashboardHeader title="Store Outlets & Branch Management" />
 
-      <main className="p-6 space-y-6 max-w-7xl">
-        <div className="flex items-center justify-between">
+      <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-white">Your Physical Outlets</h3>
             <p className="text-xs text-slate-400">Manage registers and localized inventories per branch</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4" />
             Add New Branch
@@ -60,7 +60,7 @@ export default function BranchesPage() {
         </div>
 
         {/* Branches Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {branches.map((br) => (
             <div
               key={br.id}
@@ -101,7 +101,7 @@ export default function BranchesPage() {
       {/* Add Branch Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white">Create New Branch Outlet</h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">

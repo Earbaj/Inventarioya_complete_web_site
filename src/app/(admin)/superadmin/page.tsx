@@ -52,7 +52,7 @@ export default function SuperAdminOverviewPage() {
   const conversionRate = totalShops > 0 ? Math.round((premiumShops / totalShops) * 100) : 0;
 
   return (
-    <main className="p-8 space-y-8 max-w-7xl">
+    <main className="p-4 sm:p-8 space-y-6 sm:space-y-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -61,7 +61,7 @@ export default function SuperAdminOverviewPage() {
               ROOT PLATFORM ADMIN
             </div>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             SuperAdmin Executive Dashboard
           </h1>
           <p className="text-xs text-slate-400">
@@ -69,17 +69,17 @@ export default function SuperAdminOverviewPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/superadmin/payments"
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
           >
             <Clock className="w-3.5 h-3.5" />
             Verification Queue ({pendingQueue})
           </Link>
           <Link
             href="/superadmin/shops"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
             <Store className="w-3.5 h-3.5 text-indigo-400" />
             Merchant Directory
