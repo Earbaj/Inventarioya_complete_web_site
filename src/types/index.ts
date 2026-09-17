@@ -133,29 +133,55 @@ export interface CartItem extends ProductItem {
   lineTotal: number;
 }
 
+export interface InvoiceItem {
+  productId?: string;
+  itemId?: string;
+  productName?: string;
+  name?: string;
+  quantity: number;
+  price?: number;
+  unitPrice?: number | string;
+  discount?: number | string;
+  discountType?: "amount" | "percentage" | string;
+  total?: number;
+  totalPrice?: number | string;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
+  invoiceNo?: string;
+  customerId?: string;
   customerName: string;
   customerPhone?: string;
-  items: {
-    productId: string;
-    productName: string;
-    quantity: number;
-    price: number;
-    total: number;
-  }[];
+  items: InvoiceItem[];
   subtotal: number;
+  originalSubtotal?: number | string;
   discount: number;
-  tax: number;
+  tax?: number;
   grandTotal: number;
+  originalGrandTotal?: number | string;
+  netGrandTotal?: number | string;
+  netTotal?: number;
+  totalRefunded?: number | string;
   paidAmount: number;
   dueAmount: number;
-  paymentMethod: "CASH" | "CARD" | "BKASH" | "NAGAD" | "BANK" | "DUE";
+  paymentMethod: "CASH" | "CARD" | "BKASH" | "NAGAD" | "BANK" | "DUE" | string;
+  paymentStatus?: "paid" | "due" | "partial" | string;
   cashierName: string;
+  createdByName?: string;
+  createdByRole?: string;
+  servedBy?: {
+    id?: string;
+    name?: string;
+    role?: string;
+  };
+  branchId?: string | null;
   branchName?: string;
   createdAt: string;
-  status: "PAID" | "PARTIAL" | "DUE" | "REFUNDED";
+  date?: string;
+  status: "PAID" | "PARTIAL" | "DUE" | "REFUNDED" | string;
+  isReturned?: "none" | "partial" | "full" | string;
 }
 
 export interface Expense {
@@ -316,3 +342,16 @@ export interface PaginatedCustomersResponse {
     hasPrevPage: boolean;
   };
 }
+
+export interface PaginatedSalesResponse {
+  data: Invoice[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+

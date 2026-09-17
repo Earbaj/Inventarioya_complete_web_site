@@ -49,10 +49,11 @@ export default function DashboardOverviewPage() {
         ]);
         console.log("📊 [Dashboard Stats Data Received]:", statsData);
         setStats(statsData);
+        const salesList = Array.isArray(salesData) ? salesData : salesData?.data || [];
         setRecentSales(
           statsData?.recentSales && statsData.recentSales.length > 0
             ? statsData.recentSales
-            : (salesData || []).slice(0, 7)
+            : salesList.slice(0, 7)
         );
       } catch (err) {
         console.error("❌ [Dashboard Page Failed to load data]:", err);

@@ -8,6 +8,7 @@ import {
   ProductItem,
   Category,
   Invoice,
+  InvoiceItem,
   Expense,
   Supplier,
   PurchaseOrder,
@@ -23,6 +24,7 @@ import {
   Shop,
   Customer,
   PaginatedCustomersResponse,
+  PaginatedSalesResponse,
 } from "@/types";
 
 // Token storage key
@@ -590,13 +592,157 @@ export const DashboardService = {
   },
 };
 
+export function normalizeInvoice(data: any): Invoice {
+  if (!data) return {} as Invoice;
+
+  const items: InvoiceItem[] = (data.items || []).map((i: any) => {
+    const qty = Number(i.quantity || 1);
+    const unitPrice = Number(i.unitPrice ?? i.price ?? i.sellingPrice ?? 0);
+    const discount = Number(i.discount ?? 0);
+    const lineTotal = Number(
+      i.totalPrice ?? i.total ?? (qty * unitPrice - discount)
+    );
+    const name = i.name || i.productName || "Item";
+    const pId = i.itemId || i.productId || i.id || "";
+
+    return {
+      productId: pId,
+      itemId: pId,
+      productName: name,
+      name: name,
+      quantity: qty,
+      price: unitPrice,
+      unitPrice: unitPrice,
+      discount: discount,
+      discountType: i.discountType || "amount",
+      total: lineTotal,
+      totalPrice: lineTotal,
+    };
+  });
+
+  const subtotal = Number(data.subtotal ?? data.originalSubtotal ?? 0);
+  const discount = Number(data.discount ?? 0);
+  const tax = Number(data.tax ?? 0);
+  const grandTotal = Number(data.grandTotal ?? data.netGrandTotal ?? data.netTotal ?? (subtotal - discount + tax));
+  const paidAmount = Number(data.paidAmount ?? 0);
+  const dueAmount = Number(data.dueAmount ?? Math.max(0, grandTotal - paidAmount));
+  const rawStatus = String(data.paymentStatus || data.status || "").toUpperCase();
+  const status: "PAID" | "PARTIAL" | "DUE" | "REFUNDED" =
+    rawStatus === "PAID"
+      ? "PAID"
+      : rawStatus === "PARTIAL"
+      ? "PARTIAL"
+      : rawStatus === "DUE"
+      ? "DUE"
+      : rawStatus === "REFUNDED" || data.isReturned === "full"
+      ? "REFUNDED"
+      : dueAmount <= 0
+      ? "PAID"
+      : paidAmount > 0
+      ? "PARTIAL"
+      : "DUE";
+
+  const cashier =
+    data.createdByName ||
+    data.servedBy?.name ||
+    data.cashierName ||
+    "Earbaj";
+
+  const dateStr = data.date || data.createdAt || new Date().toISOString();
+
+  return {
+    id: data.id || "inv_" + Date.now(),
+    invoiceNumber: data.invoiceNumber || data.invoiceNo || "INV-" + Date.now(),
+    invoiceNo: data.invoiceNo || data.invoiceNumber,
+    customerId: data.customerId || "walk-in",
+    customerName: data.customerName || "Walk-in Customer",
+    customerPhone: data.customerPhone || "",
+    items,
+    subtotal,
+    originalSubtotal: data.originalSubtotal ?? subtotal,
+    discount,
+    tax,
+    grandTotal,
+    originalGrandTotal: data.originalGrandTotal ?? grandTotal,
+    netGrandTotal: data.netGrandTotal ?? grandTotal,
+    netTotal: Number(data.netTotal ?? grandTotal),
+    totalRefunded: Number(data.totalRefunded ?? 0),
+    paidAmount,
+    dueAmount,
+    paymentMethod: data.paymentMethod || (dueAmount === grandTotal && paidAmount === 0 ? "DUE" : "CASH"),
+    paymentStatus: (data.paymentStatus || status).toLowerCase(),
+    cashierName: cashier,
+    createdByName: data.createdByName || cashier,
+    createdByRole: data.createdByRole || data.servedBy?.role || "admin",
+    servedBy: data.servedBy || {
+      id: data.createdBy,
+      name: cashier,
+      role: data.createdByRole || "admin",
+    },
+    branchId: data.branchId || null,
+    branchName: data.branchName || "",
+    isReturned: data.isReturned || "none",
+    createdAt: dateStr,
+    date: dateStr,
+    status,
+  };
+}
+
 export const SalesService = {
-  async getSales(): Promise<Invoice[]> {
+  async getSales(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<PaginatedSalesResponse> {
     try {
-      const res = await apiClient.get(ApiEndpoints.sales);
-      return res.data?.data || res.data || mockInvoices;
+      const res = await apiClient.get(ApiEndpoints.sales, {
+        params: {
+          page: params?.page || 1,
+          limit: params?.limit || 50,
+          search: params?.search || undefined,
+          status: params?.status && params.status !== "ALL" ? params.status.toLowerCase() : undefined,
+          startDate: params?.startDate || undefined,
+          endDate: params?.endDate || undefined,
+        },
+      });
+
+      const rawList = res.data?.data && Array.isArray(res.data.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : mockInvoices;
+
+      const normalizedData = rawList.map(normalizeInvoice);
+
+      const meta = res.data?.meta || {
+        total: normalizedData.length,
+        page: params?.page || 1,
+        limit: params?.limit || 50,
+        totalPages: Math.ceil(normalizedData.length / (params?.limit || 50)) || 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      };
+
+      return {
+        data: normalizedData,
+        meta,
+      };
     } catch {
-      return mockInvoices;
+      const normalizedData = mockInvoices.map(normalizeInvoice);
+      return {
+        data: normalizedData,
+        meta: {
+          total: normalizedData.length,
+          page: 1,
+          limit: params?.limit || 50,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
     }
   },
 
@@ -626,32 +772,7 @@ export const SalesService = {
 
       const res = await apiClient.post(ApiEndpoints.sales, payload);
       const data = res.data;
-
-      const normalizedInvoice: Invoice = {
-        id: data.id || "inv_" + Date.now(),
-        invoiceNumber: data.invoiceNumber || data.invoiceNo || "INV-" + Date.now(),
-        customerName: data.customerName || saleData.customerName || "Walk-in Customer",
-        customerPhone: data.customerPhone || saleData.customerPhone || "",
-        items: (data.items || formattedItems).map((i: any) => ({
-          productId: i.itemId || i.productId || i.id,
-          productName: i.name || i.productName || "Product",
-          quantity: Number(i.quantity || 1),
-          price: Number(i.unitPrice ?? i.price ?? 0),
-          total: Number(i.totalPrice ?? i.total ?? (Number(i.quantity || 1) * Number(i.unitPrice ?? i.price ?? 0))),
-        })),
-        subtotal: Number(data.subtotal || saleData.subtotal || 0),
-        discount: Number(data.discount || saleData.discount || 0),
-        tax: Number(data.tax || saleData.tax || 0),
-        grandTotal: Number(data.grandTotal || data.netGrandTotal || saleData.grandTotal || 0),
-        paidAmount: Number(data.paidAmount ?? saleData.paidAmount ?? 0),
-        dueAmount: Number(data.dueAmount ?? saleData.dueAmount ?? 0),
-        paymentMethod: (data.paymentMethod || saleData.paymentMethod || "CASH") as any,
-        cashierName: data.createdByName || data.servedBy?.name || saleData.cashierName || "Active Cashier",
-        createdAt: data.date || data.createdAt || new Date().toISOString(),
-        status: (data.paymentStatus ? data.paymentStatus.toUpperCase() : (Number(data.dueAmount || 0) > 0 ? (Number(data.paidAmount || 0) > 0 ? "PARTIAL" : "DUE") : "PAID")) as any,
-      };
-
-      return normalizedInvoice;
+      return normalizeInvoice({ ...payload, ...data });
     } catch (error: any) {
       const errMsg = error.response?.data?.message;
       if (errMsg) {
