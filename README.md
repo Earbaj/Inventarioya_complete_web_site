@@ -2,8 +2,9 @@
 
 A modern, full-stack Next.js SaaS Web Application and POS platform built for retail businesses, supermarkets, and multi-branch chains, fully synchronized with the Android Mobile App on Google Play Store.
 
-## 🚀 Live Backend Integration
+## 🚀 Live Backend & Mobile App Integration
 
+- **Google Play Store App**: [Inventarioya on Google Play](https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share)
 - **Base REST API URL**: `https://inventory-web-backend-c0fu.onrender.com`
 - **Frontend Framework**: Next.js 14 (App Router) + TypeScript + Tailwind CSS + Lucide Icons + Recharts
 

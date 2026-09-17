@@ -30,12 +30,17 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           {/* Play store announcement badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-6 animate-pulse">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-6 transition-colors group cursor-pointer"
+          >
             <Smartphone className="w-3.5 h-3.5" />
             <span>Mobile App Live on Google Play Store</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span className="text-slate-400">Synchronized with Web POS</span>
-          </div>
+            <span className="text-slate-400 group-hover:text-slate-200">Get App &rarr;</span>
+          </a>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight sm:leading-none">
             Smart Cloud POS & <br />
@@ -208,9 +213,9 @@ export default function LandingPage() {
               </p>
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <a
-                  href="https://play.google.com"
+                  href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="px-5 py-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-700 text-white flex items-center gap-3 shadow-lg transition-colors"
                 >
                   <div className="w-6 h-6 text-emerald-400">

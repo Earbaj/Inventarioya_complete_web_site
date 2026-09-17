@@ -31,10 +31,15 @@ export function LandingNavbar() {
             Gemini AI
           </Link>
           <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-          <Link href="/#mobile-app" className="hover:text-white transition-colors flex items-center gap-1 text-emerald-400">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-emerald-300 transition-colors flex items-center gap-1 text-emerald-400"
+          >
             <Smartphone className="w-4 h-4" />
             Play Store App
-          </Link>
+          </a>
         </nav>
 
         {/* CTA Buttons */}
@@ -72,6 +77,16 @@ export function LandingNavbar() {
           <Link href="/#pos" onClick={() => setIsOpen(false)} className="block text-slate-300 py-1.5">Cloud POS</Link>
           <Link href="/#ai" onClick={() => setIsOpen(false)} className="block text-indigo-400 py-1.5">Gemini AI Intelligence</Link>
           <Link href="/pricing" onClick={() => setIsOpen(false)} className="block text-slate-300 py-1.5">Pricing</Link>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-1 text-emerald-400 py-1.5"
+          >
+            <Smartphone className="w-4 h-4" />
+            Download Android App
+          </a>
           <div className="pt-4 border-t border-slate-800 flex flex-col gap-2">
             <Link href="/login" className="w-full text-center py-2.5 rounded-lg text-slate-200 bg-slate-800 text-sm font-medium">Sign In</Link>
             <Link href="/register" className="w-full text-center py-2.5 rounded-lg text-white bg-indigo-600 text-sm font-medium">Start Free Trial</Link>

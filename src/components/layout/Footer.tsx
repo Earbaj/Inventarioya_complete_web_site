@@ -15,10 +15,15 @@ export function Footer() {
           <p className="text-xs text-slate-400 leading-relaxed">
             Next-generation enterprise retail management, fast cloud POS, multi-branch inventory, and predictive Gemini AI analytics.
           </p>
-          <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg w-fit">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 px-3 py-1.5 rounded-lg w-fit transition-colors"
+          >
             <Smartphone className="w-4 h-4" />
             <span>Published on Google Play Store</span>
-          </div>
+          </a>
         </div>
 
         <div>
