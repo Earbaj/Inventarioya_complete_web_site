@@ -38,10 +38,12 @@ export default function DashboardOverviewPage() {
   useEffect(() => {
     async function loadStats() {
       try {
+        console.log("Fetching /api/dashboard/stats...");
         const data = await DashboardService.getStats();
+        console.log("📊 [Dashboard Page Received Stats Data]:", data);
         setStats(data);
       } catch (err) {
-        console.error("Failed to load dashboard statistics", err);
+        console.error("❌ [Dashboard Page Failed to load stats]:", err);
       } finally {
         setLoading(false);
       }

@@ -26,33 +26,136 @@ import {
 const TOKEN_KEY = "inventarioya_auth_token";
 const USER_KEY = "inventarioya_user";
 
+export interface ApiLogEntry {
+  id: string;
+  timestamp: string;
+  method: string;
+  url: string;
+  status?: number;
+  requestHeaders?: any;
+  requestData?: any;
+  responseData?: any;
+  error?: string;
+  durationMs?: number;
+}
+
+export const apiLogs: ApiLogEntry[] = [];
+const logListeners: ((logs: ApiLogEntry[]) => void)[] = [];
+
+export function subscribeToApiLogs(listener: (logs: ApiLogEntry[]) => void) {
+  logListeners.push(listener);
+  listener([...apiLogs]);
+  return () => {
+    const idx = logListeners.indexOf(listener);
+    if (idx !== -1) logListeners.splice(idx, 1);
+  };
+}
+
+function notifyLogListeners() {
+  logListeners.forEach((fn) => fn([...apiLogs]));
+}
+
 // Create Axios Instance
 export const apiClient: AxiosInstance = axios.create({
   baseURL: ApiEndpoints.baseUrl,
-  timeout: 15000,
+  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request Interceptor: Attach Bearer token
+// Request Interceptor: Attach Bearer token & Log Request
 apiClient.interceptors.request.use(
   (config) => {
+    (config as any).__startTime = Date.now();
     if (typeof window !== "undefined") {
       const token = localStorage.getItem(TOKEN_KEY);
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+
+    console.log(
+      `%c🚀 [API REQUEST] ${config.method?.toUpperCase()} ${config.url}`,
+      "background: #4f46e5; color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px;",
+      {
+        url: config.url,
+        method: config.method,
+        headers: config.headers,
+        data: config.data,
+        params: config.params,
+      }
+    );
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("%c[API REQUEST SETUP ERROR]", "background: #ef4444; color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px;", error);
+    return Promise.reject(error);
+  }
 );
 
-// Response Interceptor: Handle 401 Unauthorized
+// Response Interceptor: Log Response & notify listeners
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const durationMs = Date.now() - ((response.config as any).__startTime || Date.now());
+
+    console.log(
+      `%c✅ [API RESPONSE SUCCESS] ${response.config.method?.toUpperCase()} ${response.config.url} (${response.status}) [${durationMs}ms]`,
+      "background: #10b981; color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px;",
+      response.data
+    );
+    console.log("Response JSON String:", JSON.stringify(response.data, null, 2));
+
+    const entry: ApiLogEntry = {
+      id: "log_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+      timestamp: new Date().toLocaleTimeString(),
+      method: response.config.method?.toUpperCase() || "GET",
+      url: response.config.url || "",
+      status: response.status,
+      requestData: response.config.data,
+      responseData: response.data,
+      durationMs,
+    };
+    apiLogs.unshift(entry);
+    if (apiLogs.length > 60) apiLogs.pop();
+    notifyLogListeners();
+
+    return response;
+  },
   (error) => {
+    const durationMs = Date.now() - ((error.config as any)?.__startTime || Date.now());
+
+    console.error(
+      `%c❌ [API RESPONSE ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url} (${error.response?.status || "NO_RESPONSE"}) [${durationMs}ms]`,
+      "background: #ef4444; color: white; font-weight: bold; padding: 2px 8px; border-radius: 4px;",
+      {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        message: error.message,
+        responseData: error.response?.data,
+      }
+    );
+    if (error.response?.data) {
+      console.error("Error Response JSON String:", JSON.stringify(error.response.data, null, 2));
+    }
+
+    const entry: ApiLogEntry = {
+      id: "log_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+      timestamp: new Date().toLocaleTimeString(),
+      method: error.config?.method?.toUpperCase() || "GET",
+      url: error.config?.url || "",
+      status: error.response?.status || 0,
+      requestData: error.config?.data,
+      responseData: error.response?.data,
+      error: error.message,
+      durationMs,
+    };
+    apiLogs.unshift(entry);
+    if (apiLogs.length > 60) apiLogs.pop();
+    notifyLogListeners();
+
     if (error.response && error.response.status === 401) {
       if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
         // Optional auto-logout on expired session
