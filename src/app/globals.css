@@ -31,13 +31,15 @@
   background: rgba(99, 102, 241, 0.6);
 }
 
-/* Thermal POS Receipt Print Styles */
+/* Print Styles for Receipts and Ledger Reports */
 @media print {
   body * {
     visibility: hidden;
   }
   #thermal-receipt,
-  #thermal-receipt * {
+  #thermal-receipt *,
+  #printable-customer-report,
+  #printable-customer-report * {
     visibility: visible;
   }
   #thermal-receipt {
@@ -54,8 +56,28 @@
     line-height: 1.2 !important;
     font-family: 'Courier New', Courier, monospace !important;
   }
+  #printable-customer-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    padding: 10mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  #printable-customer-report table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  #printable-customer-report tr {
+    page-break-inside: avoid;
+  }
   @page {
-    size: 80mm auto;
-    margin: 0;
+    size: auto;
+    margin: 8mm;
   }
 }
+
