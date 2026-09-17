@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ShieldAlert,
   LayoutDashboard,
   Building2,
   CreditCard,
-  ArrowLeft,
   LogOut,
-  Boxes,
 } from "lucide-react";
 import { AuthService } from "@/lib/api/client";
 
@@ -20,11 +18,18 @@ export default function SuperAdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    setUser(AuthService.getCurrentUser());
-  }, []);
+    const currentUser = AuthService.getCurrentUser();
+    setUser(currentUser);
+    if (!currentUser) {
+      router.push("/login");
+    } else if (currentUser.role?.toLowerCase() !== "superadmin") {
+      router.push("/dashboard");
+    }
+  }, [router]);
 
   const navItems = [
     { name: "Platform Metrics", href: "/superadmin", icon: LayoutDashboard },
@@ -71,17 +76,9 @@ export default function SuperAdminLayout({
           })}
         </div>
 
-        {/* Sidebar Footer with Return to Dashboard & Logout */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950/40 space-y-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-indigo-400 hover:bg-slate-800/60 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Shop Dashboard</span>
-          </Link>
-
-          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between px-2">
+        {/* Sidebar Footer with Logout only */}
+        <div className="p-3 border-t border-slate-800 bg-slate-950/40">
+          <div className="flex items-center justify-between px-2 py-1">
             <div className="truncate">
               <p className="text-xs font-bold text-white truncate">
                 {user?.name || "SuperAdmin"}

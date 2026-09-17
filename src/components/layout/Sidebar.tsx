@@ -18,9 +18,7 @@ import {
   Trash2,
   CreditCard,
   Settings,
-  ShieldAlert,
   LogOut,
-  ChevronRight,
   Lock,
   Sparkles,
 } from "lucide-react";
@@ -41,7 +39,6 @@ export function Sidebar() {
   const tier = (user?.subscriptionTier || "free").toLowerCase();
   const isFreeTier = tier === "free";
   const isManager = role === "manager";
-  const isSuperAdmin = role === "superadmin";
 
   // Free Tier Restricted Feature Keys
   const isFeatureRestrictedByPlan = (href: string) => {
@@ -209,22 +206,6 @@ export function Sidebar() {
             })}
           </nav>
         </div>
-
-        {/* SuperAdmin Link (only for superadmin role) */}
-        {isSuperAdmin && (
-          <div className="pt-2 border-t border-slate-800">
-            <Link
-              href="/superadmin"
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-amber-400 hover:bg-amber-500/10 transition-colors"
-            >
-              <div className="flex items-center gap-2.5">
-                <ShieldAlert className="w-4 h-4" />
-                <span>SuperAdmin Portal</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        )}
       </div>
 
       {/* Footer User Info & Logout */}

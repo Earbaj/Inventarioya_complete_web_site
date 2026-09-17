@@ -43,7 +43,6 @@ export function Footer() {
             <li><Link href="/login" className="hover:text-indigo-400">Shop Admin Login</Link></li>
             <li><Link href="/register" className="hover:text-indigo-400">Register Shop Owner</Link></li>
             <li><Link href="/pricing" className="hover:text-indigo-400">Subscription Plans</Link></li>
-            <li><Link href="/superadmin" className="hover:text-indigo-400">SuperAdmin Gateway</Link></li>
             <li><Link href="/dashboard/trash" className="hover:text-indigo-400">Data Recovery Bin</Link></li>
           </ul>
         </div>
