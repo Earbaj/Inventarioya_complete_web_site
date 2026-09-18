@@ -857,21 +857,23 @@ export const InventoryService = {
 
   async createProduct(payload: Partial<ProductItem>): Promise<ProductItem> {
     try {
+      const sellPrice = Math.max(0, Number(payload.sellingPrice ?? (payload as any).sellPrice) || 0);
+      const buyPrice = Math.max(0, Number(payload.costPrice ?? (payload as any).buyPrice) || 0);
+      const stockQuantity = Math.max(0, Number(payload.stockQuantity) || 0);
+      const lowStockThreshold = Math.max(0, Number(payload.minStockAlert ?? (payload as any).lowStockThreshold) || 5);
+      const reorderLevel = Math.max(0, Number(payload.minStockAlert ?? (payload as any).reorderLevel) || 5);
+
       const backendPayload = {
         name: payload.name,
         sku: payload.sku || "",
         code: payload.sku || "",
         category: payload.categoryName || (payload as any).category || "General",
-        sellPrice: String(payload.sellingPrice ?? 0),
-        buyPrice: String(payload.costPrice ?? 0),
-        stockQuantity: Number(payload.stockQuantity ?? 0),
+        sellPrice,
+        buyPrice,
+        stockQuantity,
         unit: payload.unit || "Piece",
-        lowStockThreshold: Number(payload.minStockAlert ?? 5),
-        reorderLevel: Number(payload.minStockAlert ?? 5),
-        costPrice: payload.costPrice,
-        sellingPrice: payload.sellingPrice,
-        categoryName: payload.categoryName,
-        minStockAlert: payload.minStockAlert,
+        lowStockThreshold,
+        reorderLevel,
       };
       const res = await apiClient.post(ApiEndpoints.items, backendPayload);
       const raw = res.data?.data || res.data;
@@ -880,31 +882,27 @@ export const InventoryService = {
         id: raw.id || "prod_" + Date.now(),
         name: raw.name || payload.name,
         sku: raw.sku || raw.code || payload.sku || "SKU-NEW",
-        costPrice: Number(raw.buyPrice ?? raw.costPrice ?? payload.costPrice ?? 0),
-        sellingPrice: Number(raw.sellPrice ?? raw.sellingPrice ?? payload.sellingPrice ?? 0),
-        stockQuantity: Number(raw.stockQuantity ?? payload.stockQuantity ?? 0),
-        minStockAlert: Number(raw.lowStockThreshold ?? raw.minStockAlert ?? 5),
+        costPrice: Number(raw.buyPrice ?? raw.costPrice ?? buyPrice),
+        sellingPrice: Number(raw.sellPrice ?? raw.sellingPrice ?? sellPrice),
+        stockQuantity: Number(raw.stockQuantity ?? stockQuantity),
+        minStockAlert: Number(raw.lowStockThreshold ?? raw.reorderLevel ?? lowStockThreshold),
         unit: raw.unit || payload.unit || "Piece",
         categoryName: categoryName,
         category: categoryName,
         isLowStock: Boolean(
           raw.isLowStock ??
-            Number(raw.stockQuantity ?? payload.stockQuantity ?? 0) <=
-              Number(raw.lowStockThreshold ?? raw.minStockAlert ?? 5)
+            Number(raw.stockQuantity ?? stockQuantity) <=
+              Number(raw.lowStockThreshold ?? lowStockThreshold)
         ),
       };
-    } catch {
-      return {
-        id: "prod_" + Date.now(),
-        name: payload.name || "Unnamed Item",
-        sku: payload.sku || "SKU-" + Math.floor(1000 + Math.random() * 9000),
-        costPrice: payload.costPrice || 0,
-        sellingPrice: payload.sellingPrice || 0,
-        stockQuantity: payload.stockQuantity || 0,
-        minStockAlert: payload.minStockAlert || 5,
-        unit: payload.unit || "Piece",
-        categoryName: payload.categoryName || "General",
-      };
+    } catch (error: any) {
+      console.error("Failed to create product:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 
@@ -921,17 +919,23 @@ export const InventoryService = {
 
   async updateProduct(id: string, payload: Partial<ProductItem>): Promise<ProductItem> {
     try {
+      const sellPrice = Math.max(0, Number(payload.sellingPrice ?? (payload as any).sellPrice) || 0);
+      const buyPrice = Math.max(0, Number(payload.costPrice ?? (payload as any).buyPrice) || 0);
+      const stockQuantity = Math.max(0, Number(payload.stockQuantity) || 0);
+      const lowStockThreshold = Math.max(0, Number(payload.minStockAlert ?? (payload as any).lowStockThreshold) || 5);
+      const reorderLevel = Math.max(0, Number(payload.minStockAlert ?? (payload as any).reorderLevel) || 5);
+
       const backendPayload: any = {
         name: payload.name,
-        sku: payload.sku || payload.code || "",
-        code: payload.code || payload.sku || "",
-        category: payload.category || payload.categoryName || "General",
-        sellPrice: String(payload.sellingPrice ?? payload.sellPrice ?? 0),
-        buyPrice: String(payload.costPrice ?? payload.buyPrice ?? 0),
-        stockQuantity: Number(payload.stockQuantity ?? 0),
+        sku: payload.sku || (payload as any).code || "",
+        code: (payload as any).code || payload.sku || "",
+        category: (payload as any).category || payload.categoryName || "General",
+        sellPrice,
+        buyPrice,
+        stockQuantity,
         unit: payload.unit || "Piece",
-        lowStockThreshold: Number(payload.minStockAlert ?? payload.lowStockThreshold ?? 5),
-        reorderLevel: Number(payload.minStockAlert ?? payload.reorderLevel ?? 5),
+        lowStockThreshold,
+        reorderLevel,
       };
 
       let res;
@@ -943,10 +947,10 @@ export const InventoryService = {
 
       const raw = res.data?.data || res.data || {};
       const categoryName = raw.category || raw.categoryName || payload.categoryName || payload.category || "General";
-      const costPrice = Number(raw.buyPrice ?? raw.costPrice ?? payload.costPrice ?? 0);
-      const sellingPrice = Number(raw.sellPrice ?? raw.sellingPrice ?? payload.sellingPrice ?? 0);
-      const stockQuantity = Number(raw.stockQuantity ?? payload.stockQuantity ?? 0);
-      const minStockAlert = Number(raw.lowStockThreshold ?? raw.reorderLevel ?? raw.minStockAlert ?? payload.minStockAlert ?? 5);
+      const costPrice = Number(raw.buyPrice ?? raw.costPrice ?? buyPrice);
+      const sellingPrice = Number(raw.sellPrice ?? raw.sellingPrice ?? sellPrice);
+      const updatedStockQuantity = Number(raw.stockQuantity ?? stockQuantity);
+      const minStockAlert = Number(raw.lowStockThreshold ?? raw.reorderLevel ?? lowStockThreshold);
 
       return {
         id: raw.id || id,
@@ -955,13 +959,13 @@ export const InventoryService = {
         code: raw.code || raw.sku || payload.code || "",
         costPrice,
         sellingPrice,
-        stockQuantity,
+        stockQuantity: updatedStockQuantity,
         minStockAlert,
         lowStockThreshold: minStockAlert,
         unit: raw.unit || payload.unit || "Piece",
         categoryName,
         category: categoryName,
-        isLowStock: raw.isLowStock !== undefined ? Boolean(raw.isLowStock) : stockQuantity <= minStockAlert,
+        isLowStock: raw.isLowStock !== undefined ? Boolean(raw.isLowStock) : updatedStockQuantity <= minStockAlert,
       };
     } catch (error: any) {
       console.error("Failed to update product:", error);
