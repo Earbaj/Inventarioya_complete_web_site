@@ -918,6 +918,76 @@ export const InventoryService = {
       return { success: true, importedCount: 15, message: "15 items imported successfully into inventory." };
     }
   },
+
+  async updateProduct(id: string, payload: Partial<ProductItem>): Promise<ProductItem> {
+    try {
+      const backendPayload: any = {
+        name: payload.name,
+        sku: payload.sku || payload.code || "",
+        code: payload.code || payload.sku || "",
+        category: payload.category || payload.categoryName || "General",
+        sellPrice: String(payload.sellingPrice ?? payload.sellPrice ?? 0),
+        buyPrice: String(payload.costPrice ?? payload.buyPrice ?? 0),
+        stockQuantity: Number(payload.stockQuantity ?? 0),
+        unit: payload.unit || "Piece",
+        lowStockThreshold: Number(payload.minStockAlert ?? payload.lowStockThreshold ?? 5),
+        reorderLevel: Number(payload.minStockAlert ?? payload.reorderLevel ?? 5),
+      };
+
+      let res;
+      try {
+        res = await apiClient.put(ApiEndpoints.itemById(id), backendPayload);
+      } catch {
+        res = await apiClient.patch(ApiEndpoints.itemById(id), backendPayload);
+      }
+
+      const raw = res.data?.data || res.data || {};
+      const categoryName = raw.category || raw.categoryName || payload.categoryName || payload.category || "General";
+      const costPrice = Number(raw.buyPrice ?? raw.costPrice ?? payload.costPrice ?? 0);
+      const sellingPrice = Number(raw.sellPrice ?? raw.sellingPrice ?? payload.sellingPrice ?? 0);
+      const stockQuantity = Number(raw.stockQuantity ?? payload.stockQuantity ?? 0);
+      const minStockAlert = Number(raw.lowStockThreshold ?? raw.reorderLevel ?? raw.minStockAlert ?? payload.minStockAlert ?? 5);
+
+      return {
+        id: raw.id || id,
+        name: raw.name || payload.name || "Unnamed Item",
+        sku: raw.sku || raw.code || payload.sku || "SKU-ITEM",
+        code: raw.code || raw.sku || payload.code || "",
+        costPrice,
+        sellingPrice,
+        stockQuantity,
+        minStockAlert,
+        lowStockThreshold: minStockAlert,
+        unit: raw.unit || payload.unit || "Piece",
+        categoryName,
+        category: categoryName,
+        isLowStock: raw.isLowStock !== undefined ? Boolean(raw.isLowStock) : stockQuantity <= minStockAlert,
+      };
+    } catch (error: any) {
+      console.error("Failed to update product:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  async deleteProduct(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete(ApiEndpoints.itemById(id));
+      return true;
+    } catch (error: any) {
+      console.error("Failed to delete product:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
 };
 
 export const CustomerService = {
