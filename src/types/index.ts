@@ -205,17 +205,32 @@ export interface Supplier {
   totalBalanceDue: number;
 }
 
+export interface PurchaseOrderItem {
+  id?: string;
+  itemId: string;
+  name: string;
+  quantity: number;
+  buyPrice: number;
+  totalPrice: number;
+}
+
 export interface PurchaseOrder {
   id: string;
   poNumber: string;
   supplierId: string;
   supplierName: string;
+  supplierCompany?: string;
   orderDate: string;
+  date?: string;
   deliveryDate?: string;
   totalCost: number;
+  totalAmount?: number;
   paidAmount: number;
-  status: "PENDING" | "RECEIVED" | "CANCELLED";
+  dueAmount?: number;
+  status: "PENDING" | "RECEIVED" | "CANCELLED" | string;
   itemsCount: number;
+  items?: PurchaseOrderItem[];
+  note?: string;
 }
 
 export interface Branch {

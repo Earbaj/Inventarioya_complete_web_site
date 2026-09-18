@@ -12,6 +12,7 @@ import {
   Expense,
   Supplier,
   PurchaseOrder,
+  PurchaseOrderItem,
   Branch,
   StaffMember,
   SubscriptionPackage,
@@ -1111,11 +1112,71 @@ export const ExpensesService = {
   },
 };
 
+function formatPurchaseOrder(raw: any): PurchaseOrder {
+  const rawItems = raw.items || [];
+  const items: PurchaseOrderItem[] = rawItems.map((i: any) => ({
+    id: i.id,
+    itemId: i.itemId || i.id,
+    name: i.name || i.itemName || "Item",
+    quantity: Number(i.quantity ?? 0),
+    buyPrice: Number(i.buyPrice ?? 0),
+    totalPrice: Number(i.totalPrice ?? (Number(i.quantity ?? 0) * Number(i.buyPrice ?? 0))),
+  }));
+
+  const totalCost = Number(raw.totalAmount ?? raw.totalCost ?? 0);
+  const paidAmount = Number(raw.paidAmount ?? 0);
+  const dueAmount = Number(raw.dueAmount ?? Math.max(0, totalCost - paidAmount));
+  const rawStatus = (raw.status || "received").toString().toUpperCase();
+
+  return {
+    id: raw.id || "po_" + Date.now(),
+    poNumber: raw.poNumber || "PO-" + new Date().getFullYear(),
+    supplierId: raw.supplierId || "",
+    supplierName: raw.supplierName || (raw.supplierCompany ? `${raw.supplierCompany} (${raw.supplierName})` : "Supplier"),
+    supplierCompany: raw.supplierCompany,
+    orderDate: raw.date ? new Date(raw.date).toISOString().split("T")[0] : (raw.orderDate || new Date().toISOString().split("T")[0]),
+    date: raw.date,
+    deliveryDate: raw.deliveryDate,
+    totalCost,
+    totalAmount: totalCost,
+    paidAmount,
+    dueAmount,
+    status: rawStatus,
+    itemsCount: items.length > 0 ? items.length : Number(raw.itemsCount ?? 1),
+    items,
+    note: raw.note || "",
+  };
+}
+
+function formatSupplier(raw: any): Supplier {
+  return {
+    id: raw.id || "sup_" + Date.now(),
+    name: raw.name || "Supplier",
+    companyName: raw.companyName || raw.company || raw.name || "Vendor",
+    phone: raw.phone || "",
+    email: raw.email || "",
+    address: raw.address || "",
+    totalBalanceDue: Number(
+      raw.totalBalanceDue ??
+      raw.balanceDue ??
+      raw.dueAmount ??
+      raw.due ??
+      raw.balance ??
+      raw.totalDue ??
+      0
+    ),
+  };
+}
+
 export const SuppliersService = {
   async getSuppliers(): Promise<Supplier[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.suppliers);
-      return res.data?.data || res.data || mockSuppliers;
+      const list = res.data?.data || res.data;
+      if (Array.isArray(list)) {
+        return list.map(formatSupplier);
+      }
+      return mockSuppliers;
     } catch {
       return mockSuppliers;
     }
@@ -1124,24 +1185,26 @@ export const SuppliersService = {
   async createSupplier(payload: Partial<Supplier>): Promise<Supplier> {
     try {
       const res = await apiClient.post(ApiEndpoints.suppliers, payload);
-      return res.data;
-    } catch {
-      return {
-        id: "sup_" + Date.now(),
-        name: payload.name || "",
-        companyName: payload.companyName || "",
-        phone: payload.phone || "",
-        email: payload.email,
-        address: payload.address,
-        totalBalanceDue: 0,
-      };
+      return res.data?.data || res.data;
+    } catch (error: any) {
+      console.error("Failed to create supplier:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 
   async getPurchaseOrders(): Promise<PurchaseOrder[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.purchaseOrders);
-      return res.data?.data || res.data || mockPurchaseOrders;
+      const list = res.data?.data || res.data;
+      if (Array.isArray(list)) {
+        return list.map(formatPurchaseOrder);
+      }
+      return mockPurchaseOrders;
     } catch {
       return mockPurchaseOrders;
     }
@@ -1149,20 +1212,32 @@ export const SuppliersService = {
 
   async createPurchaseOrder(payload: any): Promise<PurchaseOrder> {
     try {
-      const res = await apiClient.post(ApiEndpoints.purchaseOrders, payload);
-      return res.data;
-    } catch {
-      return {
-        id: "po_" + Date.now(),
-        poNumber: "PO-" + new Date().getFullYear() + "-" + Math.floor(100 + Math.random() * 900),
-        supplierId: payload.supplierId || "sup_1",
-        supplierName: payload.supplierName || "Supplier",
-        orderDate: new Date().toISOString().split("T")[0],
-        totalCost: payload.totalCost || 0,
-        paidAmount: payload.paidAmount || 0,
-        status: "PENDING",
-        itemsCount: payload.itemsCount || 1,
+      const backendPayload = {
+        supplierId: payload.supplierId,
+        date: payload.date || new Date().toISOString(),
+        totalAmount: Number(payload.totalAmount ?? payload.totalCost ?? 0),
+        paidAmount: Number(payload.paidAmount ?? 0),
+        status: payload.status || "received",
+        note: payload.note || "",
+        items: (payload.items || []).map((item: any) => ({
+          itemId: item.itemId,
+          name: item.name,
+          quantity: Number(item.quantity ?? 1),
+          buyPrice: Number(item.buyPrice ?? 0),
+          totalPrice: Number(item.totalPrice ?? (Number(item.quantity ?? 1) * Number(item.buyPrice ?? 0))),
+        })),
       };
+      const res = await apiClient.post(ApiEndpoints.purchaseOrders, backendPayload);
+      const raw = res.data?.data || res.data;
+      return formatPurchaseOrder(raw);
+    } catch (error: any) {
+      console.error("Failed to create purchase order:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 };
