@@ -63,10 +63,15 @@ html:not(.dark) .bg-slate-950 {
   background-color: #f8fafc !important;
 }
 
+html:not(.dark) .bg-slate-950\/95,
+html:not(.dark) .bg-slate-950\/90,
+html:not(.dark) .bg-slate-950\/85,
+html:not(.dark) .bg-slate-950\/80,
+html:not(.dark) .bg-slate-950\/70,
 html:not(.dark) .bg-slate-950\/60,
 html:not(.dark) .bg-slate-950\/50,
 html:not(.dark) .bg-slate-950\/40 {
-  background-color: rgba(248, 250, 252, 0.85) !important;
+  background-color: rgba(248, 250, 252, 0.95) !important;
 }
 
 html:not(.dark) .bg-slate-900 {
@@ -74,15 +79,16 @@ html:not(.dark) .bg-slate-900 {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
 }
 
+html:not(.dark) .bg-slate-900\/95,
 html:not(.dark) .bg-slate-900\/90,
 html:not(.dark) .bg-slate-900\/80 {
-  background-color: rgba(255, 255, 255, 0.92) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
 }
 
 html:not(.dark) .bg-slate-900\/60,
 html:not(.dark) .bg-slate-900\/50,
 html:not(.dark) .bg-slate-900\/40 {
-  background-color: rgba(255, 255, 255, 0.75) !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
 }
 
 html:not(.dark) .bg-slate-850 {
@@ -97,7 +103,7 @@ html:not(.dark) .bg-slate-800\/80,
 html:not(.dark) .bg-slate-800\/60,
 html:not(.dark) .bg-slate-800\/50,
 html:not(.dark) .bg-slate-800\/40 {
-  background-color: rgba(241, 245, 249, 0.75) !important;
+  background-color: rgba(241, 245, 249, 0.85) !important;
 }
 
 html:not(.dark) .bg-slate-700 {
@@ -113,9 +119,10 @@ html:not(.dark) .border-slate-800 {
   border-color: #e2e8f0 !important;
 }
 
+html:not(.dark) .border-slate-800\/80,
 html:not(.dark) .border-slate-800\/60,
 html:not(.dark) .border-slate-800\/50 {
-  border-color: rgba(226, 232, 240, 0.7) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
 }
 
 html:not(.dark) .border-slate-700 {
