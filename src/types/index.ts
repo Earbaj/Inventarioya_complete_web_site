@@ -246,11 +246,12 @@ export interface StaffMember {
   id: string;
   name: string;
   email: string;
+  password?: string;
   phone: string;
-  role: "admin" | "manager";
+  role: "admin" | "manager" | string;
   branchId?: string;
   branchName?: string;
-  permissions: string[];
+  permissions?: string[];
   isActive: boolean;
 }
 

@@ -1269,11 +1269,36 @@ export const BranchesService = {
   },
 };
 
+function formatStaff(raw: any): StaffMember {
+  let perms: string[] = [];
+  if (Array.isArray(raw.permissions)) {
+    perms = raw.permissions;
+  } else if (raw.permissions && typeof raw.permissions === "object") {
+    perms = Object.keys(raw.permissions).filter((k) => raw.permissions[k]);
+  }
+
+  return {
+    id: raw.id || "stf_" + Date.now(),
+    name: raw.name || "Staff Member",
+    email: raw.email || "",
+    phone: raw.phone || "",
+    role: raw.role || "manager",
+    branchId: raw.branchId || raw.branch?.id,
+    branchName: raw.branchName || raw.branch?.name || (raw.branchId ? "Assigned Branch" : "All Branches"),
+    permissions: perms,
+    isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : true,
+  };
+}
+
 export const StaffService = {
   async getStaff(): Promise<StaffMember[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.staff);
-      return res.data?.data || res.data || mockStaff;
+      const list = res.data?.data || res.data;
+      if (Array.isArray(list)) {
+        return list.map(formatStaff);
+      }
+      return mockStaff;
     } catch {
       return mockStaff;
     }
@@ -1281,19 +1306,37 @@ export const StaffService = {
 
   async createStaff(payload: Partial<StaffMember>): Promise<StaffMember> {
     try {
-      const res = await apiClient.post(ApiEndpoints.staff, payload);
-      return res.data;
-    } catch {
-      return {
-        id: "stf_" + Date.now(),
-        name: payload.name || "Staff Member",
-        email: payload.email || "staff@shop.com",
-        phone: payload.phone || "+880 1700-000000",
+      const backendPayload: any = {
+        name: payload.name?.trim(),
+        email: payload.email?.trim(),
+        password: String(payload.password || "").trim(),
+        phone: payload.phone?.trim() || "",
         role: payload.role || "manager",
-        branchName: payload.branchName || "Main Branch",
-        permissions: payload.permissions || ["sales_create"],
-        isActive: true,
       };
+
+      if (payload.branchId) {
+        backendPayload.branchId = payload.branchId;
+      }
+      if (payload.branchName) {
+        backendPayload.branchName = payload.branchName;
+      }
+
+      // If permissions is provided as an object (not an array), include it
+      if (payload.permissions && typeof payload.permissions === "object" && !Array.isArray(payload.permissions)) {
+        backendPayload.permissions = payload.permissions;
+      }
+
+      const res = await apiClient.post(ApiEndpoints.staff, backendPayload);
+      const raw = res.data?.data || res.data;
+      return formatStaff(raw);
+    } catch (error: any) {
+      console.error("Failed to create staff:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 
@@ -1301,8 +1344,14 @@ export const StaffService = {
     try {
       const res = await apiClient.patch(ApiEndpoints.staffPermissions(id), { permissions });
       return res.data;
-    } catch {
-      return { success: true, message: "Permissions updated successfully." };
+    } catch (error: any) {
+      console.error("Failed to update staff permissions:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 
@@ -1310,8 +1359,14 @@ export const StaffService = {
     try {
       const res = await apiClient.delete(ApiEndpoints.staffById(id));
       return res.data;
-    } catch {
-      return { success: true };
+    } catch (error: any) {
+      console.error("Failed to delete staff:", error);
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 };
