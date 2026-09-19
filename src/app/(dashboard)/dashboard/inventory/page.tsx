@@ -23,7 +23,10 @@ import {
   Layers,
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function InventoryPage() {
+  const { txt } = useLanguage();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -216,7 +219,7 @@ export default function InventoryPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Inventory Catalog & Stock Control" />
+      <DashboardHeader title={txt("ইনভেন্টরি ক্যাটালগ ও স্টক নিয়ন্ত্রণ", "Inventory Catalog & Stock Control")} />
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* KPI Overview Cards */}
@@ -224,33 +227,33 @@ export default function InventoryPage() {
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Total Products
+                {txt("মোট প্রোডাক্ট", "Total Products")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                 <Package className="w-4 h-4" />
               </div>
             </div>
             <p className="text-2xl font-black text-white mt-2 font-mono">{products.length}</p>
-            <p className="text-[10px] text-slate-500 mt-1">Unique catalog items</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("ক্যাটালগ পণ্য আইটেম", "Unique catalog items")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Total Stock Units
+                {txt("মোট স্টক ইউনিট", "Total Stock Units")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
                 <Layers className="w-4 h-4" />
               </div>
             </div>
             <p className="text-2xl font-black text-white mt-2 font-mono">{totalStockCount}</p>
-            <p className="text-[10px] text-slate-500 mt-1">On-hand physical units</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("মজুদ থাকা মোট ইউনিট", "On-hand physical units")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">
-                Low Stock Warning
+                {txt("কম স্টক সতর্কবার্তা", "Low Stock Warning")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
                 <AlertTriangle className="w-4 h-4" />
@@ -259,13 +262,13 @@ export default function InventoryPage() {
             <p className="text-2xl font-black text-rose-400 mt-2 font-mono">
               {lowStockProducts.length}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Needs reordering soon</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("দ্রুত রি-অর্ডার করা প্রয়োজন", "Needs reordering soon")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
-                Active Categories
+                {txt("সক্রিয় ক্যাটাগরি", "Active Categories")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <CheckCircle2 className="w-4 h-4" />
@@ -274,7 +277,7 @@ export default function InventoryPage() {
             <p className="text-2xl font-black text-emerald-400 mt-2 font-mono">
               {categories.length || 3}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Classification groups</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("পণ্য শ্রেণি বিভাগ", "Classification groups")}</p>
           </div>
         </div>
 
@@ -291,7 +294,7 @@ export default function InventoryPage() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search products by name, SKU or code..."
+                placeholder={txt("নাম, SKU বা কোড দিয়ে পণ্য খুঁজুন...", "Search products by name, SKU or code...")}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 shadow-inner"
               />
             </div>
@@ -306,7 +309,7 @@ export default function InventoryPage() {
               }}
               className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
             >
-              <option value="ALL">All Categories</option>
+              <option value="ALL">{txt("সকল ক্যাটাগরি", "All Categories")}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.name}>
                   {cat.name}
@@ -319,20 +322,20 @@ export default function InventoryPage() {
             <button
               onClick={() => setShowImportModal(true)}
               className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors border border-slate-700 shadow-sm"
-              title="Bulk import items via CSV file"
+              title={txt("বাল্ক CSV ফাইল ইমপোর্ট", "Bulk import items via CSV file")}
             >
               <Upload className="w-3.5 h-3.5 text-amber-400" />
-              <span>Import CSV</span>
+              <span>{txt("CSV ইমপোর্ট", "Import CSV")}</span>
             </button>
 
             {canExportExcel && (
               <button
                 onClick={handleExportCsv}
                 className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                title="Export catalog to CSV"
+                title={txt("ক্যাটালগ CSV ফাইলে এক্সপোর্ট", "Export catalog to CSV")}
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Export CSV</span>
+                <span>{txt("CSV এক্সপোর্ট", "Export CSV")}</span>
               </button>
             )}
 
@@ -341,13 +344,13 @@ export default function InventoryPage() {
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 transition-all"
             >
               <Plus className="w-4 h-4" />
-              <span>New Product</span>
+              <span>{txt("নতুন প্রোডাক্ট", "New Product")}</span>
             </button>
 
             <button
               onClick={loadData}
               className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition-colors"
-              title="Refresh product list"
+              title={txt("পণ্য তালিকা রিফ্রেশ করুন", "Refresh product list")}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-400" : ""}`} />
             </button>
@@ -360,14 +363,14 @@ export default function InventoryPage() {
             <table className="w-full min-w-[800px] text-left text-xs">
               <thead className="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
-                  <th className="py-3.5 px-4">SKU / Code</th>
-                  <th className="py-3.5 px-4">Product Name</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  {canViewBuyPrice && <th className="py-3.5 px-4 text-right">Cost Price</th>}
-                  <th className="py-3.5 px-4 text-right">Selling Price</th>
-                  <th className="py-3.5 px-4 text-center">Stock Level</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4">{txt("SKU / কোড", "SKU / Code")}</th>
+                  <th className="py-3.5 px-4">{txt("পণ্যের নাম", "Product Name")}</th>
+                  <th className="py-3.5 px-4">{txt("ক্যাটাগরি", "Category")}</th>
+                  {canViewBuyPrice && <th className="py-3.5 px-4 text-right">{txt("ক্রয় মূল্য", "Cost Price")}</th>}
+                  <th className="py-3.5 px-4 text-right">{txt("বিক্রয় মূল্য", "Selling Price")}</th>
+                  <th className="py-3.5 px-4 text-center">{txt("স্টক পরিমাণ", "Stock Level")}</th>
+                  <th className="py-3.5 px-4 text-center">{txt("স্ট্যাটাস", "Status")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("অ্যাকশন", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
@@ -376,14 +379,14 @@ export default function InventoryPage() {
                     <td colSpan={canViewBuyPrice ? 8 : 7} className="py-12 text-center text-slate-400">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
-                        <span className="text-xs">Loading inventory catalog...</span>
+                        <span className="text-xs">{txt("ইনভেন্টরি ক্যাটালগ লোড হচ্ছে...", "Loading inventory catalog...")}</span>
                       </div>
                     </td>
                   </tr>
                 ) : paginatedProducts.length === 0 ? (
                   <tr>
                     <td colSpan={canViewBuyPrice ? 8 : 7} className="py-12 text-center text-slate-500">
-                      No products found matching current criteria.
+                      {txt("বর্তমান শর্ত অনুযায়ী কোনো পণ্য খুঁজে পাওয়া যায়নি।", "No products found matching current criteria.")}
                     </td>
                   </tr>
                 ) : (
@@ -421,11 +424,11 @@ export default function InventoryPage() {
                           {isLow ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
                               <AlertTriangle className="w-3 h-3" />
-                              Low Stock (≤{p.minStockAlert})
+                              {txt(`কম স্টক (≤${p.minStockAlert})`, `Low Stock (≤${p.minStockAlert})`)}
                             </span>
                           ) : (
                             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
-                              In Stock
+                              {txt("স্টকে আছে", "In Stock")}
                             </span>
                           )}
                         </td>
@@ -438,7 +441,7 @@ export default function InventoryPage() {
                                   setEditingProduct(p);
                                 }}
                                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white transition-colors"
-                                title="Edit Product Details"
+                                title={txt("পণ্য বিবরণ সম্পাদনা করুন", "Edit Product Details")}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
@@ -450,7 +453,7 @@ export default function InventoryPage() {
                                   setDeletingProduct(p);
                                 }}
                                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors"
-                                title="Delete Product"
+                                title={txt("পণ্য মুছে ফেলুন", "Delete Product")}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -469,19 +472,14 @@ export default function InventoryPage() {
           <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <span>
-                Showing{" "}
-                <span className="font-bold text-white">
-                  {filteredProducts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-bold text-white">
-                  {Math.min(currentPage * pageSize, filteredProducts.length)}
-                </span>{" "}
-                of <span className="font-bold text-white">{filteredProducts.length}</span> products
+                {txt(
+                  `দেখাচ্ছে ${filteredProducts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} থেকে ${Math.min(currentPage * pageSize, filteredProducts.length)} (মোট ${filteredProducts.length} টি পণ্য)`,
+                  `Showing ${filteredProducts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredProducts.length)} of ${filteredProducts.length} products`
+                )}
               </span>
               <div className="h-3 w-px bg-slate-800 mx-2" />
               <select
-                aria-label="Items per page"
+                aria-label={txt("প্রতি পৃষ্ঠার আইটেম সংখ্যা", "Items per page")}
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(Number(e.target.value));
@@ -489,9 +487,9 @@ export default function InventoryPage() {
                 }}
                 className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs focus:outline-none"
               >
-                <option value={10}>10 per page</option>
-                <option value={25}>25 per page</option>
-                <option value={50}>50 per page</option>
+                <option value={10}>10 {txt("টি প্রতি পৃষ্ঠায়", "per page")}</option>
+                <option value={25}>25 {txt("টি প্রতি পৃষ্ঠায়", "per page")}</option>
+                <option value={50}>50 {txt("টি প্রতি পৃষ্ঠায়", "per page")}</option>
               </select>
             </div>
 
@@ -500,20 +498,20 @@ export default function InventoryPage() {
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Previous Page"
+                title={txt("পূর্ববর্তী পৃষ্ঠা", "Previous Page")}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
               <span className="px-3 py-1 font-semibold text-white">
-                Page {currentPage} of {computedTotalPages}
+                {txt(`পৃষ্ঠা ${currentPage} / ${computedTotalPages}`, `Page ${currentPage} of ${computedTotalPages}`)}
               </span>
 
               <button
                 onClick={() => setCurrentPage((p) => Math.min(computedTotalPages, p + 1))}
                 disabled={currentPage >= computedTotalPages}
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Next Page"
+                title={txt("পরবর্তী পৃষ্ঠা", "Next Page")}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -532,7 +530,7 @@ export default function InventoryPage() {
                   <Pencil className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Edit Product</h3>
+                  <h3 className="text-sm font-bold text-white">{txt("পণ্য সম্পাদনা", "Edit Product")}</h3>
                   <p className="text-[10px] text-slate-400 font-mono">
                     ID: {editingProduct.id.slice(0, 8)}...
                   </p>
@@ -557,7 +555,7 @@ export default function InventoryPage() {
 
             <form onSubmit={handleUpdateProduct} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Product Title / Name</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("পণ্যের নাম / শিরোনাম", "Product Title / Name")}</label>
                 <input
                   type="text"
                   required
@@ -571,7 +569,7 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">SKU / Item Code</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("SKU / আইটেম কোড", "SKU / Item Code")}</label>
                   <input
                     type="text"
                     value={editingProduct.sku || (editingProduct as any).code || ""}
@@ -587,7 +585,7 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Category</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("ক্যাটাগরি", "Category")}</label>
                   <input
                     type="text"
                     list="category-suggestions"
@@ -599,7 +597,7 @@ export default function InventoryPage() {
                         category: e.target.value,
                       })
                     }
-                    placeholder="General, Electric, etc."
+                    placeholder={txt("জেনারেল, ইলেকট্রনিক্স ইত্যাদি", "General, Electric, etc.")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   />
                   <datalist id="category-suggestions">
@@ -613,7 +611,7 @@ export default function InventoryPage() {
               <div className={`grid ${canViewBuyPrice ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
                 {canViewBuyPrice && (
                   <div>
-                    <label className="block text-slate-300 font-medium mb-1">Cost / Buy Price (৳)</label>
+                    <label className="block text-slate-300 font-medium mb-1">{txt("কেনা দাম / ক্রয় মূল্য (৳)", "Cost / Buy Price (৳)")}</label>
                     <input
                       type="number"
                       step="any"
@@ -631,7 +629,7 @@ export default function InventoryPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Selling Price (৳)</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("বিক্রয় মূল্য (৳)", "Selling Price (৳)")}</label>
                   <input
                     type="number"
                     step="any"
@@ -652,7 +650,7 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Stock Quantity</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("স্টক পরিমাণ", "Stock Quantity")}</label>
                   <input
                     type="number"
                     min="0"
@@ -668,7 +666,7 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Min Stock Alert</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("কম স্টক সতর্কবার্তা", "Min Stock Alert")}</label>
                   <input
                     type="number"
                     min="0"
@@ -684,7 +682,7 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Unit</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("একক / ইউনিট", "Unit")}</label>
                   <input
                     type="text"
                     value={editingProduct.unit || "Piece"}
@@ -694,7 +692,7 @@ export default function InventoryPage() {
                         unit: e.target.value,
                       })
                     }
-                    placeholder="pcs, box, etc."
+                    placeholder={txt("টি, প্যাকেট ইত্যাদি", "pcs, box, etc.")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -709,7 +707,7 @@ export default function InventoryPage() {
                   }}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -719,10 +717,10 @@ export default function InventoryPage() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving...</span>
+                      <span>{txt("সংরক্ষণ হচ্ছে...", "Saving...")}</span>
                     </>
                   ) : (
-                    <span>Save Changes</span>
+                    <span>{txt("পরিবর্তন সংরক্ষণ করুন", "Save Changes")}</span>
                   )}
                 </button>
               </div>
@@ -740,8 +738,8 @@ export default function InventoryPage() {
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Delete Product</h3>
-                <p className="text-[11px] text-slate-400">Confirm catalog removal</p>
+                <h3 className="text-sm font-bold text-white">{txt("পণ্য মুছে ফেলুন", "Delete Product")}</h3>
+                <p className="text-[11px] text-slate-400">{txt("ক্যাটালগ থেকে অপসারণ নিশ্চিতকরণ", "Confirm catalog removal")}</p>
               </div>
             </div>
 
@@ -752,13 +750,19 @@ export default function InventoryPage() {
             )}
 
             <p className="text-xs text-slate-300 leading-relaxed mb-4">
-              Are you sure you want to delete <span className="font-bold text-white">"{deletingProduct.name}"</span>?
+              {txt(
+                `আপনি কি নিশ্চিত যে "${deletingProduct.name}" মুছে ফেলতে চান?`,
+                `Are you sure you want to delete "${deletingProduct.name}"?`
+              )}
               {deletingProduct.sku && (
                 <span className="block text-slate-400 text-[11px] mt-1 font-mono">
                   SKU: {deletingProduct.sku}
                 </span>
               )}
-              This product will be removed from your active catalog and moved to Trash.
+              {txt(
+                "এই পণ্যটি আপনার সক্রিয় ক্যাটালগ থেকে মুছে ট্র্যাশে পাঠানো হবে।",
+                "This product will be removed from your active catalog and moved to Trash."
+              )}
             </p>
 
             <div className="flex items-center justify-end gap-2">
@@ -770,7 +774,7 @@ export default function InventoryPage() {
                 }}
                 className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition-colors"
               >
-                Cancel
+                {txt("বাতিল", "Cancel")}
               </button>
               <button
                 type="button"
@@ -781,12 +785,12 @@ export default function InventoryPage() {
                 {isSubmitting ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Deleting...</span>
+                    <span>{txt("মুছে ফেলা হচ্ছে...", "Deleting...")}</span>
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Product</span>
+                    <span>{txt("পণ্য মুছে ফেলুন", "Delete Product")}</span>
                   </>
                 )}
               </button>
@@ -800,7 +804,7 @@ export default function InventoryPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-white">Add New Product to Inventory</h3>
+              <h3 className="text-sm font-bold text-white">{txt("ইনভেন্টরিতে নতুন পণ্য যোগ করুন", "Add New Product to Inventory")}</h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-white"
@@ -817,20 +821,20 @@ export default function InventoryPage() {
 
             <form onSubmit={handleAddProduct} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Product Title</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("পণ্যের নাম", "Product Title")}</label>
                 <input
                   type="text"
                   required
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                  placeholder="e.g. Pran Mango Juice 250ml"
+                  placeholder={txt("যেমন: প্রাণ ম্যাঙ্গো জুস ২৫০ মি.লি.", "e.g. Pran Mango Juice 250ml")}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">SKU Code</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("SKU কোড", "SKU Code")}</label>
                   <input
                     type="text"
                     required
@@ -841,9 +845,9 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Category</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("ক্যাটাগরি", "Category")}</label>
                   <select
-                    aria-label="Category Selection"
+                    aria-label={txt("ক্যাটাগরি নির্বাচন", "Category Selection")}
                     value={newProduct.categoryName}
                     onChange={(e) => setNewProduct({ ...newProduct, categoryName: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
@@ -860,7 +864,7 @@ export default function InventoryPage() {
               <div className={`grid ${canViewBuyPrice ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
                 {canViewBuyPrice && (
                   <div>
-                    <label className="block text-slate-300 font-medium mb-1">Cost Price (৳)</label>
+                    <label className="block text-slate-300 font-medium mb-1">{txt("কেনা দাম (৳)", "Cost Price (৳)")}</label>
                     <input
                       type="number"
                       required
@@ -875,7 +879,7 @@ export default function InventoryPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Selling Price (৳)</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("বিক্রয় মূল্য (৳)", "Selling Price (৳)")}</label>
                   <input
                     type="number"
                     required
@@ -892,7 +896,7 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Initial Qty</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("শুরুর স্টক", "Initial Qty")}</label>
                   <input
                     type="number"
                     required
@@ -905,7 +909,7 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Min Alert</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("সর্বনিম্ন এলার্ট", "Min Alert")}</label>
                   <input
                     type="number"
                     min="0"
@@ -917,12 +921,12 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Unit</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("একক", "Unit")}</label>
                   <input
                     type="text"
                     value={newProduct.unit}
                     onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
-                    placeholder="pcs"
+                    placeholder={txt("টি / বক্স", "pcs")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -934,14 +938,14 @@ export default function InventoryPage() {
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md"
                 >
-                  {isSubmitting ? "Saving..." : "Save Product"}
+                  {isSubmitting ? txt("সংরক্ষণ হচ্ছে...", "Saving...") : txt("পণ্য সংরক্ষণ করুন", "Save Product")}
                 </button>
               </div>
             </form>
@@ -956,7 +960,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-bold text-white">Bulk CSV Inventory Import</h3>
+                <h3 className="text-sm font-bold text-white">{txt("একসাথে বাল্ক CSV ইনভেন্টরি ইমপোর্ট", "Bulk CSV Inventory Import")}</h3>
               </div>
               <button
                 onClick={() => setShowImportModal(false)}
@@ -967,7 +971,10 @@ export default function InventoryPage() {
             </div>
 
             <p className="text-xs text-slate-400 mb-4">
-              Upload a .csv file containing columns:{" "}
+              {txt(
+                "এমন একটি .csv ফাইল আপলোড করুন যাতে কলাম থাকবে: ",
+                "Upload a .csv file containing columns: "
+              )}
               <span className="text-white font-mono">
                 name, sku{canViewBuyPrice ? ", costPrice" : ""}, sellingPrice, stockQuantity, unit
               </span>
@@ -986,9 +993,9 @@ export default function InventoryPage() {
                 <label htmlFor="csv-file-input" className="cursor-pointer">
                   <Upload className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
                   <span className="text-xs text-white font-medium block">
-                    {selectedFile ? selectedFile.name : "Select CSV File from computer"}
+                    {selectedFile ? selectedFile.name : txt("কম্পিউটার থেকে CSV ফাইল নির্বাচন করুন", "Select CSV File from computer")}
                   </span>
-                  <span className="text-[10px] text-slate-500 mt-1 block">Max size: 5MB</span>
+                  <span className="text-[10px] text-slate-500 mt-1 block">{txt("সর্বোচ্চ সাইজ: ৫ মেগাবাইট", "Max size: 5MB")}</span>
                 </label>
               </div>
 
@@ -1002,14 +1009,14 @@ export default function InventoryPage() {
                   onClick={() => setShowImportModal(false)}
                   className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={!selectedFile}
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-bold shadow-md"
                 >
-                  Upload & Import
+                  {txt("আপলোড ও ইমপোর্ট করুন", "Upload & Import")}
                 </button>
               </div>
             </form>

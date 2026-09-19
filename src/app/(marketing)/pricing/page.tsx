@@ -8,8 +8,10 @@ import { SubscriptionsService } from "@/lib/api/client";
 import { SubscriptionPackage, PaymentInfo } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import { Check, Sparkles, Building, CreditCard, ShieldCheck, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function PricingPage() {
+  const { locale, txt } = useLanguage();
   const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,19 +35,22 @@ export default function PricingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-600 selection:text-white transition-colors">
       <LandingNavbar />
 
       <main className="pt-32 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
-            Simple & Transparent Pricing
+          <span className="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 text-xs font-semibold">
+            {txt("সহজ ও স্বচ্ছ মূল্যতালিকা", "Simple & Transparent Pricing")}
           </span>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-            Choose the Perfect Plan for Your Business
+          <h1 className="mt-4 text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {txt("আপনার ব্যবসার জন্য নিখুঁত প্ল্যান বেছে নিন", "Choose the Perfect Plan for Your Business")}
           </h1>
-          <p className="mt-3 text-slate-400 text-sm sm:text-base">
-            All plans include full cloud synchronization with the Android mobile app, unlimited invoices, and automated data backups.
+          <p className="mt-3 text-slate-600 dark:text-slate-400 text-sm sm:text-base">
+            {txt(
+              "সকল প্ল্যানে রয়েছে অ্যান্ড্রয়েড মোবাইল অ্যাপের সাথে ক্লাউড সিঙ্ক, আনলিমিটেড চালান এবং স্বয়ংক্রিয় ডাটা ব্যাকআপ।",
+              "All plans include full cloud synchronization with the Android mobile app, unlimited invoices, and automated data backups."
+            )}
           </p>
         </div>
 
@@ -56,34 +61,37 @@ export default function PricingPage() {
               key={pkg.id}
               className={`rounded-3xl p-8 transition-all relative flex flex-col justify-between ${
                 pkg.isPopular
-                  ? "bg-gradient-to-b from-indigo-950/80 to-slate-900 border-2 border-indigo-500 shadow-2xl shadow-indigo-500/20"
-                  : "bg-slate-900/60 border border-slate-800"
+                  ? "bg-white dark:bg-gradient-to-b dark:from-indigo-950/80 dark:to-slate-900 border-2 border-indigo-500 shadow-2xl shadow-indigo-500/20"
+                  : "bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm"
               }`}
             >
               {pkg.isPopular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold tracking-wide shadow-md flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" />
-                  MOST POPULAR
+                  {txt("সর্বাধিক জনপ্রিয়", "MOST POPULAR")}
                 </div>
               )}
 
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">{pkg.name}</h3>
-                <p className="text-xs text-slate-400 mb-6">
-                  {pkg.maxBranches} Branch{pkg.maxBranches > 1 ? "es" : ""} • Up to {pkg.maxStaff} Staff
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{pkg.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+                  {pkg.maxBranches} {txt("টি ব্রাঞ্চ", "Branch" + (pkg.maxBranches > 1 ? "es" : ""))} •{" "}
+                  {txt("সর্বোচ্চ", "Up to")} {pkg.maxStaff} {txt("জন স্টাফ", "Staff")}
                 </p>
 
                 <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-extrabold text-white">
+                  <span className="text-4xl font-extrabold text-slate-900 dark:text-white">
                     {formatCurrency(pkg.price)}
                   </span>
-                  <span className="text-xs text-slate-400">/{pkg.billingPeriod}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    /{pkg.billingPeriod === "monthly" ? txt("মাস", "monthly") : pkg.billingPeriod === "yearly" ? txt("বছর", "yearly") : pkg.billingPeriod}
+                  </span>
                 </div>
 
-                <div className="space-y-3 pt-6 border-t border-slate-800 text-xs text-slate-300 mb-8">
+                <div className="space-y-3 pt-6 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 mb-8">
                   {(pkg.features || []).map((feat, i) => (
                     <div key={i} className="flex items-center gap-2.5">
-                      <div className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                         <Check className="w-3 h-3" />
                       </div>
                       <span>{feat}</span>
@@ -97,10 +105,10 @@ export default function PricingPage() {
                 className={`w-full py-3 rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5 ${
                   pkg.isPopular
                     ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30"
-                    : "bg-slate-800 hover:bg-slate-700 text-slate-200"
+                    : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
                 }`}
               >
-                Choose {pkg.name}
+                {txt("প্ল্যান বেছে নিন", "Choose")} {pkg.name}
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -109,48 +117,66 @@ export default function PricingPage() {
 
         {/* Merchant Payment Details Guide */}
         {paymentInfo && (
-          <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 sm:p-10 max-w-4xl mx-auto shadow-xl">
+          <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 sm:p-10 max-w-4xl mx-auto shadow-xl transition-colors">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Local Payment Gateway & Merchant Numbers</h3>
-                <p className="text-xs text-slate-400">Accepted methods: bKash, Nagad, Rocket, and Bank Transfer</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {txt("স্থানীয় পেমেন্ট মাধ্যম ও মার্চেন্ট নম্বর", "Local Payment Gateway & Merchant Numbers")}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {txt("গৃহীত মাধ্যম: বিকাশ, নগদ, রকেট এবং ব্যাংক ট্রান্সফার", "Accepted methods: bKash, Nagad, Rocket, and Bank Transfer")}
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                <p className="text-xs font-semibold text-pink-400 uppercase">bKash Merchant</p>
-                <p className="text-sm font-bold text-white mt-1 font-mono">{paymentInfo.bkashNumber}</p>
-                <span className="text-[10px] text-slate-500">Use 'Make Payment'</span>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                <p className="text-xs font-semibold text-pink-600 dark:text-pink-400 uppercase">
+                  {txt("বিকাশ মার্চেন্ট", "bKash Merchant")}
+                </p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-1 font-mono">{paymentInfo.bkashNumber}</p>
+                <span className="text-[10px] text-slate-500">{txt("'Make Payment' করুন", "Use 'Make Payment'")}</span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                <p className="text-xs font-semibold text-orange-400 uppercase">Nagad Merchant</p>
-                <p className="text-sm font-bold text-white mt-1 font-mono">{paymentInfo.nagadNumber}</p>
-                <span className="text-[10px] text-slate-500">Merchant Payment</span>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase">
+                  {txt("নগদ মার্চেন্ট", "Nagad Merchant")}
+                </p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-1 font-mono">{paymentInfo.nagadNumber}</p>
+                <span className="text-[10px] text-slate-500">{txt("মার্চেন্ট পেমেন্ট", "Merchant Payment")}</span>
               </div>
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                <p className="text-xs font-semibold text-purple-400 uppercase">Rocket Personal</p>
-                <p className="text-sm font-bold text-white mt-1 font-mono">{paymentInfo.rocketNumber}</p>
-                <span className="text-[10px] text-slate-500">Send Money</span>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase">
+                  {txt("রকেট পার্সোনাল", "Rocket Personal")}
+                </p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white mt-1 font-mono">{paymentInfo.rocketNumber}</p>
+                <span className="text-[10px] text-slate-500">{txt("সেন্ড মানি করুন", "Send Money")}</span>
               </div>
             </div>
 
             {paymentInfo.bankAccount && (
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 mb-6 text-xs space-y-1">
-                <p className="font-bold text-white">Bank Account Transfer Details:</p>
-                <p className="text-slate-300">Bank: <span className="text-white font-medium">{paymentInfo.bankAccount.bankName}</span></p>
-                <p className="text-slate-300">Account Name: <span className="text-white font-medium">{paymentInfo.bankAccount.accountName}</span></p>
-                <p className="text-slate-300">A/C Number: <span className="text-white font-mono font-medium">{paymentInfo.bankAccount.accountNumber}</span> ({paymentInfo.bankAccount.branchName})</p>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 mb-6 text-xs space-y-1">
+                <p className="font-bold text-slate-900 dark:text-white">
+                  {txt("ব্যাংক অ্যাকাউন্ট ট্রান্সফারের তথ্য:", "Bank Account Transfer Details:")}
+                </p>
+                <p className="text-slate-600 dark:text-slate-300">
+                  {txt("ব্যাংক:", "Bank:")} <span className="text-slate-900 dark:text-white font-medium">{paymentInfo.bankAccount.bankName}</span>
+                </p>
+                <p className="text-slate-600 dark:text-slate-300">
+                  {txt("হিসাবের নাম:", "Account Name:")} <span className="text-slate-900 dark:text-white font-medium">{paymentInfo.bankAccount.accountName}</span>
+                </p>
+                <p className="text-slate-600 dark:text-slate-300">
+                  {txt("হিসাব নম্বর:", "A/C Number:")} <span className="text-slate-900 dark:text-white font-mono font-medium">{paymentInfo.bankAccount.accountNumber}</span> ({paymentInfo.bankAccount.branchName})
+                </p>
               </div>
             )}
 
-            <div className="space-y-1.5 text-xs text-slate-400">
+            <div className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
               {paymentInfo.instructionNotes?.map((note, idx) => (
                 <p key={idx} className="flex items-start gap-2">
-                  <span className="text-indigo-400 font-bold">•</span>
+                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">•</span>
                   <span>{note}</span>
                 </p>
               ))}

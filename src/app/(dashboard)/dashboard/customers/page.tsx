@@ -47,7 +47,10 @@ function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function CustomersPage() {
+  const { txt, isBangla } = useLanguage();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -406,7 +409,7 @@ export default function CustomersPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Customer Ledgers & Due Management (কাস্টমার খাতা)" />
+      <DashboardHeader title={txt("কাস্টমার লেজার ও বাকি খাতা (Customer Ledgers)", "Customer Ledgers & Due Management")} />
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* Notification Banner */}
@@ -439,42 +442,42 @@ export default function CustomersPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm">
             <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Total Customers</span>
+              <span>{txt("মোট কাস্টমার", "Total Customers")}</span>
               <Users className="w-4 h-4 text-indigo-400" />
             </div>
             <div className="text-2xl font-bold text-white mt-1">{totalCount}</div>
-            <div className="text-[11px] text-slate-500 mt-1">Active customer profiles</div>
+            <div className="text-[11px] text-slate-500 mt-1">{txt("সক্রিয় কাস্টমার প্রোফাইল", "Active customer profiles")}</div>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-sm dark:bg-gradient-to-br dark:from-slate-900 dark:to-rose-950/20">
             <div className="flex items-center justify-between text-rose-300 text-xs mb-1">
-              <span>Total Outstanding Due</span>
+              <span>{txt("সর্বমোট অপরিশোধিত বাকি", "Total Outstanding Due")}</span>
               <DollarSign className="w-4 h-4 text-rose-400" />
             </div>
             <div className="text-2xl font-black text-rose-400 mt-1">
               {formatCurrency(totalOutstandingDue)}
             </div>
             <div className="text-[11px] text-rose-400/80 mt-1">
-              মোট অপরিশোধিত বাকি
+              {txt("মোট অপরিশোধিত বাকি", "Total unpaid customer balance")}
             </div>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/20 shadow-sm">
             <div className="flex items-center justify-between text-amber-400 text-xs mb-1">
-              <span>With Outstanding Due</span>
+              <span>{txt("বকেয়া বাকি সহ খাতা", "With Outstanding Due")}</span>
               <AlertCircle className="w-4 h-4 text-amber-400" />
             </div>
             <div className="text-2xl font-bold text-amber-400 mt-1">{customersWithDue}</div>
-            <div className="text-[11px] text-slate-500 mt-1">Pending payments</div>
+            <div className="text-[11px] text-slate-500 mt-1">{txt("বাকি খরিদ্দার একাউন্ট", "Pending customer accounts")}</div>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/20 shadow-sm">
             <div className="flex items-center justify-between text-emerald-400 text-xs mb-1">
-              <span>Cleared Accounts</span>
+              <span>{txt("পরিশোধিত একাউন্ট", "Cleared Accounts")}</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
             <div className="text-2xl font-bold text-emerald-400 mt-1">{clearedCustomers}</div>
-            <div className="text-[11px] text-slate-500 mt-1">Zero due balance</div>
+            <div className="text-[11px] text-slate-500 mt-1">{txt("কোনো বকেয়া নেই (৳০)", "Zero due balance")}</div>
           </div>
         </div>
 
@@ -490,7 +493,7 @@ export default function CustomersPage() {
                   setSearchQuery(e.target.value);
                   setPage(1);
                 }}
-                placeholder="Search customer by name or phone..."
+                placeholder={txt("কাস্টমারের নাম বা ফোন নম্বর দিয়ে খুঁজুন...", "Search customer by name or phone...")}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
@@ -505,11 +508,11 @@ export default function CustomersPage() {
               }}
               className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
             >
-              <option value="createdAt_desc">Newest First</option>
-              <option value="createdAt_asc">Oldest First</option>
-              <option value="name_asc">Name (A-Z)</option>
-              <option value="name_desc">Name (Z-A)</option>
-              <option value="closingBalance_asc">Highest Due First</option>
+              <option value="createdAt_desc">{txt("নতুন আগে (Newest First)", "Newest First")}</option>
+              <option value="createdAt_asc">{txt("পুরাতন আগে (Oldest First)", "Oldest First")}</option>
+              <option value="name_asc">{txt("নাম (A-Z)", "Name (A-Z)")}</option>
+              <option value="name_desc">{txt("নাম (Z-A)", "Name (Z-A)")}</option>
+              <option value="closingBalance_asc">{txt("সর্বোচ্চ বাকি আগে", "Highest Due First")}</option>
             </select>
           </div>
 
@@ -519,7 +522,7 @@ export default function CustomersPage() {
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shrink-0 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              Add Customer
+              {txt("কাস্টমার যোগ করুন", "Add Customer")}
             </button>
 
             <button
@@ -528,10 +531,10 @@ export default function CustomersPage() {
                 setShowPdfModal(true);
               }}
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shrink-0"
-              title="Print Customer Ledger and Due Summary Report"
+              title={txt("কাস্টমার লেজার এবং বকেয়া সামারি রিপোর্ট প্রিন্ট করুন", "Print Customer Ledger and Due Summary Report")}
             >
               <Printer className="w-4 h-4 text-indigo-400" />
-              Print / PDF Report
+              {txt("রিপোর্ট / লেজার প্রিন্ট", "Print / PDF Report")}
             </button>
 
             {canExportExcel && (
@@ -540,7 +543,7 @@ export default function CustomersPage() {
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shrink-0"
               >
                 <Download className="w-4 h-4 text-emerald-400" />
-                Export CSV
+                {txt("CSV এক্সপোর্ট", "Export CSV")}
               </button>
             )}
           </div>
@@ -552,13 +555,13 @@ export default function CustomersPage() {
             <table className="w-full min-w-[850px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
-                  <th className="py-3 px-4">Customer</th>
-                  <th className="py-3 px-4">Phone</th>
-                  <th className="py-3 px-4">Address</th>
-                  <th className="py-3 px-4 text-right">Opening Balance</th>
-                  <th className="py-3 px-4 text-right">Current Due (বাকি)</th>
-                  <th className="py-3 px-4 text-center">AI Credit</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4">{txt("কাস্টমার", "Customer")}</th>
+                  <th className="py-3 px-4">{txt("ফোন নম্বর", "Phone")}</th>
+                  <th className="py-3 px-4">{txt("ঠিকানা", "Address")}</th>
+                  <th className="py-3 px-4 text-right">{txt("পূর্বের বাকি (Opening)", "Opening Balance")}</th>
+                  <th className="py-3 px-4 text-right">{txt("বর্তমান বকেয়া (বাকি)", "Current Due (বাকি)")}</th>
+                  <th className="py-3 px-4 text-center">{txt("এআই স্কোর", "AI Credit")}</th>
+                  <th className="py-3 px-4 text-right">{txt("অ্যাকশন", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
@@ -567,7 +570,7 @@ export default function CustomersPage() {
                     <td colSpan={7} className="py-12 text-center text-slate-500">
                       <div className="inline-flex items-center gap-2">
                         <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
-                        Loading customers...
+                        {txt("কাস্টমার লোড হচ্ছে...", "Loading customers...")}
                       </div>
                     </td>
                   </tr>
@@ -575,7 +578,7 @@ export default function CustomersPage() {
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-500">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                      No customers found matching your criteria.
+                      {txt("কোনো কাস্টমার পাওয়া যায়নি।", "No customers found matching your criteria.")}
                     </td>
                   </tr>
                 ) : (
@@ -604,7 +607,7 @@ export default function CustomersPage() {
                               <span className="truncate">{cust.address}</span>
                             </span>
                           ) : (
-                            <span className="text-slate-600 italic">None</span>
+                            <span className="text-slate-600 italic">{txt("নেই", "None")}</span>
                           )}
                         </td>
 
@@ -616,22 +619,22 @@ export default function CustomersPage() {
                           {due > 0 ? (
                             <div className="inline-flex flex-col items-end">
                               <span className="font-black text-rose-400 px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20">
-                                {formatCurrency(due)} Due
+                                {formatCurrency(due)} {txt("বাকি", "Due")}
                               </span>
                               <span className="text-[10px] text-rose-400/80 font-medium">
-                                বকেয়া পাওনা
+                                {txt("বকেয়া পাওনা", "Outstanding Due")}
                               </span>
                             </div>
                           ) : rawClosing > 0 ? (
                             <div className="inline-flex flex-col items-end">
                               <span className="font-bold text-sky-400 px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20">
-                                +{formatCurrency(rawClosing)} Advance
+                                +{formatCurrency(rawClosing)} {txt("অগ্রিম", "Advance")}
                               </span>
-                              <span className="text-[10px] text-sky-400/80">অগ্রিম জমা</span>
+                              <span className="text-[10px] text-sky-400/80">{txt("অগ্রিম জমা", "Advance")}</span>
                             </div>
                           ) : (
                             <span className="font-medium text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                              Cleared (৳0)
+                              {txt("বাকি নেই (৳০)", "Cleared (৳0)")}
                             </span>
                           )}
                         </td>
@@ -641,11 +644,11 @@ export default function CustomersPage() {
                             onClick={() => handleRunAICreditCheck(cust)}
                             disabled={evaluatingId === cust.id}
                             className="px-2 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-medium inline-flex items-center gap-1 transition-colors"
-                            title="Analyze customer credit rating with Gemini AI"
+                            title={txt("জেমিনাই এআই দিয়ে ক্রেতার ক্রেডিট মূল্যায়ন করুন", "Analyze customer credit rating with Gemini AI")}
                           >
                             <Sparkles className="w-3 h-3 text-purple-400" />
                             <span>
-                              {evaluatingId === cust.id ? "Analyzing..." : "Score"}
+                              {evaluatingId === cust.id ? txt("যাচাই হচ্ছে...", "Analyzing...") : txt("স্কোর", "Score")}
                             </span>
                           </button>
                         </td>
@@ -656,10 +659,10 @@ export default function CustomersPage() {
                             <button
                               onClick={() => handleOpenLedger(cust)}
                               className="px-2.5 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors"
-                              title="View Customer Ledger Statement (হিসাব খাতা)"
+                              title={txt("কাস্টমার হিসাব খাতা ও লেনদেন দেখুন", "View Customer Ledger Statement")}
                             >
                               <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                              Ledger
+                              {txt("খাতা", "Ledger")}
                             </button>
 
                             {/* WhatsApp Due Reminder Button */}
@@ -672,8 +675,8 @@ export default function CustomersPage() {
                               }`}
                               title={
                                 due > 0
-                                  ? `Send WhatsApp Due Reminder (${formatCurrency(due)})`
-                                  : "Open WhatsApp Contact"
+                                  ? txt(`হোয়াটসঅ্যাপে বকেয়া তাগাদা পাঠান (${formatCurrency(due)})`, `Send WhatsApp Due Reminder (${formatCurrency(due)})`)
+                                  : txt("হোয়াটসঅ্যাপে মেসেজ পাঠান", "Open WhatsApp Contact")
                               }
                             >
                               <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
@@ -683,7 +686,7 @@ export default function CustomersPage() {
                             <button
                               onClick={() => handleOpenCustomerPdf(cust)}
                               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
-                              title="Print Full Customer Ledger Statement (A-Z)"
+                              title={txt("কাস্টমারের পূর্ণাঙ্গ স্টেটমেন্ট প্রিন্ট করুন", "Print Full Customer Ledger Statement (A-Z)")}
                             >
                               <Printer className="w-3.5 h-3.5" />
                             </button>
@@ -693,7 +696,7 @@ export default function CustomersPage() {
                               <button
                                 onClick={() => handleOpenEdit(cust)}
                                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
-                                title="Edit Customer Information"
+                                title={txt("কাস্টমারের তথ্য পরিবর্তন করুন", "Edit Customer Information")}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
@@ -761,8 +764,8 @@ export default function CustomersPage() {
                   <Users className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Register New Customer</h3>
-                  <p className="text-[11px] text-slate-400">Add customer to ledger directory</p>
+                  <h3 className="text-sm font-bold text-white">{txt("নতুন কাস্টমার নিবন্ধন করুন", "Register New Customer")}</h3>
+                  <p className="text-[11px] text-slate-400">{txt("বাকি খাতার তালিকায় কাস্টমার যোগ করুন", "Add customer to ledger directory")}</p>
                 </div>
               </div>
               <button
@@ -775,7 +778,7 @@ export default function CustomersPage() {
 
             {/* Free Tier Notice */}
             <div className="mb-4 p-3 rounded-xl bg-slate-950 border border-indigo-500/20 text-[11px] text-slate-300">
-              <span className="font-semibold text-indigo-400">💡 Tip:</span> Registers a new customer and automatically logs an initial opening balance in the customer&apos;s ledger statement. Free Tier is limited to 1 active customer.
+              <span className="font-semibold text-indigo-400">💡 {txt("পরামর্শ:", "Tip:")}</span> {txt("নতুন কাস্টমার যোগ করে তার পূর্বের যেকোনো বকেয়া ব্যালেন্স স্বয়ংক্রিয়ভাবে খাতা স্টেটমেন্টে এন্ট্রি হিসেবে জমা হবে।", "Registers a new customer and automatically logs an initial opening balance in the customer's ledger statement.")}
             </div>
 
             {formError && (
@@ -788,12 +791,12 @@ export default function CustomersPage() {
             <form onSubmit={handleCreateCustomer} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Customer Name <span className="text-rose-400">*</span>
+                  {txt("কাস্টমারের নাম", "Customer Name")} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Rahim Traders"
+                  placeholder={txt("যেমন: রহিম ট্রেডার্স", "e.g. Rahim Traders")}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
@@ -802,12 +805,12 @@ export default function CustomersPage() {
 
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Phone Number <span className="text-rose-400">*</span>
+                  {txt("মোবাইল নম্বর", "Phone Number")} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 01711223344"
+                  placeholder={txt("যেমন: 01711223344", "e.g. 01711223344")}
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
@@ -816,11 +819,11 @@ export default function CustomersPage() {
 
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Address (Optional)
+                  {txt("ঠিকানা (ঐচ্ছিক)", "Address (Optional)")}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Mirpur-10, Dhaka"
+                  placeholder={txt("যেমন: মিরপুর-১০, ঢাকা", "e.g. Mirpur-10, Dhaka")}
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
@@ -829,7 +832,7 @@ export default function CustomersPage() {
 
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Initial Opening Balance (৳)
+                  {txt("পূর্বের বাকি ব্যালেন্স (Opening Balance ৳)", "Initial Opening Balance (৳)")}
                 </label>
                 <input
                   type="number"
@@ -840,7 +843,7 @@ export default function CustomersPage() {
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">
-                  Logged as initial &apos;opening&apos; ledger balance statement entry.
+                  {txt("কাস্টমারের লেজার স্টেটমেন্টে শুরুর উদ্বৃত্ত হিসেবে সংরক্ষিত হবে।", "Logged as initial 'opening' ledger balance statement entry.")}
                 </span>
               </div>
 
@@ -850,14 +853,14 @@ export default function CustomersPage() {
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-colors"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors shadow-sm"
                 >
-                  {formLoading ? "Creating..." : "Save Customer"}
+                  {formLoading ? txt("সংরক্ষণ হচ্ছে...", "Creating...") : txt("কাস্টমার সংরক্ষণ করুন", "Save Customer")}
                 </button>
               </div>
             </form>
@@ -877,7 +880,7 @@ export default function CustomersPage() {
                   <Pencil className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Edit Customer Profile</h3>
+                  <h3 className="text-sm font-bold text-white">{txt("কাস্টমার তথ্য সম্পাদনা", "Edit Customer Profile")}</h3>
                   <p className="text-[11px] text-slate-400">{activeCustomer.name}</p>
                 </div>
               </div>
@@ -899,7 +902,7 @@ export default function CustomersPage() {
             <form onSubmit={handleUpdateCustomer} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Customer Name <span className="text-rose-400">*</span>
+                  {txt("কাস্টমারের নাম", "Customer Name")} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -912,7 +915,7 @@ export default function CustomersPage() {
 
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Phone Number <span className="text-rose-400">*</span>
+                  {txt("মোবাইল নম্বর", "Phone Number")} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -924,7 +927,7 @@ export default function CustomersPage() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Address</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("ঠিকানা", "Address")}</label>
                 <input
                   type="text"
                   value={formData.address}
@@ -939,14 +942,14 @@ export default function CustomersPage() {
                   onClick={() => setShowEditModal(false)}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-colors"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors shadow-sm"
                 >
-                  {formLoading ? "Saving..." : "Update Customer"}
+                  {formLoading ? txt("আপডেট হচ্ছে...", "Updating...") : txt("আপডেট করুন", "Save Changes")}
                 </button>
               </div>
             </form>
@@ -965,18 +968,18 @@ export default function CustomersPage() {
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Move Customer to Trash</h3>
-                <p className="text-[11px] text-slate-400">Soft-delete customer record</p>
+                <h3 className="text-sm font-bold text-white">{txt("কাস্টমার ট্র্যাশে পাঠান", "Move Customer to Trash")}</h3>
+                <p className="text-[11px] text-slate-400">{txt("কাস্টমার সাময়িকভাবে মুছে ফেলুন", "Soft-delete customer record")}</p>
               </div>
             </div>
 
             <div className="space-y-2 text-xs text-slate-300 mb-6 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
               <p>
-                Are you sure you want to delete{" "}
-                <span className="font-bold text-white">{activeCustomer.name}</span>?
+                {txt("আপনি কি নিশ্চিত যে আপনি", "Are you sure you want to delete")}{" "}
+                <span className="font-bold text-white">{activeCustomer.name}</span> {txt("কে মুছে ফেলতে চান?", "")}
               </p>
               <p className="text-slate-400 text-[11px]">
-                This will soft-delete the customer profile and its associated ledger statement records to the Recycle Bin. You can restore them anytime from the Recycle Bin.
+                {txt("এটি কাস্টমার প্রোফাইল এবং তার যাবতীয় লেনদেন খাতা সাময়িকভাবে রিসাইকেল বিনে পাঠিয়ে দেবে। পরবর্তীতে যেকোনো সময় রিস্টোর করা যাবে।", "This will soft-delete the customer profile and its associated ledger statement records to the Recycle Bin. You can restore them anytime from the Recycle Bin.")}
               </p>
             </div>
 
@@ -985,14 +988,14 @@ export default function CustomersPage() {
                 onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-colors"
               >
-                Cancel
+                {txt("বাতিল", "Cancel")}
               </button>
               <button
                 onClick={handleDeleteCustomer}
                 disabled={formLoading}
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-colors"
               >
-                {formLoading ? "Deleting..." : "Move to Trash"}
+                {formLoading ? txt("মুছে ফেলা হচ্ছে...", "Deleting...") : txt("ট্র্যাশে পাঠান", "Move to Trash")}
               </button>
             </div>
           </div>
@@ -1017,7 +1020,7 @@ export default function CustomersPage() {
                     <span className="text-xs font-normal text-slate-400 font-mono">({activeCustomer.phone})</span>
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Customer Ledger Statement History (হিসাব খাতা ও লেনদেন বিবরণী)
+                    {txt("কাস্টমার হিসাব খাতা ও লেনদেন বিবরণী", "Customer Ledger Statement History (হিসাব খাতা ও লেনদেন বিবরণী)")}
                   </p>
                 </div>
               </div>
@@ -1028,7 +1031,7 @@ export default function CustomersPage() {
                   className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
                 >
                   <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
-                  Due Reminder
+                  {txt("বাকি তাগাদা", "Due Reminder")}
                 </button>
 
                 {canExportExcel && (
@@ -1044,10 +1047,10 @@ export default function CustomersPage() {
                 <button
                   onClick={() => handleOpenCustomerPdf(activeCustomer, ledgerEntries)}
                   className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
-                  title="Print Complete Customer Ledger Statement (A-Z)"
+                  title={txt("পূর্ণাঙ্গ কাস্টমার লেজার স্টেটমেন্ট প্রিন্ট করুন", "Print Complete Customer Ledger Statement (A-Z)")}
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  Print Statement
+                  {txt("স্টেটমেন্ট প্রিন্ট", "Print Statement")}
                 </button>
 
                 <button
@@ -1062,27 +1065,27 @@ export default function CustomersPage() {
             {/* Quick KPI Bar */}
             <div className="bg-slate-950/40 px-6 py-3 border-b border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold block">Opening Balance</span>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold block">{txt("পূর্বের ব্যালেন্স (Opening)", "Opening Balance")}</span>
                 <span className="font-bold text-white text-sm font-mono">
                   {formatCurrency(activeCustomer.openingBalance || 0)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold block">Current Net Balance</span>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold block">{txt("বর্তমান নিট ব্যালেন্স", "Current Net Balance")}</span>
                 <span className="font-bold text-white text-sm font-mono">
                   {formatCurrency(activeCustomer.closingBalance || 0)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-rose-400 uppercase font-semibold block">Outstanding Due (বাকি)</span>
+                <span className="text-[10px] text-rose-400 uppercase font-semibold block">{txt("বকেয়া বাকি (Outstanding Due)", "Outstanding Due (বাকি)")}</span>
                 <span className="font-black text-rose-400 text-sm font-mono">
                   {formatCurrency(getDueAmount(activeCustomer))}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold block">Address</span>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold block">{txt("ঠিকানা", "Address")}</span>
                 <span className="text-slate-300 truncate block">
-                  {activeCustomer.address || "No address specified"}
+                  {activeCustomer.address || txt("ঠিকানা দেওয়া হয়নি", "No address specified")}
                 </span>
               </div>
             </div>
@@ -1092,7 +1095,7 @@ export default function CustomersPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-400 text-[11px]">From:</span>
+                  <span className="text-slate-400 text-[11px]">{txt("হতে:", "From:")}</span>
                   <input
                     type="date"
                     value={ledgerStartDate}
@@ -1102,7 +1105,7 @@ export default function CustomersPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-400 text-[11px]">To:</span>
+                  <span className="text-slate-400 text-[11px]">{txt("পর্যন্ত:", "To:")}</span>
                   <input
                     type="date"
                     value={ledgerEndDate}
@@ -1120,8 +1123,8 @@ export default function CustomersPage() {
                   }}
                   className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-slate-300 text-xs focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="asc">Date: Oldest First</option>
-                  <option value="desc">Date: Newest First</option>
+                  <option value="asc">{txt("তারিখ: পুরাতন আগে", "Date: Oldest First")}</option>
+                  <option value="desc">{txt("তারিখ: নতুন আগে", "Date: Newest First")}</option>
                 </select>
 
                 <button
@@ -1130,7 +1133,7 @@ export default function CustomersPage() {
                   }
                   className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-medium"
                 >
-                  Filter
+                  {txt("ফিল্টার", "Filter")}
                 </button>
 
                 {(ledgerStartDate || ledgerEndDate) && (
@@ -1142,13 +1145,13 @@ export default function CustomersPage() {
                     }}
                     className="text-slate-400 hover:text-white text-[11px] underline"
                   >
-                    Clear Filter
+                    {txt("ফিল্টার রিসেট", "Clear Filter")}
                   </button>
                 )}
               </div>
 
               <div className="text-[11px] text-slate-400">
-                Total Statements: <span className="font-semibold text-white">{ledgerEntries.length}</span>
+                {txt("মোট বিবরণী:", "Total Statements:")} <span className="font-semibold text-white">{ledgerEntries.length}</span>
               </div>
             </div>
 
@@ -1158,12 +1161,12 @@ export default function CustomersPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-950/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
                     <tr>
-                      <th className="py-2.5 px-4">Date & Time</th>
-                      <th className="py-2.5 px-4">Type</th>
-                      <th className="py-2.5 px-4">Description / Reference</th>
-                      <th className="py-2.5 px-4 text-right">Amount (৳)</th>
-                      <th className="py-2.5 px-4 text-right">Prev Balance</th>
-                      <th className="py-2.5 px-4 text-right">New Balance</th>
+                      <th className="py-2.5 px-4">{txt("তারিখ ও সময়", "Date & Time")}</th>
+                      <th className="py-2.5 px-4">{txt("ধরন", "Type")}</th>
+                      <th className="py-2.5 px-4">{txt("বিবরণ / রেফারেন্স", "Description / Reference")}</th>
+                      <th className="py-2.5 px-4 text-right">{txt("টাকার পরিমাণ (৳)", "Amount (৳)")}</th>
+                      <th className="py-2.5 px-4 text-right">{txt("পূর্বের স্থিতি", "Prev Balance")}</th>
+                      <th className="py-2.5 px-4 text-right">{txt("নতুন স্থিতি", "New Balance")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -1178,7 +1181,7 @@ export default function CustomersPage() {
                       <tr>
                         <td colSpan={6} className="py-10 text-center text-slate-500">
                           <BookOpen className="w-6 h-6 mx-auto mb-2 opacity-30" />
-                          No ledger statement records found for this customer.
+                          {txt("এই কাস্টমারের কোনো লেজার স্টেটমেন্ট পাওয়া যায়নি।", "No ledger statement records found for this customer.")}
                         </td>
                       </tr>
                     ) : (
@@ -1204,7 +1207,7 @@ export default function CustomersPage() {
                                     : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                                 }`}
                               >
-                                {entry.type}
+                                {entry.type === "opening" ? txt("প্রারম্ভিক", "opening") : entry.type === "sale" ? txt("বিক্রয়", "sale") : entry.type === "payment" ? txt("পেমেন্ট", "payment") : entry.type}
                               </span>
                             </td>
 
@@ -1244,7 +1247,7 @@ export default function CustomersPage() {
             {ledgerTotalPages > 1 && (
               <div className="px-6 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
                 <div>
-                  Page <span className="font-semibold text-white">{ledgerPage}</span> of{" "}
+                  {txt("পৃষ্ঠা", "Page")} <span className="font-semibold text-white">{ledgerPage}</span> {txt("এর মধ্যে", "of")}{" "}
                   <span className="font-semibold text-white">{ledgerTotalPages}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1257,7 +1260,7 @@ export default function CustomersPage() {
                     }}
                     className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-white disabled:opacity-40"
                   >
-                    Prev
+                    {txt("পূর্ববর্তী", "Prev")}
                   </button>
                   <button
                     disabled={ledgerPage >= ledgerTotalPages}
@@ -1268,7 +1271,7 @@ export default function CustomersPage() {
                     }}
                     className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-white disabled:opacity-40"
                   >
-                    Next
+                    {txt("পরবর্তী", "Next")}
                   </button>
                 </div>
               </div>
@@ -1289,8 +1292,8 @@ export default function CustomersPage() {
                   <WhatsAppIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">WhatsApp Payment Reminder</h3>
-                  <p className="text-[11px] text-slate-400">Automated payment due reminder link</p>
+                  <h3 className="text-sm font-bold text-white">{txt("হোয়াটসঅ্যাপ বকেয়া তাগাদা", "WhatsApp Payment Reminder")}</h3>
+                  <p className="text-[11px] text-slate-400">{txt("স্বয়ংক্রিয় পেমেন্ট তাগাদা মেসেজ ও লিংক", "Automated payment due reminder link")}</p>
                 </div>
               </div>
               <button
@@ -1304,7 +1307,7 @@ export default function CustomersPage() {
             {reminderLoading ? (
               <div className="py-12 text-center text-slate-400 text-xs">
                 <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-400" />
-                Generating WhatsApp direct link and reminder message...
+                {txt("হোয়াটসঅ্যাপ লিংক ও মেসেজ প্রস্তুত হচ্ছে...", "Generating WhatsApp direct link and reminder message...")}
               </div>
             ) : reminderError ? (
               <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
@@ -1315,15 +1318,15 @@ export default function CustomersPage() {
                 {/* Customer Meta */}
                 <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 grid grid-cols-2 gap-2 text-[11px]">
                   <div>
-                    <span className="text-slate-500 block">Customer:</span>
+                    <span className="text-slate-500 block">{txt("কাস্টমার:", "Customer:")}</span>
                     <span className="font-bold text-white text-xs">{reminderData.customerName}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Clean Phone:</span>
+                    <span className="text-slate-500 block">{txt("মোবাইল নম্বর:", "Clean Phone:")}</span>
                     <span className="font-mono text-emerald-400 font-bold">+{reminderData.cleanPhone}</span>
                   </div>
                   <div className="col-span-2 pt-1 border-t border-slate-850 flex justify-between items-center">
-                    <span className="text-slate-400">Current Outstanding Due:</span>
+                    <span className="text-slate-400">{txt("বর্তমান বকেয়া বাকি:", "Current Outstanding Due:")}</span>
                     <span className="font-black text-rose-400 text-sm font-mono">
                       {formatCurrency(reminderData.dueAmount)}
                     </span>
@@ -1333,7 +1336,7 @@ export default function CustomersPage() {
                 {/* WhatsApp Chat Preview Bubble */}
                 <div>
                   <span className="text-slate-400 font-medium block mb-1.5 text-[11px]">
-                    Pre-filled WhatsApp Message Preview:
+                    {txt("হোয়াটসঅ্যাপ মেসেজ প্রিভিউ:", "Pre-filled WhatsApp Message Preview:")}
                   </span>
                   <div className="bg-[#0b141a] p-3.5 rounded-2xl border border-emerald-500/20 text-slate-200 whitespace-pre-wrap font-sans text-xs leading-relaxed relative shadow-inner">
                     <div className="bg-[#005c4b] text-white p-3 rounded-xl rounded-tl-none inline-block max-w-full text-xs shadow">
@@ -1351,7 +1354,7 @@ export default function CustomersPage() {
                     className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
                   >
                     <WhatsAppIcon className="w-4 h-4" />
-                    Open in WhatsApp Web / Mobile
+                    {txt("হোয়াটসঅ্যাপে ওপেন করুন", "Open in WhatsApp Web / Mobile")}
                     <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-70" />
                   </a>
 
@@ -1365,7 +1368,7 @@ export default function CustomersPage() {
                       className="py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                     >
                       {copiedMessage ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copiedMessage ? "Copied Message!" : "Copy Message"}
+                      {copiedMessage ? txt("মেসেজ কপি হয়েছে!", "Copied Message!") : txt("মেসেজ কপি করুন", "Copy Message")}
                     </button>
 
                     <button
@@ -1377,7 +1380,7 @@ export default function CustomersPage() {
                       className="py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                     >
                       {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      {copiedLink ? "Copied Link!" : "Copy Link"}
+                      {copiedLink ? txt("লিংক কপি হয়েছে!", "Copied Link!") : txt("লিংক কপি করুন", "Copy Link")}
                     </button>
                   </div>
                 </div>

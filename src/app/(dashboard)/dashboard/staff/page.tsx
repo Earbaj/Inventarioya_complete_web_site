@@ -22,33 +22,36 @@ import {
   User,
 } from "lucide-react";
 
-const allAvailablePermissions = [
-  {
-    key: "canViewBuyPrice",
-    label: "View Purchases / Costs",
-    description: "Allow viewing product purchase prices and wholesale costs in inventory",
-  },
-  {
-    key: "canEditCustomers",
-    label: "Edit Customer",
-    description: "Permission to modify customer profiles, phone numbers, and balances",
-  },
-  {
-    key: "canProcessReturn",
-    label: "Process Returns and refund",
-    description: "Permission to authorize sales returns, item exchanges, and cash refunds",
-  },
-  {
-    key: "canExportExcel",
-    label: "Export Excell reports",
-    description: "Permission to download sales, inventory, and financial Excel spreadsheets",
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function StaffPage() {
+  const { txt } = useLanguage();
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const allAvailablePermissions = [
+    {
+      key: "canViewBuyPrice",
+      label: txt("ক্রয় মূল্য / খরচ দেখা", "View Purchases / Costs"),
+      description: txt("ইনভেন্টরিতে পণ্যের কেনা দাম ও পাইকারি খরচ দেখার অনুমতি", "Allow viewing product purchase prices and wholesale costs in inventory"),
+    },
+    {
+      key: "canEditCustomers",
+      label: txt("কাস্টমার তথ্য পরিবর্তন", "Edit Customer"),
+      description: txt("কাস্টমার প্রোফাইল, ফোন নম্বর ও বকেয়া ব্যালেন্স পরিবর্তন করার অনুমতি", "Permission to modify customer profiles, phone numbers, and balances"),
+    },
+    {
+      key: "canProcessReturn",
+      label: txt("পণ্য ফেরত ও রিফান্ড প্রসেস", "Process Returns and refund"),
+      description: txt("বিক্রয় ফেরত, পণ্য বিনিময় ও ক্যাশ রিফান্ড সম্পন্ন করার অনুমতি", "Permission to authorize sales returns, item exchanges, and cash refunds"),
+    },
+    {
+      key: "canExportExcel",
+      label: txt("এক্সেল রিপোর্ট ডাউনলোড", "Export Excell reports"),
+      description: txt("বিক্রয়, ইনভেন্টরি ও আর্থিক এক্সেল রিপোর্ট ডাউনলোড করার অনুমতি", "Permission to download sales, inventory, and financial Excel spreadsheets"),
+    },
+  ];
 
   // Modals & form state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -178,28 +181,28 @@ export default function StaffPage() {
   };
 
   const handleDeleteStaff = async (id: string) => {
-    if (!confirm("Remove this staff member from your shop?")) return;
+    if (!confirm(txt("আপনি কি এই কর্মীকে দোকান থেকে অপসারণ করতে চান?", "Remove this staff member from your shop?"))) return;
     try {
       await StaffService.deleteStaff(id);
       setStaffList(staffList.filter((s) => s.id !== id));
     } catch (err: any) {
       console.error("Failed to delete staff", err);
-      alert(err.message || "Failed to delete staff member.");
+      alert(err.message || txt("কর্মী অপসারণ করতে ব্যর্থ হয়েছে।", "Failed to delete staff member."));
     }
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Staff Accounts & Granular Permissions" />
+      <DashboardHeader title={txt("স্টাফ অ্যাকাউন্ট ও পারমিশন ব্যবস্থাপনা", "Staff Accounts & Granular Permissions")} />
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl w-full mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Users className="w-4 h-4 text-indigo-400" />
-              <span>Active Shop Employees ({staffList.length})</span>
+              <span>{txt(`সক্রিয় শপ কর্মী (${staffList.length} জন)`, `Active Shop Employees (${staffList.length})`)}</span>
             </h3>
-            <p className="text-xs text-slate-400">Manage cashiers, managers, branch assignments, and access privileges</p>
+            <p className="text-xs text-slate-400">{txt("ক্যাশিয়ার, ম্যানেজার, শাখা অ্যাসাইনমেন্ট ও এক্সেস পারমিশন নিয়ন্ত্রণ করুন", "Manage cashiers, managers, branch assignments, and access privileges")}</p>
           </div>
           <button
             onClick={() => {
@@ -209,7 +212,7 @@ export default function StaffPage() {
             className="w-full sm:w-auto justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Staff Member</span>
+            <span>{txt("নতুন কর্মী যোগ করুন", "Add Staff Member")}</span>
           </button>
         </div>
 
@@ -219,19 +222,19 @@ export default function StaffPage() {
             <table className="w-full min-w-[650px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
-                  <th className="py-3.5 px-4">Name</th>
-                  <th className="py-3.5 px-4">Role</th>
-                  <th className="py-3.5 px-4">Contact</th>
-                  <th className="py-3.5 px-4">Assigned Branch</th>
-                  <th className="py-3.5 px-4">Permissions</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4">{txt("নাম", "Name")}</th>
+                  <th className="py-3.5 px-4">{txt("পদবী / রোল", "Role")}</th>
+                  <th className="py-3.5 px-4">{txt("যোগাযোগ", "Contact")}</th>
+                  <th className="py-3.5 px-4">{txt("নির্ধারিত শাখা", "Assigned Branch")}</th>
+                  <th className="py-3.5 px-4">{txt("পারমিশন", "Permissions")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("অ্যাকশন", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {staffList.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-500">
-                      {isLoading ? "Loading staff members..." : "No staff members recorded yet."}
+                      {isLoading ? txt("কর্মী তালিকা লোড হচ্ছে...", "Loading staff members...") : txt("এখনও কোনো কর্মী যোগ করা হয়নি।", "No staff members recorded yet.")}
                     </td>
                   </tr>
                 ) : (
@@ -257,7 +260,7 @@ export default function StaffPage() {
                       <td className="py-3.5 px-4 text-slate-300">
                         <span className="inline-flex items-center gap-1.5 text-slate-300">
                           <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                          <span>{member.branchName || "All Branches"}</span>
+                          <span>{member.branchName || txt("সকল শাখা", "All Branches")}</span>
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
@@ -278,7 +281,7 @@ export default function StaffPage() {
                               className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors border border-slate-700/60"
                             >
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>{activeCount} of 4 Permissions</span>
+                              <span>{txt(`${activeCount} / ৪ টি পারমিশন`, `${activeCount} of 4 Permissions`)}</span>
                             </button>
                           );
                         })()}
@@ -287,7 +290,7 @@ export default function StaffPage() {
                         <button
                           onClick={() => handleDeleteStaff(member.id)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-                          title="Delete staff"
+                          title={txt("কর্মী মুছে ফেলুন", "Delete staff")}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -309,9 +312,9 @@ export default function StaffPage() {
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Permissions: {editingPermissionsStaff.name}</span>
+                  <span>{txt(`পারমিশন: ${editingPermissionsStaff.name}`, `Permissions: ${editingPermissionsStaff.name}`)}</span>
                 </h3>
-                <p className="text-[11px] text-slate-400">Configure the 4 core permissions for this employee</p>
+                <p className="text-[11px] text-slate-400">{txt("এই কর্মীর জন্য ৪টি প্রধান পারমিশন কনফিগার করুন", "Configure the 4 core permissions for this employee")}</p>
               </div>
               <button
                 onClick={() => setEditingPermissionsStaff(null)}
@@ -323,14 +326,14 @@ export default function StaffPage() {
 
             {/* Quick Actions */}
             <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 py-1.5 border-y border-slate-800/80 mb-3">
-              <span>{activePermissions.length} of 4 Selected</span>
+              <span>{txt(`৪ টির মধ্যে ${activePermissions.length} টি নির্বাচিত`, `${activePermissions.length} of 4 Selected`)}</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setActivePermissions(allAvailablePermissions.map((p) => p.key))}
                   className="text-indigo-400 hover:underline font-medium"
                 >
-                  Select All
+                  {txt("সবগুলো সিলেক্ট করুন", "Select All")}
                 </button>
                 <span>•</span>
                 <button
@@ -338,7 +341,7 @@ export default function StaffPage() {
                   onClick={() => setActivePermissions([])}
                   className="text-slate-400 hover:underline font-medium"
                 >
-                  Clear All
+                  {txt("সব বাতিল করুন", "Clear All")}
                 </button>
               </div>
             </div>
@@ -380,7 +383,7 @@ export default function StaffPage() {
                 onClick={() => setEditingPermissionsStaff(null)}
                 className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
               >
-                Cancel
+                {txt("বাতিল", "Cancel")}
               </button>
               <button
                 type="button"
@@ -391,10 +394,10 @@ export default function StaffPage() {
                 {isSubmitting ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Saving...</span>
+                    <span>{txt("সংরক্ষণ হচ্ছে...", "Saving...")}</span>
                   </>
                 ) : (
-                  <span>Save Permissions</span>
+                  <span>{txt("পারমিশন সংরক্ষণ করুন", "Save Permissions")}</span>
                 )}
               </button>
             </div>
@@ -412,8 +415,8 @@ export default function StaffPage() {
                   <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Create Staff Member</h3>
-                  <p className="text-[11px] text-slate-400">Add credentials and assign store branch</p>
+                  <h3 className="text-sm font-bold text-white">{txt("নতুন স্টাফ সদস্য তৈরি করুন", "Create Staff Member")}</h3>
+                  <p className="text-[11px] text-slate-400">{txt("লগইন ক্রেডেনশিয়াল ও শাখা নির্ধারণ করুন", "Add credentials and assign store branch")}</p>
                 </div>
               </div>
               <button
@@ -434,7 +437,7 @@ export default function StaffPage() {
             <form onSubmit={handleCreateStaff} className="space-y-3.5 text-xs">
               {/* Name */}
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Full Name *</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("পূর্ণ নাম *", "Full Name *")}</label>
                 <div className="relative">
                   <User className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -442,7 +445,7 @@ export default function StaffPage() {
                     required
                     value={newStaff.name}
                     onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
-                    placeholder="e.g. Tasnim Anjum"
+                    placeholder={txt("যেমন: তাসনীম আঞ্জুম", "e.g. Tasnim Anjum")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -450,7 +453,7 @@ export default function StaffPage() {
 
               {/* Email */}
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Email Address *</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("ইমেইল ঠিকানা *", "Email Address *")}</label>
                 <div className="relative">
                   <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -467,7 +470,8 @@ export default function StaffPage() {
               {/* Password */}
               <div>
                 <label className="block text-slate-300 font-medium mb-1">
-                  Account Password * <span className="text-slate-500 font-normal">(min 6 characters)</span>
+                  {txt("অ্যাকাউন্ট পাসওয়ার্ড * ", "Account Password * ")}
+                  <span className="text-slate-500 font-normal">{txt("(কমপক্ষে ৬ অক্ষর)", "(min 6 characters)")}</span>
                 </label>
                 <div className="relative">
                   <Key className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -477,7 +481,7 @@ export default function StaffPage() {
                     minLength={6}
                     value={newStaff.password}
                     onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
-                    placeholder="Enter secure password"
+                    placeholder={txt("সুরক্ষিত পাসওয়ার্ড লিখুন", "Enter secure password")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-10 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono"
                   />
                   <button
@@ -493,7 +497,7 @@ export default function StaffPage() {
               {/* Phone & Role */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Phone Number *</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("ফোন নম্বর *", "Phone Number *")}</label>
                   <div className="relative">
                     <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
@@ -508,27 +512,27 @@ export default function StaffPage() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">Role *</label>
+                  <label className="block text-slate-300 font-medium mb-1">{txt("রোল / পদবী *", "Role *")}</label>
                   <select
-                    aria-label="Staff Role"
+                    aria-label={txt("স্টাফ পদবী", "Staff Role")}
                     value={newStaff.role}
                     onChange={(e) => setNewStaff({ ...newStaff, role: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="cashier">Cashier</option>
+                    <option value="manager">{txt("ম্যানেজার (Manager)", "Manager")}</option>
+                    <option value="admin">{txt("অ্যাডমিন (Admin)", "Admin")}</option>
+                    <option value="cashier">{txt("ক্যাশিয়ার (Cashier)", "Cashier")}</option>
                   </select>
                 </div>
               </div>
 
               {/* Branch Selection */}
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Assigned Branch Outlet</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("নির্ধারিত শাখা আউটলেট", "Assigned Branch Outlet")}</label>
                 <div className="relative">
                   <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <select
-                    aria-label="Assigned Branch"
+                    aria-label={txt("শাখা নির্বাচন", "Assigned Branch")}
                     value={newStaff.branchId}
                     onChange={(e) => {
                       const selected = branches.find((b) => b.id === e.target.value);
@@ -540,7 +544,7 @@ export default function StaffPage() {
                     }}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="">All Branches / Main Outlet</option>
+                    <option value="">{txt("সকল শাখা / প্রধান আউটলেট", "All Branches / Main Outlet")}</option>
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name} {b.address ? `(${b.address})` : ""}
@@ -557,7 +561,7 @@ export default function StaffPage() {
                   onClick={() => setShowAddModal(false)}
                   className="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -567,10 +571,10 @@ export default function StaffPage() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving...</span>
+                      <span>{txt("সংরক্ষণ হচ্ছে...", "Saving...")}</span>
                     </>
                   ) : (
-                    <span>Create Staff Member</span>
+                    <span>{txt("কর্মী তৈরি করুন", "Create Staff Member")}</span>
                   )}
                 </button>
               </div>

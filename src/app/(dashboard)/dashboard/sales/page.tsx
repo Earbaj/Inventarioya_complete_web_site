@@ -27,7 +27,10 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function SalesHistoryPage() {
+  const { txt } = useLanguage();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -182,7 +185,7 @@ export default function SalesHistoryPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Sales History & Invoicing Records" />
+      <DashboardHeader title={txt("বিক্রয় ইতিহাস ও ইনভয়েস রেকর্ড", "Sales History & Invoicing Records")} />
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* KPI Financial Overview Cards */}
@@ -190,7 +193,7 @@ export default function SalesHistoryPage() {
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Total Invoices
+                {txt("মোট ইনভয়েস", "Total Invoices")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                 <ShoppingBag className="w-4 h-4" />
@@ -199,13 +202,13 @@ export default function SalesHistoryPage() {
             <p className="text-2xl font-black text-white mt-2 font-mono">
               {filteredInvoices.length}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Recorded sales orders</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("রেকর্ডকৃত বিক্রয় অর্ডার", "Recorded sales orders")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Total Revenue
+                {txt("মোট রেভিনিউ / বিক্রয়", "Total Revenue")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4" />
@@ -214,13 +217,13 @@ export default function SalesHistoryPage() {
             <p className="text-2xl font-black text-white mt-2 font-mono">
               {formatCurrency(totalSalesRevenue)}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Cumulative billed volume</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("সর্বমোট বিক্রয়কৃত পরিমাণ", "Cumulative billed volume")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
-                Paid / Collected
+                {txt("পরিশোধিত / আদায়কৃত", "Paid / Collected")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <CheckCircle2 className="w-4 h-4" />
@@ -229,13 +232,13 @@ export default function SalesHistoryPage() {
             <p className="text-2xl font-black text-emerald-400 mt-2 font-mono">
               {formatCurrency(totalPaidAmount)}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Cash & digital collections</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("নগদ ও ডিজিটাল আদায়", "Cash & digital collections")}</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">
-                Outstanding Due (বাকি)
+                {txt("মোট বাকি (বকেয়া)", "Outstanding Due (Due)")}
               </span>
               <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
                 <AlertCircle className="w-4 h-4" />
@@ -244,7 +247,7 @@ export default function SalesHistoryPage() {
             <p className="text-2xl font-black text-rose-400 mt-2 font-mono">
               {formatCurrency(totalDueAmount)}
             </p>
-            <p className="text-[10px] text-slate-500 mt-1">Pending customer balances</p>
+            <p className="text-[10px] text-slate-500 mt-1">{txt("কাস্টমারদের কাছে বাকি", "Pending customer balances")}</p>
           </div>
         </div>
 
@@ -261,14 +264,14 @@ export default function SalesHistoryPage() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search by invoice #, customer name, phone, or cashier..."
+                placeholder={txt("ইনভয়েস #, কাস্টমারের নাম, ফোন বা ক্যাশিয়ার দিয়ে খুঁজুন...", "Search by invoice #, customer name, phone, or cashier...")}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 shadow-inner"
               />
             </div>
 
             {/* Status Filter */}
             <select
-              aria-label="Filter by Status"
+              aria-label={txt("স্ট্যাটাস অনুযায়ী ফিল্টার", "Filter by Status")}
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -276,16 +279,16 @@ export default function SalesHistoryPage() {
               }}
               className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
             >
-              <option value="ALL">All Status</option>
-              <option value="PAID">Paid</option>
-              <option value="PARTIAL">Partial</option>
-              <option value="DUE">Due (বাকি)</option>
-              <option value="REFUNDED">Refunded</option>
+              <option value="ALL">{txt("সকল স্ট্যাটাস", "All Status")}</option>
+              <option value="PAID">{txt("পরিশোধিত (Paid)", "Paid")}</option>
+              <option value="PARTIAL">{txt("আংশিক (Partial)", "Partial")}</option>
+              <option value="DUE">{txt("বাকি (Due)", "Due")}</option>
+              <option value="REFUNDED">{txt("রিফান্ডকৃত (Refunded)", "Refunded")}</option>
             </select>
 
             {/* Date Range Filter */}
             <select
-              aria-label="Filter by Date"
+              aria-label={txt("তারিখ অনুযায়ী ফিল্টার", "Filter by Date")}
               value={dateFilter}
               onChange={(e) => {
                 setDateFilter(e.target.value);
@@ -293,10 +296,10 @@ export default function SalesHistoryPage() {
               }}
               className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
             >
-              <option value="ALL">All Dates</option>
-              <option value="TODAY">Today</option>
-              <option value="LAST_7_DAYS">Last 7 Days</option>
-              <option value="LAST_30_DAYS">Last 30 Days</option>
+              <option value="ALL">{txt("সকল তারিখ", "All Dates")}</option>
+              <option value="TODAY">{txt("আজকের বিক্রয়", "Today")}</option>
+              <option value="LAST_7_DAYS">{txt("গত ৭ দিন", "Last 7 Days")}</option>
+              <option value="LAST_30_DAYS">{txt("গত ৩০ দিন", "Last 30 Days")}</option>
             </select>
           </div>
 
@@ -305,27 +308,27 @@ export default function SalesHistoryPage() {
             <button
               onClick={() => setShowSalesReportModal(true)}
               className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
-              title="Print executive sales summary report or save as PDF"
+              title={txt("বিক্রয় সারসংক্ষেপ রিপোর্ট প্রিন্ট বা PDF ডাউনলোড করুন", "Print executive sales summary report or save as PDF")}
             >
               <Printer className="w-4 h-4" />
-              <span>Print / PDF Report</span>
+              <span>{txt("রিপোর্ট প্রিন্ট / PDF", "Print / PDF Report")}</span>
             </button>
 
             {canExportExcel && (
               <button
                 onClick={handleExportCsv}
                 className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm"
-                title="Export filtered sales to CSV"
+                title={txt("ফিল্টারকৃত বিক্রয় তালিকা CSV ডাউনলোড", "Export filtered sales to CSV")}
               >
                 <Download className="w-4 h-4 text-emerald-400" />
-                <span>Export CSV</span>
+                <span>{txt("CSV এক্সপোর্ট", "Export CSV")}</span>
               </button>
             )}
 
             <button
               onClick={() => loadSales(1, 100)}
               className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white rounded-xl transition-colors"
-              title="Refresh sales data"
+              title={txt("বিক্রয় ডাটা রিফ্রেশ করুন", "Refresh sales data")}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-400" : ""}`} />
             </button>
@@ -338,16 +341,16 @@ export default function SalesHistoryPage() {
             <table className="w-full min-w-[850px] text-left text-xs">
               <thead className="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
-                  <th className="py-3.5 px-4">Invoice #</th>
-                  <th className="py-3.5 px-4">Date & Time</th>
-                  <th className="py-3.5 px-4">Customer</th>
-                  <th className="py-3.5 px-4">Served By</th>
-                  <th className="py-3.5 px-4 text-right">Total Amount</th>
-                  <th className="py-3.5 px-4 text-right">Paid</th>
-                  <th className="py-3.5 px-4 text-right">Due</th>
-                  <th className="py-3.5 px-4 text-center">Method</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                  <th className="py-3.5 px-4 text-right">Print / PDF</th>
+                  <th className="py-3.5 px-4">{txt("ইনভয়েস #", "Invoice #")}</th>
+                  <th className="py-3.5 px-4">{txt("তারিখ ও সময়", "Date & Time")}</th>
+                  <th className="py-3.5 px-4">{txt("কাস্টমার", "Customer")}</th>
+                  <th className="py-3.5 px-4">{txt("ক্যাশিয়ার", "Served By")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("মোট মূল্য", "Total Amount")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("পরিশোধ", "Paid")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("বাকি", "Due")}</th>
+                  <th className="py-3.5 px-4 text-center">{txt("মাধ্যম", "Method")}</th>
+                  <th className="py-3.5 px-4 text-center">{txt("স্ট্যাটাস", "Status")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("প্রিন্ট / PDF", "Print / PDF")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
@@ -356,14 +359,14 @@ export default function SalesHistoryPage() {
                     <td colSpan={10} className="py-12 text-center text-slate-400">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
-                        <span className="text-xs">Loading sales and invoice records...</span>
+                        <span className="text-xs">{txt("বিক্রয় ও ইনভয়েস রেকর্ড লোড হচ্ছে...", "Loading sales and invoice records...")}</span>
                       </div>
                     </td>
                   </tr>
                 ) : paginatedInvoices.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="py-12 text-center text-slate-500">
-                      No invoices found matching current search or filters.
+                      {txt("বর্তমান সার্চ বা ফিল্টারে কোনো ইনভয়েস পাওয়া যায়নি।", "No invoices found matching current search or filters.")}
                     </td>
                   </tr>
                 ) : (
@@ -381,13 +384,13 @@ export default function SalesHistoryPage() {
                           <button
                             onClick={() => handleOpenInvoiceModal(inv, "a4")}
                             className="font-mono font-bold text-indigo-400 hover:text-indigo-300 hover:underline text-left block"
-                            title="View / Print A4 Invoice"
+                            title={txt("A4 ইনভয়েস দেখুন / প্রিন্ট করুন", "View / Print A4 Invoice")}
                           >
                             {inv.invoiceNumber || inv.invoiceNo}
                           </button>
                           {inv.isReturned && inv.isReturned !== "none" && (
                             <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-400">
-                              Returned ({inv.isReturned})
+                              {txt("ফেরতকৃত", "Returned")} ({inv.isReturned})
                             </span>
                           )}
                         </td>
@@ -406,7 +409,7 @@ export default function SalesHistoryPage() {
                             </p>
                           ) : (
                             <span className="text-[10px] text-slate-500 italic">
-                              Walk-in
+                              {txt("সাধারণ ক্রেতা", "Walk-in")}
                             </span>
                           )}
                         </td>
@@ -462,7 +465,13 @@ export default function SalesHistoryPage() {
                                 : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                             }`}
                           >
-                            {status}
+                            {status === "PAID"
+                              ? txt("পরিশোধিত", "PAID")
+                              : status === "PARTIAL"
+                              ? txt("আংশিক", "PARTIAL")
+                              : status === "REFUNDED"
+                              ? txt("রিফান্ড", "REFUNDED")
+                              : txt("বাকি", "DUE")}
                           </span>
                         </td>
 
@@ -472,16 +481,16 @@ export default function SalesHistoryPage() {
                             <button
                               onClick={() => handleOpenInvoiceModal(inv, "a4")}
                               className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
-                              title="Print or Save Standard A4 Tax Invoice as PDF"
+                              title={txt("স্ট্যান্ডার্ড A4 ট্যাক্স ইনভয়েস প্রিন্ট বা PDF সংরক্ষণ", "Print or Save Standard A4 Tax Invoice as PDF")}
                             >
                               <FileText className="w-3.5 h-3.5" />
-                              <span>Invoice (PDF)</span>
+                              <span>{txt("ইনভয়েস (PDF)", "Invoice (PDF)")}</span>
                             </button>
 
                             <button
                               onClick={() => handleOpenInvoiceModal(inv, "thermal")}
                               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-                              title="Print 80mm POS Thermal Slip"
+                              title={txt("৮০ মিমি POS থার্মাল স্লিপ প্রিন্ট", "Print 80mm POS Thermal Slip")}
                             >
                               <Receipt className="w-3.5 h-3.5" />
                             </button>
@@ -499,21 +508,14 @@ export default function SalesHistoryPage() {
           <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <span>
-                Showing{" "}
-                <span className="font-bold text-white">
-                  {filteredInvoices.length === 0
-                    ? 0
-                    : (currentPage - 1) * pageSize + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-bold text-white">
-                  {Math.min(currentPage * pageSize, filteredInvoices.length)}
-                </span>{" "}
-                of <span className="font-bold text-white">{filteredInvoices.length}</span> sales
+                {txt(
+                  `দেখাচ্ছে ${filteredInvoices.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} থেকে ${Math.min(currentPage * pageSize, filteredInvoices.length)} (মোট ${filteredInvoices.length} টি বিক্রয়)`,
+                  `Showing ${filteredInvoices.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredInvoices.length)} of ${filteredInvoices.length} sales`
+                )}
               </span>
               <div className="h-3 w-px bg-slate-800 mx-2" />
               <select
-                aria-label="Rows per page"
+                aria-label={txt("প্রতি পৃষ্ঠার রেকর্ড সংখ্যা", "Rows per page")}
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(Number(e.target.value));
@@ -521,9 +523,9 @@ export default function SalesHistoryPage() {
                 }}
                 className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs focus:outline-none"
               >
-                <option value={10}>10 per page</option>
-                <option value={25}>25 per page</option>
-                <option value={50}>50 per page</option>
+                <option value={10}>10 {txt("টি প্রতি পৃষ্ঠায়", "per page")}</option>
+                <option value={25}>25 {txt("টি প্রতি পৃষ্ঠায়", "per page")}</option>
+                <option value={50}>50 {txt("টি প্রতি পৃষ্ঠায়", "per page")}</option>
               </select>
             </div>
 
@@ -532,20 +534,20 @@ export default function SalesHistoryPage() {
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Previous Page"
+                title={txt("পূর্ববর্তী পৃষ্ঠা", "Previous Page")}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
               <span className="px-3 py-1 font-semibold text-white">
-                Page {currentPage} of {computedTotalPages}
+                {txt(`পৃষ্ঠা ${currentPage} / ${computedTotalPages}`, `Page ${currentPage} of ${computedTotalPages}`)}
               </span>
 
               <button
                 onClick={() => setCurrentPage((p) => Math.min(computedTotalPages, p + 1))}
                 disabled={currentPage >= computedTotalPages}
                 className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                title="Next Page"
+                title={txt("পরবর্তী পৃষ্ঠা", "Next Page")}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -571,7 +573,7 @@ export default function SalesHistoryPage() {
             <div className="bg-slate-950 px-4 sm:px-6 py-3.5 border-b border-slate-800 flex items-center justify-between print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="w-4 h-4 text-indigo-400" />
-                <span className="font-bold text-xs">Executive Sales Summary Report</span>
+                <span className="font-bold text-xs">{txt("এক্সিকিউটিভ বিক্রয় সারসংক্ষেপ রিপোর্ট", "Executive Sales Summary Report")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -579,7 +581,7 @@ export default function SalesHistoryPage() {
                   className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2 transition-colors"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>Print / Save as PDF</span>
+                  <span>{txt("প্রিন্ট / PDF সংরক্ষণ", "Print / Save as PDF")}</span>
                 </button>
                 <button
                   onClick={() => setShowSalesReportModal(false)}
@@ -615,35 +617,35 @@ export default function SalesHistoryPage() {
                           {pdfShopName}
                         </h1>
                         <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
-                          Smart Cloud POS & Sales Ledger Audit
+                          {txt("স্মার্ট ক্লাউড পিওএস ও সেলস লেজার অডিট", "Smart Cloud POS & Sales Ledger Audit")}
                         </p>
                         <p className="text-[11px] text-slate-600 mt-1">
-                          {pdfShopAddress || "Dhaka, Bangladesh"}
+                          {pdfShopAddress || txt("ঢাকা, বাংলাদেশ", "Dhaka, Bangladesh")}
                         </p>
                         <p className="text-[11px] text-slate-600">
-                          Phone: {pdfShopPhone || "+880 1700-000000"}
+                          {txt("ফোন: ", "Phone: ")}{pdfShopPhone || "+880 1700-000000"}
                         </p>
                         {pdfShopEmail && (
                           <p className="text-[10px] text-slate-500">
-                            Email: {pdfShopEmail}
+                            {txt("ইমেইল: ", "Email: ")}{pdfShopEmail}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <span className="inline-block bg-slate-900 text-white font-bold px-3 py-1 text-[11px] rounded uppercase mb-1.5">
-                        SALES SUMMARY REPORT
+                        {txt("বিক্রয় সারসংক্ষেপ রিপোর্ট", "SALES SUMMARY REPORT")}
                       </span>
                       <p className="text-[11px] text-slate-700">
-                        <span className="font-semibold text-slate-900">Report Date:</span>{" "}
-                        {new Date().toLocaleDateString("en-GB", {
+                        <span className="font-semibold text-slate-900">{txt("রিপোর্টের তারিখ:", "Report Date:")}</span>{" "}
+                        {new Date().toLocaleDateString(txt("bn-BD", "en-GB"), {
                           day: "2-digit",
                           month: "short",
                           year: "numeric",
                         })}
                       </p>
                       <p className="text-[11px] text-slate-700 mt-1">
-                        <span className="font-semibold text-slate-900">Generated By:</span>{" "}
+                        <span className="font-semibold text-slate-900">{txt("তৈরি করেছেন:", "Generated By:")}</span>{" "}
                         <span className="font-medium text-slate-800">{personName}</span>
                       </p>
                     </div>
@@ -654,7 +656,7 @@ export default function SalesHistoryPage() {
                 <div className="grid grid-cols-4 gap-3">
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase font-semibold block">
-                      Total Invoices
+                      {txt("মোট ইনভয়েস", "Total Invoices")}
                     </span>
                     <span className="text-xl font-bold text-slate-900 mt-0.5 block">
                       {filteredInvoices.length}
@@ -662,7 +664,7 @@ export default function SalesHistoryPage() {
                   </div>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
                     <span className="text-[10px] text-slate-500 uppercase font-semibold block">
-                      Total Sales Volume
+                      {txt("মোট বিক্রয়ের পরিমাণ", "Total Sales Volume")}
                     </span>
                     <span className="text-xl font-bold text-slate-900 mt-0.5 block">
                       {formatCurrency(totalSalesRevenue)}
@@ -670,7 +672,7 @@ export default function SalesHistoryPage() {
                   </div>
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <span className="text-[10px] text-emerald-800 uppercase font-semibold block">
-                      Collected (Paid)
+                      {txt("মোট আদায় (পরিশোধিত)", "Collected (Paid)")}
                     </span>
                     <span className="text-xl font-bold text-emerald-700 mt-0.5 block">
                       {formatCurrency(totalPaidAmount)}
@@ -678,7 +680,7 @@ export default function SalesHistoryPage() {
                   </div>
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg">
                     <span className="text-[10px] text-rose-700 uppercase font-semibold block">
-                      Outstanding Due
+                      {txt("মোট বকেয়া (বাকি)", "Outstanding Due")}
                     </span>
                     <span className="text-xl font-black text-rose-600 mt-0.5 block">
                       {formatCurrency(totalDueAmount)}
@@ -691,14 +693,14 @@ export default function SalesHistoryPage() {
                   <table className="w-full text-left text-xs border-collapse">
                     <thead className="bg-slate-100 border-b border-slate-200 text-slate-800 font-bold uppercase text-[10px]">
                       <tr>
-                        <th className="py-2 px-3 text-center">SL</th>
-                        <th className="py-2 px-3">Invoice #</th>
-                        <th className="py-2 px-3">Date</th>
-                        <th className="py-2 px-3">Customer</th>
-                        <th className="py-2 px-3 text-right">Total</th>
-                        <th className="py-2 px-3 text-right">Paid</th>
-                        <th className="py-2 px-3 text-right">Due</th>
-                        <th className="py-2 px-3 text-center">Status</th>
+                        <th className="py-2 px-3 text-center">{txt("ক্রমিক", "SL")}</th>
+                        <th className="py-2 px-3">{txt("ইনভয়েস #", "Invoice #")}</th>
+                        <th className="py-2 px-3">{txt("তারিখ", "Date")}</th>
+                        <th className="py-2 px-3">{txt("কাস্টমার", "Customer")}</th>
+                        <th className="py-2 px-3 text-right">{txt("মোট", "Total")}</th>
+                        <th className="py-2 px-3 text-right">{txt("পরিশোধ", "Paid")}</th>
+                        <th className="py-2 px-3 text-right">{txt("বাকি", "Due")}</th>
+                        <th className="py-2 px-3 text-center">{txt("স্ট্যাটাস", "Status")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -732,7 +734,7 @@ export default function SalesHistoryPage() {
                     <tfoot className="bg-slate-100 font-bold border-t border-slate-300">
                       <tr>
                         <td colSpan={4} className="py-2 px-3 text-right uppercase text-[10px]">
-                          Grand Totals:
+                          {txt("সর্বমোট:", "Grand Totals:")}
                         </td>
                         <td className="py-2 px-3 text-right text-slate-900 font-mono">
                           {formatCurrency(totalSalesRevenue)}
@@ -753,12 +755,12 @@ export default function SalesHistoryPage() {
                 <div className="pt-10 grid grid-cols-2 gap-8 text-center text-[10px] text-slate-600">
                   <div>
                     <div className="border-t border-slate-400 mx-auto w-40 pt-1 font-semibold">
-                      Store Manager Signature
+                      {txt("স্টোর ম্যানেজার স্বাক্ষর", "Store Manager Signature")}
                     </div>
                   </div>
                   <div>
                     <div className="border-t border-slate-400 mx-auto w-40 pt-1 font-semibold">
-                      Auditor / Accountant Signature
+                      {txt("অডিটর / হিসাবরক্ষক স্বাক্ষর", "Auditor / Accountant Signature")}
                     </div>
                   </div>
                 </div>

@@ -27,7 +27,10 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function PosTerminalPage() {
+  const { txt, isBangla } = useLanguage();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -387,7 +390,7 @@ export default function PosTerminalPage() {
 
   return (
     <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-      <DashboardHeader title="High-Speed Cloud POS Terminal" />
+      <DashboardHeader title={txt("পয়েন্ট অফ সেল (হাই-স্পিড ক্লাউড পিওএস)", "High-Speed Cloud POS Terminal")} />
 
       {/* Floating Stock Warning Notification */}
       {stockWarning && (
@@ -414,13 +417,13 @@ export default function PosTerminalPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products by Name, SKU, or Barcode (e.g. 890103...)"
+                placeholder={txt("পণ্যের নাম, SKU বা বারকোড স্ক্যান করুন...", "Search products by Name, SKU, or Barcode (e.g. 890103...)")}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
             <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
               <Barcode className="w-4 h-4 text-indigo-400" />
-              <span className="hidden sm:inline">Scanner Ready</span>
+              <span className="hidden sm:inline">{txt("স্ক্যানার রেডি", "Scanner Ready")}</span>
             </div>
           </div>
 
@@ -434,7 +437,7 @@ export default function PosTerminalPage() {
                   : "bg-slate-900 text-slate-400 hover:text-white"
               }`}
             >
-              All Categories ({products.length})
+              {txt(`সকল ক্যাটাগরি (${products.length})`, `All Categories (${products.length})`)}
             </button>
             {categories.map((cat) => (
               <button
@@ -474,7 +477,7 @@ export default function PosTerminalPage() {
                   >
                     {isOutOfStock && (
                       <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold text-[9px] border border-rose-500/30 flex items-center gap-1">
-                        <AlertTriangle className="w-2.5 h-2.5" /> Out of Stock
+                        <AlertTriangle className="w-2.5 h-2.5" /> {txt("স্টক শেষ", "Out of Stock")}
                       </div>
                     )}
                     {inCart && !isOutOfStock && (
@@ -489,7 +492,7 @@ export default function PosTerminalPage() {
                           {product.sku && product.sku.trim() !== "" ? product.sku : "SKU-N/A"}
                         </span>
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 font-medium shrink-0">
-                          {product.categoryName || (product as any).category || "General"}
+                          {product.categoryName || (product as any).category || txt("সাধারণ", "General")}
                         </span>
                       </div>
                       <h4 className="text-xs font-semibold text-white line-clamp-2 group-hover:text-indigo-300">
@@ -511,10 +514,10 @@ export default function PosTerminalPage() {
                         }`}
                       >
                         {isOutOfStock
-                          ? "Out of Stock (0)"
+                          ? txt("স্টক নেই (০)", "Out of Stock (0)")
                           : isLowStock
-                          ? `Low (${product.stockQuantity})`
-                          : `${product.stockQuantity} ${product.unit}`}
+                          ? `${txt("কম", "Low")} (${product.stockQuantity})`
+                          : `${product.stockQuantity} ${product.unit || txt("টি", "pcs")}`}
                       </span>
                     </div>
                   </div>
@@ -551,7 +554,7 @@ export default function PosTerminalPage() {
               </button>
               <ShoppingCart className="w-4 h-4 text-emerald-400" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-                Active Register Cart ({cart.reduce((s, i) => s + i.cartQuantity, 0)})
+                {txt(`বিলিং কার্ট (${cart.reduce((s, i) => s + i.cartQuantity, 0)})`, `Active Register Cart (${cart.reduce((s, i) => s + i.cartQuantity, 0)})`)}
               </h3>
             </div>
             {cart.length > 0 && (
@@ -559,7 +562,7 @@ export default function PosTerminalPage() {
                 onClick={() => setCart([])}
                 className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors"
               >
-                Clear Cart
+                {txt("কার্ট খালি করুন", "Clear Cart")}
               </button>
             )}
           </div>
@@ -569,7 +572,7 @@ export default function PosTerminalPage() {
             <div className="flex items-center justify-between gap-1 mb-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                 <User className="w-3 h-3 text-indigo-400" />
-                Customer / Ledger
+                {txt("কাস্টমার / বাকি খাতা", "Customer / Ledger")}
               </span>
               <button
                 type="button"
@@ -577,7 +580,7 @@ export default function PosTerminalPage() {
                 className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
               >
                 <Plus className="w-3 h-3" />
-                New Customer
+                {txt("নতুন কাস্টমার", "New Customer")}
               </button>
             </div>
 
@@ -593,18 +596,18 @@ export default function PosTerminalPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-semibold text-white truncate">
-                      {selectedCustomer ? selectedCustomer.name : customerName || "Walk-in Customer"}
+                      {selectedCustomer ? selectedCustomer.name : customerName || txt("সাধারণ ক্রেতা (Walk-in)", "Walk-in Customer")}
                     </p>
                     {selectedCustomer && Number(selectedCustomer.closingBalance || 0) < 0 && (
                       <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
-                        Due: {formatCurrency(Math.abs(Number(selectedCustomer.closingBalance)))}
+                        {txt("বাকি:", "Due:")} {formatCurrency(Math.abs(Number(selectedCustomer.closingBalance)))}
                       </span>
                     )}
                   </div>
                   <p className="text-[10px] text-slate-400 truncate">
                     {selectedCustomer
-                      ? selectedCustomer.phone || "No phone"
-                      : customerPhone ? `${customerPhone} (Custom)` : "General Customer (No ledger)"}
+                      ? selectedCustomer.phone || txt("ফোন নেই", "No phone")
+                      : customerPhone ? `${customerPhone} (Custom)` : txt("সাধারণ ক্যাশ খরিদ্দার (খাতা ছাড়া)", "General Customer (No ledger)")}
                   </p>
                 </div>
               </div>
@@ -618,7 +621,7 @@ export default function PosTerminalPage() {
                       handleSelectCustomer(null);
                     }}
                     className="p-1 hover:text-white rounded hover:bg-slate-800 transition-colors"
-                    title="Reset to Walk-in Customer"
+                    title={txt("সাধারণ কাস্টমারে রিসেট করুন", "Reset to Walk-in Customer")}
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -639,7 +642,7 @@ export default function PosTerminalPage() {
                       autoFocus
                       value={customerSearch}
                       onChange={(e) => setCustomerSearch(e.target.value)}
-                      placeholder="Search customer by name or phone..."
+                      placeholder={txt("কাস্টমারের নাম বা ফোন নম্বর দিয়ে খুঁজুন...", "Search customer by name or phone...")}
                       className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                     />
                     {isLoadingCustomers && (
@@ -659,10 +662,10 @@ export default function PosTerminalPage() {
                   >
                     <div>
                       <p className="text-xs font-semibold text-white flex items-center gap-1.5">
-                        Walk-in Customer
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">Cash Sale</span>
+                        {txt("সাধারণ ক্রেতা (Walk-in)", "Walk-in Customer")}
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">{txt("নগদ বিক্রয়", "Cash Sale")}</span>
                       </p>
-                      <p className="text-[10px] text-slate-400">Default general walk-in buyer</p>
+                      <p className="text-[10px] text-slate-400">{txt("ডিফল্ট সাধারণ নগদ খরিদ্দার", "Default general walk-in buyer")}</p>
                     </div>
                     {!selectedCustomer && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />}
                   </div>
@@ -686,10 +689,10 @@ export default function PosTerminalPage() {
                         <div className="flex items-center gap-2 shrink-0">
                           {dueNum < 0 ? (
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400">
-                              Due: {formatCurrency(Math.abs(dueNum))}
+                              {txt("বাকি:", "Due:")} {formatCurrency(Math.abs(dueNum))}
                             </span>
                           ) : (
-                            <span className="text-[9px] text-slate-500">No Due</span>
+                            <span className="text-[9px] text-slate-500">{txt("বাকি নেই", "No Due")}</span>
                           )}
                           {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />}
                         </div>
@@ -700,7 +703,7 @@ export default function PosTerminalPage() {
                   {/* Empty Search Result */}
                   {customers.length === 0 && !isLoadingCustomers && (
                     <div className="p-4 text-center text-slate-500 text-xs">
-                      No customer found for &quot;{customerSearch}&quot;
+                      {txt(`"${customerSearch}" নামে কোনো কাস্টমার পাওয়া যায়নি`, `No customer found for "${customerSearch}"`)}
                     </div>
                   )}
 
@@ -719,10 +722,10 @@ export default function PosTerminalPage() {
                         {isLoadingMoreCustomers ? (
                           <>
                             <Loader2 className="w-3 h-3 animate-spin" />
-                            Loading more...
+                            {txt("লোড হচ্ছে...", "Loading more...")}
                           </>
                         ) : (
-                          `Load more (${customers.length} of ${customerMeta.total})`
+                          txt(`আরও লোড করুন (${customers.length} / ${customerMeta.total})`, `Load more (${customers.length} of ${customerMeta.total})`)
                         )}
                       </button>
                     </div>
@@ -732,7 +735,7 @@ export default function PosTerminalPage() {
                 {/* Footer with summary & add new customer */}
                 <div className="p-2 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between text-[11px]">
                   <span className="text-slate-400">
-                    Total: <strong className="text-white">{customerMeta.total}</strong> customers
+                    {txt("মোট:", "Total:")} <strong className="text-white">{customerMeta.total}</strong> {txt("জন কাস্টমার", "customers")}
                   </span>
                   <button
                     type="button"
@@ -742,7 +745,7 @@ export default function PosTerminalPage() {
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
                   >
-                    <Plus className="w-3 h-3" /> Quick Add
+                    <Plus className="w-3 h-3" /> {txt("দ্রুত যোগ", "Quick Add")}
                   </button>
                 </div>
               </div>
@@ -754,9 +757,9 @@ export default function PosTerminalPage() {
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500">
                 <ShoppingCart className="w-10 h-10 text-slate-700 mb-2" />
-                <p className="text-xs font-medium">Register Cart is Empty</p>
+                <p className="text-xs font-medium">{txt("বিলিং কার্ট সম্পূর্ণ খালি", "Register Cart is Empty")}</p>
                 <p className="text-[11px] text-slate-600 mt-1">
-                  Click any product or scan barcode to add to billing bill
+                  {txt("পণ্য সিলেক্ট করুন বা বারকোড স্ক্যান করে কার্টে যোগ করুন", "Click any product or scan barcode to add to billing bill")}
                 </p>
               </div>
             ) : (
@@ -770,7 +773,7 @@ export default function PosTerminalPage() {
                     <p className="text-[10px] text-slate-400">
                       {formatCurrency(item.sellingPrice)} × {item.cartQuantity}
                       {item.cartQuantity >= item.stockQuantity && (
-                        <span className="ml-1 text-[9px] text-amber-400 font-semibold">(Max Stock)</span>
+                        <span className="ml-1 text-[9px] text-amber-400 font-semibold">({txt("সর্বোচ্চ স্টক", "Max Stock")})</span>
                       )}
                     </p>
                   </div>
@@ -789,7 +792,7 @@ export default function PosTerminalPage() {
                       onClick={() => updateQuantity(item.id, 1)}
                       disabled={item.cartQuantity >= item.stockQuantity}
                       className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 flex items-center justify-center transition-colors"
-                      title={item.cartQuantity >= item.stockQuantity ? "Maximum available stock reached" : "Increase quantity"}
+                      title={item.cartQuantity >= item.stockQuantity ? txt("সর্বোচ্চ মজুত পৌঁছে গেছে", "Maximum available stock reached") : txt("পরিমাণ বৃদ্ধি করুন", "Increase quantity")}
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -832,7 +835,7 @@ export default function PosTerminalPage() {
                         : "bg-slate-800 text-slate-400 hover:text-white"
                     }`}
                   >
-                    {method === "DUE" ? "DUE (বাকি)" : method}
+                    {method === "DUE" ? txt("DUE (বাকি)", "DUE") : method === "CASH" ? txt("CASH (নগদ)", "CASH") : method}
                   </button>
                 );
               })}
@@ -841,11 +844,11 @@ export default function PosTerminalPage() {
             {/* Discount & Subtotals */}
             <div className="space-y-1.5 text-xs text-slate-400 pt-1">
               <div className="flex justify-between">
-                <span>Subtotal:</span>
+                <span>{txt("সাবটোটাল:", "Subtotal:")}</span>
                 <span className="font-semibold text-white">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span>Discount (৳):</span>
+                <span>{txt("ছাড় / ডিসকাউন্ট (৳):", "Discount (৳):")}</span>
                 <input
                   type="number"
                   min={0}
@@ -855,7 +858,7 @@ export default function PosTerminalPage() {
                 />
               </div>
               <div className="flex justify-between text-sm font-extrabold text-white pt-1.5 border-t border-slate-800">
-                <span>Grand Total:</span>
+                <span>{txt("সর্বমোট বিল:", "Grand Total:")}</span>
                 <span className="text-emerald-400">{formatCurrency(grandTotal)}</span>
               </div>
             </div>
@@ -864,7 +867,7 @@ export default function PosTerminalPage() {
             <div className="space-y-2 pt-1 border-t border-slate-800/60">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-300 font-medium">Cash / Paid (৳):</span>
+                  <span className="text-xs text-slate-300 font-medium">{txt("নগদ / পরিশোধ (৳):", "Cash / Paid (৳):")}</span>
                   <div className="flex items-center gap-1 mt-0.5">
                     <button
                       type="button"
@@ -874,7 +877,7 @@ export default function PosTerminalPage() {
                       }}
                       className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
                     >
-                      Full Paid
+                      {txt("পুরো পরিশোধ", "Full Paid")}
                     </button>
                     <button
                       type="button"
@@ -884,7 +887,7 @@ export default function PosTerminalPage() {
                       }}
                       className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
                     >
-                      Full Due
+                      {txt("পুরো বাকি", "Full Due")}
                     </button>
                   </div>
                 </div>
@@ -910,7 +913,7 @@ export default function PosTerminalPage() {
                 <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-semibold">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    Remaining Due:
+                    {txt("অবশিষ্ট বাকি:", "Remaining Due:")}
                   </span>
                   <span className="font-bold text-rose-300 font-mono text-sm">{formatCurrency(dueAmount)}</span>
                 </div>
@@ -918,14 +921,14 @@ export default function PosTerminalPage() {
 
               {changeAmount > 0 && (
                 <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-semibold">
-                  <span>Return Change:</span>
+                  <span>{txt("ফেরত দিন (চেঞ্জ):", "Return Change:")}</span>
                   <span className="font-bold text-white font-mono text-sm">{formatCurrency(changeAmount)}</span>
                 </div>
               )}
 
               {dueAmount > 0 && !selectedCustomer && (
                 <p className="text-[10px] text-amber-400/90 leading-tight">
-                  ⚠️ Note: Unregistered customer. To record this ৳{dueAmount} due in customer ledger, please select or add a customer above.
+                  {txt(`⚠️ সতর্কতা: সাধারণ ক্রেতা। এই ৳${dueAmount} টাকা বাকি খাতায় রেকর্ড করতে উপরে কাস্টমার সিলেক্ট বা যোগ করুন।`, `⚠️ Note: Unregistered customer. To record this ৳${dueAmount} due in customer ledger, please select or add a customer above.`)}
                 </p>
               )}
             </div>
@@ -944,12 +947,12 @@ export default function PosTerminalPage() {
             >
               <Printer className="w-4 h-4" />
               {isCheckingOut
-                ? "Processing Invoice..."
+                ? txt("ইনভয়েস প্রসেসিং হচ্ছে...", "Processing Invoice...")
                 : dueAmount > 0 && paidAmount === 0
-                ? `Complete Due Sale (${formatCurrency(grandTotal)})`
+                ? `${txt("বাকি বিক্রয় সম্পন্ন করুন", "Complete Due Sale")} (${formatCurrency(grandTotal)})`
                 : dueAmount > 0
-                ? `Partial Sale (Paid: ${formatCurrency(paidAmount)} · Due: ${formatCurrency(dueAmount)})`
-                : `Complete & Print Invoice (${formatCurrency(grandTotal)})`}
+                ? `${txt("আংশিক বিক্রয়", "Partial Sale")} (${txt("জমা:", "Paid:")} ${formatCurrency(paidAmount)} · ${txt("বাকি:", "Due:")} ${formatCurrency(dueAmount)})`
+                : `${txt("বিক্রয় সম্পন্ন ও রসিদ প্রিন্ট", "Complete & Print Invoice")} (${formatCurrency(grandTotal)})`}
             </button>
           </div>
         </div>
@@ -967,12 +970,12 @@ export default function PosTerminalPage() {
                 {cart.reduce((s, i) => s + i.cartQuantity, 0)}
               </div>
               <div className="text-left">
-                <p className="text-xs font-semibold leading-tight">View Cart ({cart.length} items)</p>
+                <p className="text-xs font-semibold leading-tight">{txt(`কার্ট দেখুন (${cart.length} টি পণ্য)`, `View Cart (${cart.length} items)`)}</p>
                 <p className="text-[11px] text-indigo-200 font-mono">{formatCurrency(grandTotal)}</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-xs font-bold bg-white text-indigo-950 px-3.5 py-1.5 rounded-xl shadow">
-              <span>Review & Pay</span>
+              <span>{txt("বিল ও পেমেন্ট", "Review & Pay")}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -994,7 +997,7 @@ export default function PosTerminalPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">Add New Customer</h3>
+                <h3 className="text-sm font-bold text-white">{txt("নতুন কাস্টমার যোগ করুন", "Add New Customer")}</h3>
               </div>
               <button
                 onClick={() => setShowAddCustomerModal(false)}
@@ -1006,42 +1009,42 @@ export default function PosTerminalPage() {
 
             <form onSubmit={handleCreateCustomer} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Customer Full Name *</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("কাস্টমারের পুরো নাম *", "Customer Full Name *")}</label>
                 <input
                   type="text"
                   required
                   value={newCustomerForm.name}
                   onChange={(e) => setNewCustomerForm({ ...newCustomerForm, name: e.target.value })}
-                  placeholder="e.g. Rahim Chowdhury"
+                  placeholder={txt("যেমন: রহিম চৌধুরী", "e.g. Rahim Chowdhury")}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Phone Number *</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("মোবাইল নম্বর *", "Phone Number *")}</label>
                 <input
                   type="text"
                   required
                   value={newCustomerForm.phone}
                   onChange={(e) => setNewCustomerForm({ ...newCustomerForm, phone: e.target.value })}
-                  placeholder="e.g. 01712345678"
+                  placeholder={txt("যেমন: 01712345678", "e.g. 01712345678")}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Address (Optional)</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("ঠিকানা (ঐচ্ছিক)", "Address (Optional)")}</label>
                 <input
                   type="text"
                   value={newCustomerForm.address}
                   onChange={(e) => setNewCustomerForm({ ...newCustomerForm, address: e.target.value })}
-                  placeholder="e.g. Mirpur, Dhaka"
+                  placeholder={txt("যেমন: মিরপুর, ঢাকা", "e.g. Mirpur, Dhaka")}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Opening Due Balance (৳)</label>
+                <label className="block text-slate-300 font-medium mb-1">{txt("পূর্বের বকেয়া ব্যালেন্স (৳)", "Opening Due Balance (৳)")}</label>
                 <input
                   type="number"
                   value={newCustomerForm.openingBalance}
@@ -1062,7 +1065,7 @@ export default function PosTerminalPage() {
                   onClick={() => setShowAddCustomerModal(false)}
                   className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs transition-colors"
                 >
-                  Cancel
+                  {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -1074,7 +1077,7 @@ export default function PosTerminalPage() {
                   ) : (
                     <Plus className="w-3.5 h-3.5" />
                   )}
-                  Save & Select
+                  {txt("সংরক্ষণ ও নির্বাচন করুন", "Save & Select")}
                 </button>
               </div>
             </form>

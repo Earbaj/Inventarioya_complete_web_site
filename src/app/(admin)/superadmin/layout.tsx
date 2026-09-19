@@ -11,8 +11,10 @@ import {
   LogOut,
   Menu,
   X,
+  Globe,
 } from "lucide-react";
 import { AuthService } from "@/lib/api/client";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SuperAdminLayout({
   children,
@@ -21,6 +23,7 @@ export default function SuperAdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { locale, toggleLocale, txt } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -35,9 +38,9 @@ export default function SuperAdminLayout({
   }, [router]);
 
   const navItems = [
-    { name: "Platform Metrics", href: "/superadmin", icon: LayoutDashboard },
-    { name: "Registered Shops", href: "/superadmin/shops", icon: Building2 },
-    { name: "Pending Approvals", href: "/superadmin/payments", icon: CreditCard },
+    { name: txt("প্ল্যাটফর্ম মেট্রিক্স", "Platform Metrics"), href: "/superadmin", icon: LayoutDashboard },
+    { name: txt("নিবন্ধিত শপসমূহ", "Registered Shops"), href: "/superadmin/shops", icon: Building2 },
+    { name: txt("পেন্ডিং অনুমোদন", "Pending Approvals"), href: "/superadmin/payments", icon: CreditCard },
   ];
 
   return (
@@ -106,7 +109,7 @@ export default function SuperAdminLayout({
           })}
         </div>
 
-        {/* Sidebar Footer with Logout only */}
+        {/* Sidebar Footer with Logout & Lang Switcher */}
         <div className="p-3 border-t border-slate-800 bg-slate-950/40">
           <div className="flex items-center justify-between px-2 py-1">
             <div className="truncate">
@@ -117,13 +120,22 @@ export default function SuperAdminLayout({
                 {user?.email || "Platform Root"}
               </p>
             </div>
-            <button
-              onClick={() => AuthService.logout()}
-              title="Sign Out"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={toggleLocale}
+                title={locale === "bn" ? "Switch to English" : "বাংলায় পরিবর্তন করুন"}
+                className="px-1.5 py-1 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 text-[10px] font-bold transition-colors cursor-pointer"
+              >
+                {locale === "bn" ? "EN" : "বাং"}
+              </button>
+              <button
+                onClick={() => AuthService.logout()}
+                title={txt("লগআউট", "Sign Out")}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -136,7 +148,7 @@ export default function SuperAdminLayout({
             {/* Mobile Hamburger */}
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors cursor-pointer"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
@@ -145,12 +157,21 @@ export default function SuperAdminLayout({
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-semibold text-slate-300 truncate">
-                Platform Backend Online
+                {txt("প্ল্যাটফর্ম ব্যাকএন্ড সচল", "Platform Backend Online")}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleLocale}
+              title={locale === "bn" ? "Switch to English" : "বাংলায় পরিবর্তন করুন"}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-700 transition-all flex items-center gap-1 text-xs font-bold shrink-0 shadow-sm cursor-pointer"
+            >
+              <Globe className="w-3.5 h-3.5 text-amber-500" />
+              <span>{locale === "bn" ? "EN" : "বাং"}</span>
+            </button>
+
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
               <span className="font-medium text-slate-200">{user?.name || "SuperAdmin"}</span>
               <span>·</span>
@@ -161,10 +182,10 @@ export default function SuperAdminLayout({
 
             <button
               onClick={() => AuthService.logout()}
-              className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span>{txt("লগআউট", "Sign Out")}</span>
             </button>
           </div>
         </header>

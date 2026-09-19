@@ -17,6 +17,8 @@ import {
   Phone,
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 interface InvoicePrintModalProps {
   invoice: Invoice;
   onClose: () => void;
@@ -28,6 +30,7 @@ export function InvoicePrintModal({
   onClose,
   initialMode = "a4",
 }: InvoicePrintModalProps) {
+  const { txt, isBangla } = useLanguage();
   const [printMode, setPrintMode] = useState<"a4" | "thermal">(initialMode);
 
   const user = AuthService.getCurrentUser();
@@ -91,7 +94,7 @@ export function InvoicePrintModal({
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Standard A4 Invoice (PDF)</span>
+              <span>{txt("স্ট্যান্ডার্ড A4 ইনভয়েস (PDF)", "Standard A4 Invoice (PDF)")}</span>
             </button>
             <button
               onClick={() => setPrintMode("thermal")}
@@ -102,7 +105,7 @@ export function InvoicePrintModal({
               }`}
             >
               <Receipt className="w-3.5 h-3.5" />
-              <span>80mm POS Receipt</span>
+              <span>{txt("৮০মিমি পিওএস রসিদ (Thermal)", "80mm POS Receipt")}</span>
             </button>
           </div>
 
@@ -111,23 +114,23 @@ export function InvoicePrintModal({
             <button
               onClick={handleExportCsv}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors"
-              title="Download items as CSV"
+              title={txt("CSV ফাইল ডাউনলোড করুন", "Download items as CSV")}
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Export CSV</span>
+              <span className="hidden sm:inline">{txt("CSV এক্সপোর্ট", "Export CSV")}</span>
             </button>
             <button
               onClick={handlePrint}
               className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow flex items-center gap-2 transition-colors"
-              title="Print or save as PDF"
+              title={txt("প্রিন্ট দিন বা PDF সেভ করুন", "Print or save as PDF")}
             >
               <Printer className="w-4 h-4" />
-              <span>Print / Save as PDF</span>
+              <span>{txt("প্রিন্ট / PDF সেভ", "Print / Save as PDF")}</span>
             </button>
             <button
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors ml-1"
-              title="Close modal"
+              title={txt("বন্ধ করুন", "Close modal")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -163,17 +166,17 @@ export function InvoicePrintModal({
                         {shopName}
                       </h1>
                       <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
-                        Smart Cloud POS & Retail Billing
+                        {txt("স্মার্ট ক্লাউড পিওএস ও রিটেল বিলিং", "Smart Cloud POS & Retail Billing")}
                       </p>
                       <p className="text-[11px] text-slate-600 mt-1">
-                        {shopAddress || "Dhaka, Bangladesh"}
+                        {shopAddress || txt("ঢাকা, বাংলাদেশ", "Dhaka, Bangladesh")}
                       </p>
                       <p className="text-[11px] text-slate-600">
-                        Phone: {shopPhone || "+880 1700-000000"}
+                        {txt("মোবাইল:", "Phone:")} {shopPhone || "+880 1700-000000"}
                       </p>
                       {shopEmail && (
                         <p className="text-[10px] text-slate-500">
-                          Email: {shopEmail}
+                          {txt("ইমেইল:", "Email:")} {shopEmail}
                         </p>
                       )}
                     </div>
@@ -181,21 +184,21 @@ export function InvoicePrintModal({
 
                   <div className="text-right shrink-0">
                     <span className="inline-block bg-slate-900 text-white font-extrabold px-3 py-1 text-[11px] rounded uppercase tracking-wider mb-2">
-                      RETAIL TAX INVOICE
+                      {txt("ক্যাশ মেমো ও ট্যাক্স ইনভয়েস", "RETAIL TAX INVOICE")}
                     </span>
                     <div className="text-[11px] text-slate-700 space-y-0.5">
                       <p>
-                        <span className="font-semibold text-slate-900">Invoice No:</span>{" "}
+                        <span className="font-semibold text-slate-900">{txt("ইনভয়েস নং:", "Invoice No:")}</span>{" "}
                         <span className="font-mono font-bold text-indigo-700">
                           {invoice.invoiceNumber || invoice.invoiceNo}
                         </span>
                       </p>
                       <p>
-                        <span className="font-semibold text-slate-900">Date & Time:</span>{" "}
+                        <span className="font-semibold text-slate-900">{txt("তারিখ ও সময়:", "Date & Time:")}</span>{" "}
                         {formatDate(invoice.createdAt || invoice.date)}
                       </p>
                       <div className="pt-1 flex items-center justify-end gap-1.5">
-                        <span className="font-semibold text-[10px] text-slate-600">Payment:</span>
+                        <span className="font-semibold text-[10px] text-slate-600">{txt("পেমেন্ট স্ট্যাটাস:", "Payment:")}</span>
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1 ${
                             isPaid
@@ -212,7 +215,7 @@ export function InvoicePrintModal({
                           ) : (
                             <AlertCircle className="w-3 h-3" />
                           )}
-                          {invoice.status}
+                          {isPaid ? txt("পরিশোধিত", "PAID") : isPartial ? txt("আংশিক জমা", "PARTIAL") : txt("বকেয়া", "DUE")}
                         </span>
                       </div>
                     </div>
@@ -226,7 +229,7 @@ export function InvoicePrintModal({
                 <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
                     <User className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Customer Information (ক্রেতা)</span>
+                    <span>{txt("ক্রেতার তথ্য (Customer)", "Customer Information")}</span>
                   </div>
                   <p className="text-sm font-bold text-slate-900">{invoice.customerName}</p>
                   {invoice.customerPhone ? (
@@ -235,7 +238,7 @@ export function InvoicePrintModal({
                       {invoice.customerPhone}
                     </p>
                   ) : (
-                    <p className="text-[10px] text-slate-500 italic mt-0.5">Counter / Walk-in Sale</p>
+                    <p className="text-[10px] text-slate-500 italic mt-0.5">{txt("কাউন্টার / সাধারণ ক্রেতা", "Counter / Walk-in Sale")}</p>
                   )}
                 </div>
 
@@ -243,15 +246,15 @@ export function InvoicePrintModal({
                 <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-right">
                   <div className="flex items-center justify-end gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
                     <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>Store Register & Served By</span>
+                    <span>{txt("ক্যাশিয়ার ও শাখা", "Store Register & Served By")}</span>
                   </div>
                   <p className="text-sm font-bold text-slate-900">{displayCashier}</p>
                   <p className="text-[11px] text-slate-600 mt-0.5">
-                    Role: <span className="font-semibold uppercase">{invoice.createdByRole || "Admin"}</span>
+                    {txt("রোল:", "Role:")} <span className="font-semibold uppercase">{invoice.createdByRole || "Admin"}</span>
                   </p>
                   {invoice.branchName && (
                     <p className="text-[10px] text-indigo-700 font-semibold mt-0.5">
-                      Branch: {invoice.branchName}
+                      {txt("শাখা:", "Branch:")} {invoice.branchName}
                     </p>
                   )}
                 </div>
@@ -263,13 +266,13 @@ export function InvoicePrintModal({
                   <thead className="bg-slate-100 border-b border-slate-200 text-slate-800 font-bold uppercase text-[10px]">
                     <tr>
                       <th className="py-2.5 px-3 text-center w-10">#</th>
-                      <th className="py-2.5 px-3">Item Description</th>
-                      <th className="py-2.5 px-3 text-right">Unit Price</th>
-                      <th className="py-2.5 px-3 text-center">Qty</th>
+                      <th className="py-2.5 px-3">{txt("পণ্যের বিবরণ", "Item Description")}</th>
+                      <th className="py-2.5 px-3 text-right">{txt("একক দর", "Unit Price")}</th>
+                      <th className="py-2.5 px-3 text-center">{txt("পরিমাণ", "Qty")}</th>
                       {Number(invoice.discount) > 0 && (
-                        <th className="py-2.5 px-3 text-right">Discount</th>
+                        <th className="py-2.5 px-3 text-right">{txt("ছাড়", "Discount")}</th>
                       )}
-                      <th className="py-2.5 px-3 text-right">Total</th>
+                      <th className="py-2.5 px-3 text-right">{txt("মোট মূল্য", "Total")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -314,33 +317,33 @@ export function InvoicePrintModal({
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 w-full">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3.5 border-b border-slate-200 text-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-semibold text-slate-500 block">Subtotal</span>
+                      <span className="text-[10px] uppercase font-semibold text-slate-500 block">{txt("সাবটোটাল", "Subtotal")}</span>
                       <span className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(invoice.subtotal)}</span>
                     </div>
                     {Number(invoice.discount) > 0 ? (
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-emerald-700 block">Discount</span>
+                        <span className="text-[10px] uppercase font-semibold text-emerald-700 block">{txt("ছাড় / ডিসকাউন্ট", "Discount")}</span>
                         <span className="text-sm font-bold text-emerald-700 font-mono">-{formatCurrency(invoice.discount)}</span>
                       </div>
                     ) : (
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">Discount</span>
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">{txt("ছাড় / ডিসকাউন্ট", "Discount")}</span>
                         <span className="text-sm font-medium text-slate-500 font-mono">৳ 0</span>
                       </div>
                     )}
                     {Number(invoice.tax) > 0 ? (
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-500 block">VAT / Tax</span>
+                        <span className="text-[10px] uppercase font-semibold text-slate-500 block">{txt("ভ্যাট / ট্যাক্স", "VAT / Tax")}</span>
                         <span className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(invoice.tax)}</span>
                       </div>
                     ) : (
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">VAT / Tax</span>
+                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">{txt("ভ্যাট / ট্যাক্স", "VAT / Tax")}</span>
                         <span className="text-sm font-medium text-slate-500 font-mono">৳ 0</span>
                       </div>
                     )}
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block">Payment Method</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-600 block">{txt("পেমেন্ট মাধ্যম", "Payment Method")}</span>
                       <span className="text-sm font-extrabold text-slate-900">{invoice.paymentMethod || "CASH"}</span>
                     </div>
                   </div>
@@ -349,22 +352,22 @@ export function InvoicePrintModal({
                   <div className="pt-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div className="flex flex-wrap items-center gap-4 text-xs">
                       <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">Paid Amount</span>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">{txt("পরিশোধিত টাকা", "Paid Amount")}</span>
                         <span className="text-base font-bold text-emerald-700 font-mono">{formatCurrency(invoice.paidAmount)}</span>
                       </div>
                       <div className="h-7 w-px bg-slate-200 hidden sm:block" />
                       <div>
-                        <span className="text-[10px] uppercase font-semibold block text-slate-500">Due Balance (বাকি)</span>
+                        <span className="text-[10px] uppercase font-semibold block text-slate-500">{txt("বকেয়া ব্যালেন্স (বাকি)", "Due Balance (বাকি)")}</span>
                         {Number(invoice.dueAmount) > 0 ? (
                           <span className="text-base font-black text-rose-600 font-mono">{formatCurrency(invoice.dueAmount)}</span>
                         ) : (
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded inline-block">Cleared (৳ 0)</span>
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded inline-block">{txt("বাকি নেই (৳ 0)", "Cleared (৳ 0)")}</span>
                         )}
                       </div>
                     </div>
 
                     <div className="bg-white border border-slate-300 rounded-xl px-5 py-2 text-right shadow-xs">
-                      <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider block">Net Grand Total</span>
+                      <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider block">{txt("সর্বমোট বিল", "Net Grand Total")}</span>
                       <span className="text-2xl font-black text-indigo-700 font-mono leading-none mt-0.5 block">
                         {formatCurrency(invoice.grandTotal)}
                       </span>
@@ -377,20 +380,21 @@ export function InvoicePrintModal({
               <div className="pt-12 grid grid-cols-2 gap-8 text-center text-[10px] text-slate-600">
                 <div>
                   <div className="border-t border-slate-400 mx-auto w-44 pt-1 font-semibold">
-                    Customer Signature
+                    {txt("ক্রেতার স্বাক্ষর", "Customer Signature")}
                   </div>
                 </div>
                 <div>
                   <div className="border-t border-slate-400 mx-auto w-44 pt-1 font-semibold">
-                    Authorized Cashier Signature
+                    {txt("কর্তৃপক্ষের স্বাক্ষর", "Authorized Cashier Signature")}
                   </div>
                 </div>
               </div>
 
               {/* Bottom Copyright */}
               <div className="text-center pt-4 border-t border-slate-200 text-[10px] text-slate-400">
-                Thank you for your business! Generated on{" "}
-                {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}.
+                {txt("আমাদের সাথে কেনাকাটা করার জন্য ধন্যবাদ!", "Thank you for your business!")}{" "}
+                {txt("তারিখ:", "Generated on")}{" "}
+                {new Date().toLocaleDateString(isBangla ? "bn-BD" : "en-GB", { day: "2-digit", month: "short", year: "numeric" })}.
               </div>
             </div>
           ) : (
@@ -417,39 +421,39 @@ export function InvoicePrintModal({
                   <h2 className="text-sm font-bold tracking-wider uppercase">
                     {shopName}
                   </h2>
-                  <p className="text-[10px] text-slate-600">{shopAddress || "Dhaka, Bangladesh"}</p>
-                  <p className="text-[10px] text-slate-600">Tel: {shopPhone || "+880 1700-000000"}</p>
-                  {shopEmail && <p className="text-[9px] text-slate-500">Email: {shopEmail}</p>}
-                  <p className="text-[10px] font-bold mt-1 bg-slate-100 py-0.5">RETAIL POS RECEIPT</p>
+                  <p className="text-[10px] text-slate-600">{shopAddress || txt("ঢাকা, বাংলাদেশ", "Dhaka, Bangladesh")}</p>
+                  <p className="text-[10px] text-slate-600">{txt("ফোন:", "Tel:")} {shopPhone || "+880 1700-000000"}</p>
+                  {shopEmail && <p className="text-[9px] text-slate-500">{txt("ইমেইল:", "Email:")} {shopEmail}</p>}
+                  <p className="text-[10px] font-bold mt-1 bg-slate-100 py-0.5">{txt("ক্যাশ রসিদ ও মেমো", "RETAIL POS RECEIPT")}</p>
                 </div>
 
                 {/* Metadata */}
                 <div className="py-2.5 border-b border-dashed border-slate-400 text-[10px] space-y-0.5">
                   <div className="flex justify-between">
-                    <span>Invoice:</span>
+                    <span>{txt("ইনভয়েস:", "Invoice:")}</span>
                     <span className="font-bold">{invoice.invoiceNumber || invoice.invoiceNo}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Date:</span>
+                    <span>{txt("তারিখ:", "Date:")}</span>
                     <span>{formatDate(invoice.createdAt || invoice.date)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Customer:</span>
+                    <span>{txt("কাস্টমার:", "Customer:")}</span>
                     <span className="font-semibold">{invoice.customerName}</span>
                   </div>
                   {invoice.customerPhone && (
                     <div className="flex justify-between">
-                      <span>Phone:</span>
+                      <span>{txt("মোবাইল:", "Phone:")}</span>
                       <span>{invoice.customerPhone}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Cashier:</span>
+                    <span>{txt("ক্যাশিয়ার:", "Cashier:")}</span>
                     <span>{displayCashier}</span>
                   </div>
                   {invoice.branchName && (
                     <div className="flex justify-between">
-                      <span>Branch:</span>
+                      <span>{txt("শাখা:", "Branch:")}</span>
                       <span>{invoice.branchName}</span>
                     </div>
                   )}
@@ -460,10 +464,10 @@ export function InvoicePrintModal({
                   <table className="w-full text-left text-[10px]">
                     <thead>
                       <tr className="border-b border-slate-300 font-bold">
-                        <th className="py-1">Item</th>
-                        <th className="py-1 text-center">Qty</th>
-                        <th className="py-1 text-right">Rate</th>
-                        <th className="py-1 text-right">Total</th>
+                        <th className="py-1">{txt("পণ্য", "Item")}</th>
+                        <th className="py-1 text-center">{txt("পরিমাণ", "Qty")}</th>
+                        <th className="py-1 text-right">{txt("দর", "Rate")}</th>
+                        <th className="py-1 text-right">{txt("মোট", "Total")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -492,32 +496,32 @@ export function InvoicePrintModal({
                 {/* Summary */}
                 <div className="py-2 border-b border-dashed border-slate-400 space-y-1 text-[10px]">
                   <div className="flex justify-between">
-                    <span>Subtotal:</span>
+                    <span>{txt("সাবটোটাল:", "Subtotal:")}</span>
                     <span>{formatCurrency(invoice.subtotal)}</span>
                   </div>
                   {Number(invoice.discount) > 0 && (
                     <div className="flex justify-between text-emerald-700">
-                      <span>Discount:</span>
+                      <span>{txt("ছাড় / ডিসকাউন্ট:", "Discount:")}</span>
                       <span>-{formatCurrency(invoice.discount)}</span>
                     </div>
                   )}
                   {Number(invoice.tax) > 0 && (
                     <div className="flex justify-between">
-                      <span>Vat / Tax:</span>
+                      <span>{txt("ভ্যাট / ট্যাক্স:", "Vat / Tax:")}</span>
                       <span>{formatCurrency(invoice.tax)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-300">
-                    <span>Grand Total:</span>
+                    <span>{txt("সর্বমোট বিল:", "Grand Total:")}</span>
                     <span>{formatCurrency(invoice.grandTotal)}</span>
                   </div>
                   <div className="flex justify-between pt-0.5">
-                    <span>Paid ({invoice.paymentMethod}):</span>
+                    <span>{txt(`জমা (${invoice.paymentMethod}):`, `Paid (${invoice.paymentMethod}):`)}</span>
                     <span>{formatCurrency(invoice.paidAmount)}</span>
                   </div>
                   {Number(invoice.dueAmount) > 0 && (
                     <div className="flex justify-between text-rose-600 font-bold">
-                      <span>Due Balance:</span>
+                      <span>{txt("বকেয়া বাকি:", "Due Balance:")}</span>
                       <span>{formatCurrency(invoice.dueAmount)}</span>
                     </div>
                   )}
@@ -525,14 +529,14 @@ export function InvoicePrintModal({
 
                 {/* Footer */}
                 <div className="text-center pt-3 space-y-1">
-                  <p className="text-[10px] font-bold">Thank you for shopping with us!</p>
+                  <p className="text-[10px] font-bold">{txt("আমাদের সাথে কেনাকাটা করার জন্য ধন্যবাদ!", "Thank you for shopping with us!")}</p>
                   <p className="text-[9px] text-slate-500">
-                    Goods once sold cannot be returned without receipt.
+                    {txt("রসিদ ছাড়া বিক্রিত পণ্য ফেরতযোগ্য নহে।", "Goods once sold cannot be returned without receipt.")}
                   </p>
                   <div className="pt-2 text-[8px] tracking-widest text-slate-400 uppercase">
                     * {invoice.invoiceNumber || invoice.invoiceNo} *
                   </div>
-                  <p className="text-[8px] text-slate-400">Powered by Inventarioya Cloud POS</p>
+                  <p className="text-[8px] text-slate-400">{txt("পাওয়ার্ড বাই Inventarioya ক্লাউড পিওএস", "Powered by Inventarioya Cloud POS")}</p>
                 </div>
               </div>
             </div>

@@ -33,7 +33,10 @@ import {
   CartesianGrid,
 } from "recharts";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function DashboardOverviewPage() {
+  const { txt } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSales, setRecentSales] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +84,7 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Store Analytics & Executive Overview" />
+      <DashboardHeader title={txt("দোকানের হিসাব ও সামগ্রিক অ্যানালিটিক্স", "Store Analytics & Executive Overview")} />
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* Primary Financial KPI Cards Grid */}
@@ -89,7 +92,7 @@ export default function DashboardOverviewPage() {
           {/* Card 1: Total Sales Revenue */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Total Sales Revenue</span>
+              <span className="text-xs font-semibold text-slate-400">{txt("মোট বিক্রয় রেভিনিউ", "Total Sales Revenue")}</span>
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <ShoppingCart className="w-4 h-4" />
               </div>
@@ -99,8 +102,8 @@ export default function DashboardOverviewPage() {
                 {formatCurrency(totalSales)}
               </p>
               <div className="mt-1 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">Invoices Created</span>
-                <span className="font-bold text-emerald-400">{totalInvoices} Orders</span>
+                <span className="text-slate-400">{txt("মোট ইনভয়েস অর্ডার", "Invoices Created")}</span>
+                <span className="font-bold text-emerald-400">{totalInvoices} {txt("টি অর্ডার", "Orders")}</span>
               </div>
             </div>
           </div>
@@ -108,7 +111,7 @@ export default function DashboardOverviewPage() {
           {/* Card 2: Cash Collected */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Collected Cash & Digital</span>
+              <span className="text-xs font-semibold text-slate-400">{txt("নগদ ও ডিজিটাল আদায়", "Collected Cash & Digital")}</span>
               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                 <DollarSign className="w-4 h-4" />
               </div>
@@ -118,8 +121,8 @@ export default function DashboardOverviewPage() {
                 {formatCurrency(totalPaid)}
               </p>
               <div className="mt-1 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">Collection Rate</span>
-                <span className="font-bold text-indigo-400">{collectionRatio}% of sales</span>
+                <span className="text-slate-400">{txt("কালেকশন হার", "Collection Rate")}</span>
+                <span className="font-bold text-indigo-400">{collectionRatio}% {txt("বিক্রয়ের", "of sales")}</span>
               </div>
             </div>
           </div>
@@ -127,7 +130,7 @@ export default function DashboardOverviewPage() {
           {/* Card 3: Total Due Amount */}
           <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">Total Market Due</span>
+              <span className="text-xs font-semibold text-slate-400">{txt("সর্বমোট বকেয়া / বাকি", "Total Market Due")}</span>
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
                 <Wallet className="w-4 h-4" />
               </div>
@@ -137,7 +140,7 @@ export default function DashboardOverviewPage() {
                 {formatCurrency(totalDue)}
               </p>
               <div className="mt-1 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">Customer Due</span>
+                <span className="text-slate-400">{txt("কাস্টমার বাকি", "Customer Due")}</span>
                 <Link
                   href="/dashboard/customers"
                   className="font-bold text-amber-300 hover:underline"
@@ -153,10 +156,10 @@ export default function DashboardOverviewPage() {
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-400">
                 {netProfit > 0
-                  ? "Net Profit (নিট লাভ)"
+                  ? txt("প্রকৃত নিট লাভ (Net Profit)", "Net Profit")
                   : netProfit < 0
-                  ? "Net Loss (ঘাটতি / ক্ষতি)"
-                  : "Net Balance (সমান)"}
+                  ? txt("প্রকৃত নিট ক্ষতি (Net Loss)", "Net Loss")
+                  : txt("ব্যালেন্সড (সমান)", "Net Balance")}
               </span>
               <div
                 className={`w-8 h-8 rounded-lg flex items-center justify-center ${
@@ -192,12 +195,12 @@ export default function DashboardOverviewPage() {
                       : "bg-slate-800 text-slate-400 border border-slate-700"
                   }`}
                 >
-                  {netProfit > 0 ? "Profit (লাভ)" : netProfit < 0 ? "Loss (ঘাটতি)" : "Balanced"}
+                  {netProfit > 0 ? txt("লাভ", "Profit") : netProfit < 0 ? txt("ঘাটতি", "Loss") : txt("সমান", "Balanced")}
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between text-[11px]">
                 <span className="text-slate-400">
-                  {netProfit < 0 ? "Loss after Expenses" : "Shop Expenses"}
+                  {netProfit < 0 ? txt("খরচ বাদে ঘাটতি", "Loss after Expenses") : txt("দোকান খরচ", "Shop Expenses")}
                 </span>
                 <span className="font-semibold text-slate-300">
                   {formatCurrency(totalExpenses)}
@@ -221,7 +224,7 @@ export default function DashboardOverviewPage() {
                 <p className="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">
                   {totalItems}
                 </p>
-                <p className="text-[11px] text-slate-400">Catalog Products</p>
+                <p className="text-[11px] text-slate-400">{txt("মোট পণ্য ক্যাটালগ", "Catalog Products")}</p>
               </div>
             </div>
           </Link>
@@ -242,7 +245,7 @@ export default function DashboardOverviewPage() {
                 <p className="text-lg font-bold text-rose-400">
                   {lowStock}
                 </p>
-                <p className="text-[11px] text-slate-400">Low Stock Alert</p>
+                <p className="text-[11px] text-slate-400">{txt("লো-স্টক সতর্কতা", "Low Stock Alert")}</p>
               </div>
             </div>
           </Link>
@@ -259,7 +262,7 @@ export default function DashboardOverviewPage() {
                 <p className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
                   {totalCustomers}
                 </p>
-                <p className="text-[11px] text-slate-400">Active Customers</p>
+                <p className="text-[11px] text-slate-400">{txt("সক্রিয় কাস্টমার", "Active Customers")}</p>
               </div>
             </div>
           </Link>
@@ -276,7 +279,7 @@ export default function DashboardOverviewPage() {
                 <p className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
                   {totalInvoices}
                 </p>
-                <p className="text-[11px] text-slate-400">Sales Invoices</p>
+                <p className="text-[11px] text-slate-400">{txt("সেলস ইনভয়েস", "Sales Invoices")}</p>
               </div>
             </div>
           </Link>
@@ -288,11 +291,11 @@ export default function DashboardOverviewPage() {
           <div className="lg:col-span-2 p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
-                <h3 className="text-sm font-bold text-white">Weekly Sales Velocity</h3>
-                <p className="text-xs text-slate-400">Daily sales revenue trends across all branch checkouts</p>
+                <h3 className="text-sm font-bold text-white">{txt("সাপ্তাহিক বিক্রয় ট্রেন্ড", "Weekly Sales Velocity")}</h3>
+                <p className="text-xs text-slate-400">{txt("প্রতিদিনের মোট বিক্রয় পরিসংখ্যানের গ্রাফ", "Daily sales revenue trends across all branch checkouts")}</p>
               </div>
               <span className="self-start sm:self-auto text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-medium">
-                Last 7 Days
+                {txt("গত ৭ দিন", "Last 7 Days")}
               </span>
             </div>
 
@@ -300,13 +303,13 @@ export default function DashboardOverviewPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={stats?.salesChartData || [
-                    { date: "Mon", amount: 28500 },
-                    { date: "Tue", amount: 31200 },
-                    { date: "Wed", amount: 24800 },
-                    { date: "Thu", amount: 39500 },
-                    { date: "Fri", amount: 48900 },
-                    { date: "Sat", amount: 54100 },
-                    { date: "Sun", amount: 34250 },
+                    { date: txt("সোম", "Mon"), amount: 28500 },
+                    { date: txt("মঙ্গল", "Tue"), amount: 31200 },
+                    { date: txt("বুধ", "Wed"), amount: 24800 },
+                    { date: txt("বৃহঃ", "Thu"), amount: 39500 },
+                    { date: txt("শুক্র", "Fri"), amount: 48900 },
+                    { date: txt("শনি", "Sat"), amount: 54100 },
+                    { date: txt("রবি", "Sun"), amount: 34250 },
                   ]}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
@@ -321,7 +324,7 @@ export default function DashboardOverviewPage() {
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", fontSize: "12px" }}
-                    formatter={(value: any) => [formatCurrency(Number(value)), "Revenue"]}
+                    formatter={(value: any) => [formatCurrency(Number(value)), txt("রেভিনিউ", "Revenue")]}
                   />
                   <Area
                     type="monotone"
@@ -341,18 +344,18 @@ export default function DashboardOverviewPage() {
             <div>
               <div className="flex items-center gap-2 text-purple-400 text-xs font-bold mb-2">
                 <Sparkles className="w-4 h-4" />
-                <span>Gemini AI Smart Advisor</span>
+                <span>{txt("জেমিনাই এআই স্মার্ট পরামর্শক", "Gemini AI Smart Advisor")}</span>
               </div>
               <h4 className="text-base font-bold text-white mb-2">
-                Restock Alert: {lowStock} Items Under Stock Limit
+                {txt(`স্টক সতর্কতা: ${lowStock} টি পণ্যের স্টক শেষ হওয়ার পথে`, `Restock Alert: ${lowStock} Items Under Stock Limit`)}
               </h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                You have {lowStock} out of {totalItems} items approaching critical inventory thresholds. Automated replenishment is recommended.
+                {txt(`আপনার মোট ${totalItems} টির মধ্যে ${lowStock} টি পণ্যের স্টক সংকটাপন্ন অবস্থায় রয়েছে। দ্রুত সাপ্লায়ার থেকে রিস্টক করার পরামর্শ দেওয়া হচ্ছে।`, `You have ${lowStock} out of ${totalItems} items approaching critical inventory thresholds. Automated replenishment is recommended.`)}
               </p>
               <div className="mt-4 p-3 rounded-xl bg-slate-900/80 border border-indigo-500/20 text-xs text-indigo-300">
                 {netProfit < 0
-                  ? `Current financial overview shows a Net Deficit / Loss of ${formatCurrency(Math.abs(netProfit))} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`
-                  : `Current financial overview shows a Net Profit of ${formatCurrency(netProfit)} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`}
+                  ? txt(`বর্তমান আর্থিক চিত্র অনুযায়ী দোকানে মোট ${formatCurrency(totalExpenses)} টাকা ব্যয়ের পর নিট ঘাটতি রয়েছে ${formatCurrency(Math.abs(netProfit))} টাকা।`, `Current financial overview shows a Net Deficit / Loss of ${formatCurrency(Math.abs(netProfit))} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`)
+                  : txt(`বর্তমান আর্থিক চিত্র অনুযায়ী দোকানে মোট ${formatCurrency(totalExpenses)} টাকা ব্যয়ের পর প্রকৃত নিট লাভ রয়েছে ${formatCurrency(netProfit)} টাকা।`, `Current financial overview shows a Net Profit of ${formatCurrency(netProfit)} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`)}
               </div>
             </div>
 
@@ -361,7 +364,7 @@ export default function DashboardOverviewPage() {
                 href="/dashboard/ai-advisor"
                 className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
               >
-                View Full AI Predictions
+                {txt("সম্পূর্ণ এআই প্রেডিকশন দেখুন", "View Full AI Predictions")}
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <Link
@@ -369,7 +372,7 @@ export default function DashboardOverviewPage() {
                 className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
-                Open POS Cash Register
+                {txt("পিওএস ক্যাশ রেজিস্টার খুলুন", "Open POS Cash Register")}
               </Link>
             </div>
           </div>
@@ -379,16 +382,16 @@ export default function DashboardOverviewPage() {
         <div className="p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h3 className="text-sm font-bold text-white">Recent POS Invoices</h3>
+              <h3 className="text-sm font-bold text-white">{txt("সাম্প্রতিক পিওএস ইনভয়েস", "Recent POS Invoices")}</h3>
               <p className="text-xs text-slate-400">
-                Latest transactions from this store register ({recentSales.length} showing)
+                {txt(`দোকানের সর্বশেষ লেনদেনসমূহ (${recentSales.length} টি দেখানো হচ্ছে)`, `Latest transactions from this store register (${recentSales.length} showing)`)}
               </p>
             </div>
             <Link
               href="/dashboard/sales"
               className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
             >
-              View All Invoices &rarr;
+              {txt("সকল ইনভয়েস দেখুন", "View All Invoices")} &rarr;
             </Link>
           </div>
 
@@ -396,21 +399,21 @@ export default function DashboardOverviewPage() {
             <table className="w-full min-w-[700px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold">
                 <tr>
-                  <th className="py-3 px-4">Invoice #</th>
-                  <th className="py-3 px-4">Customer</th>
-                  <th className="py-3 px-4">Time</th>
-                  <th className="py-3 px-4">Items</th>
-                  <th className="py-3 px-4">Amount</th>
-                  <th className="py-3 px-4">Payment</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Receipt</th>
+                  <th className="py-3 px-4">{txt("ইনভয়েস #", "Invoice #")}</th>
+                  <th className="py-3 px-4">{txt("কাস্টমার", "Customer")}</th>
+                  <th className="py-3 px-4">{txt("সময়", "Time")}</th>
+                  <th className="py-3 px-4">{txt("আইটেম", "Items")}</th>
+                  <th className="py-3 px-4">{txt("টাকা", "Amount")}</th>
+                  <th className="py-3 px-4">{txt("পেমেন্ট মাধ্যম", "Payment")}</th>
+                  <th className="py-3 px-4">{txt("স্ট্যাটাস", "Status")}</th>
+                  <th className="py-3 px-4 text-right">{txt("রসিদ প্রিন্ট", "Receipt")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {recentSales.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center text-slate-500">
-                      No invoices found yet.
+                      {txt("এখনও কোনো ইনভয়েস তৈরি হয়নি।", "No invoices found yet.")}
                     </td>
                   </tr>
                 ) : (
@@ -421,7 +424,7 @@ export default function DashboardOverviewPage() {
                     </td>
                     <td className="py-3 px-4 font-medium text-white">{inv.customerName}</td>
                     <td className="py-3 px-4 text-slate-400">{formatDate(inv.createdAt)}</td>
-                    <td className="py-3 px-4 text-slate-300">{inv.items?.length || 1} items</td>
+                    <td className="py-3 px-4 text-slate-300">{inv.items?.length || 1} {txt("টি", "items")}</td>
                     <td className="py-3 px-4 font-bold text-white">
                       {formatCurrency(inv.grandTotal)}
                     </td>
@@ -438,14 +441,14 @@ export default function DashboardOverviewPage() {
                             : "bg-rose-500/20 text-rose-400"
                         }`}
                       >
-                        {inv.status}
+                        {inv.status === "PAID" ? txt("পরিশোধিত", "PAID") : inv.status === "PARTIAL" ? txt("আংশিক", "PARTIAL") : txt("বকেয়া", "DUE")}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <button
                         onClick={() => setSelectedInvoice(inv)}
                         className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors"
-                        title="Print Thermal Receipt"
+                        title={txt("থার্মাল রসিদ প্রিন্ট করুন", "Print Thermal Receipt")}
                       >
                         <Printer className="w-3.5 h-3.5" />
                       </button>

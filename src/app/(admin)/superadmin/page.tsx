@@ -19,8 +19,10 @@ import {
   Sparkles,
   Store,
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SuperAdminOverviewPage() {
+  const { locale, txt } = useLanguage();
   const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,10 +64,13 @@ export default function SuperAdminOverviewPage() {
             </div>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            SuperAdmin Executive Dashboard
+            {txt("সুপারঅ্যাডমিন এক্সিকিউটিভ ড্যাশবোর্ড", "SuperAdmin Executive Dashboard")}
           </h1>
           <p className="text-xs text-slate-400">
-            Platform-wide merchant subscriptions, revenue streams, and real-time operations
+            {txt(
+              "প্ল্যাটফর্মের সকল মার্চেন্ট সাবস্ক্রিপশন, রাজস্ব ও সার্বিক সিস্টেম কার্যক্রম",
+              "Platform-wide merchant subscriptions, revenue streams, and real-time operations"
+            )}
           </p>
         </div>
 
@@ -75,14 +80,14 @@ export default function SuperAdminOverviewPage() {
             className="flex-1 sm:flex-initial justify-center px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
           >
             <Clock className="w-3.5 h-3.5" />
-            Verification Queue ({pendingQueue})
+            {txt("ভেরিফিকেশন কিউ", "Verification Queue")} ({pendingQueue})
           </Link>
           <Link
             href="/superadmin/shops"
             className="flex-1 sm:flex-initial justify-center px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
             <Store className="w-3.5 h-3.5 text-indigo-400" />
-            Merchant Directory
+            {txt("মার্চেন্ট ডিরেক্টরি", "Merchant Directory")}
           </Link>
         </div>
       </div>
@@ -92,7 +97,9 @@ export default function SuperAdminOverviewPage() {
         {/* Card 1: Registered Merchants */}
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Registered Shops</span>
+            <span className="text-xs font-semibold text-slate-400">
+              {txt("নিবন্ধিত শপসমূহ", "Registered Shops")}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
               <Building2 className="w-4 h-4" />
             </div>
@@ -100,9 +107,9 @@ export default function SuperAdminOverviewPage() {
           <div className="mt-3">
             <p className="text-3xl font-black text-white tracking-tight">{totalShops}</p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Active Merchants</span>
+              <span className="text-slate-400">{txt("সক্রিয় মার্চেন্ট", "Active Merchants")}</span>
               <span className="font-bold text-indigo-400">
-                {freeShops} Free · {premiumShops} Premium
+                {freeShops} {txt("ফ্রি", "Free")} · {premiumShops} {txt("প্রিমিয়াম", "Premium")}
               </span>
             </div>
           </div>
@@ -111,7 +118,9 @@ export default function SuperAdminOverviewPage() {
         {/* Card 2: Platform Subscription Revenue */}
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Subscription Collections</span>
+            <span className="text-xs font-semibold text-slate-400">
+              {txt("মোট সাবস্ক্রিপশন রাজস্ব", "Subscription Collections")}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
             </div>
@@ -121,8 +130,8 @@ export default function SuperAdminOverviewPage() {
               {formatCurrency(subRevenue)}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Conversion Rate</span>
-              <span className="font-bold text-emerald-400">{conversionRate}% Paid Tier</span>
+              <span className="text-slate-400">{txt("পেইড কনভার্সন", "Conversion Rate")}</span>
+              <span className="font-bold text-emerald-400">{conversionRate}% {txt("পেইড টিয়ার", "Paid Tier")}</span>
             </div>
           </div>
         </div>
@@ -130,7 +139,9 @@ export default function SuperAdminOverviewPage() {
         {/* Card 3: Pending Payments Queue */}
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Payment Review Queue</span>
+            <span className="text-xs font-semibold text-slate-400">
+              {txt("পেমেন্ট যাচাইয়ের কিউ", "Payment Review Queue")}
+            </span>
             <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                 pendingQueue > 0
@@ -150,12 +161,14 @@ export default function SuperAdminOverviewPage() {
               {pendingQueue}
             </p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Manual Trx Approvals</span>
+              <span className="text-slate-400">{txt("ম্যানুয়াল ট্রানজ্যাকশন", "Manual Trx Approvals")}</span>
               <Link
                 href="/superadmin/payments"
                 className="font-bold text-amber-400 hover:underline"
               >
-                {pendingQueue === 0 ? "All Cleared &rarr;" : "Review Now &rarr;"}
+                {pendingQueue === 0
+                  ? txt("সব ক্লিয়ার →", "All Cleared →")
+                  : txt("এখনই যাচাই করুন →", "Review Now →")}
               </Link>
             </div>
           </div>
@@ -164,7 +177,9 @@ export default function SuperAdminOverviewPage() {
         {/* Card 4: Platform Total Invoices */}
         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Platform Total Sales</span>
+            <span className="text-xs font-semibold text-slate-400">
+              {txt("প্ল্যাটফর্ম মোট বিক্রয়", "Platform Total Sales")}
+            </span>
             <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
             </div>
@@ -172,8 +187,8 @@ export default function SuperAdminOverviewPage() {
           <div className="mt-3">
             <p className="text-3xl font-black text-white tracking-tight">{totalSales}</p>
             <div className="mt-1 flex items-center justify-between text-[11px]">
-              <span className="text-slate-400">Total Products Hosted</span>
-              <span className="font-bold text-purple-400">{totalItems} SKUs</span>
+              <span className="text-slate-400">{txt("মোট পণ্য ক্যাটালগ", "Total Products Hosted")}</span>
+              <span className="font-bold text-purple-400">{totalItems} {txt("আইটেম", "SKUs")}</span>
             </div>
           </div>
         </div>

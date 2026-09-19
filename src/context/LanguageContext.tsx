@@ -8,6 +8,7 @@ interface LanguageContextType {
   setLocale: (locale: Locale) => void;
   toggleLocale: () => void;
   t: (path: string, fallback?: string) => string;
+  txt: (bn: string, en: string) => string;
   isBangla: boolean;
 }
 
@@ -77,15 +78,24 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [locale]
   );
 
+  // Quick inline bilingual helper: txt("বাংলা", "English")
+  const txt = useCallback(
+    (bn: string, en: string): string => {
+      return locale === "bn" ? bn : en;
+    },
+    [locale]
+  );
+
   const contextValue = useMemo(
     () => ({
       locale,
       setLocale: handleSetLocale,
       toggleLocale,
       t,
+      txt,
       isBangla: locale === "bn",
     }),
-    [locale, handleSetLocale, toggleLocale, t]
+    [locale, handleSetLocale, toggleLocale, t, txt]
   );
 
   return (
