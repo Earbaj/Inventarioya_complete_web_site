@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 
 import { ApiLogDrawer } from "@/components/ui/ApiLogDrawer";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export default function RootLayout({
   children,
@@ -17,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="bn" className="dark" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -37,6 +38,9 @@ export default function RootLayout({
                     root.classList.add('dark');
                     root.classList.remove('light');
                   }
+
+                  var locale = localStorage.getItem('inventarioya_locale') || 'bn';
+                  root.setAttribute('lang', locale);
                 } catch (e) {}
               })();
             `,
@@ -45,8 +49,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
         <ThemeProvider>
-          {children}
-          <ApiLogDrawer />
+          <LanguageProvider>
+            {children}
+            <ApiLogDrawer />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

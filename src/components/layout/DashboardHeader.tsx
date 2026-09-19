@@ -13,14 +13,17 @@ import {
   Menu,
   Sun,
   Moon,
+  Globe,
 } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function DashboardHeader({ title }: { title: string }) {
-  const [selectedBranch, setSelectedBranch] = useState("Main Flagship (Dhanmondi)");
+  const [selectedBranch, setSelectedBranch] = useState("main");
   const { toggle, isOpen } = useSidebar();
   const { isDark, toggleTheme } = useTheme();
+  const { locale, toggleLocale, t } = useLanguage();
 
   return (
     <header className="h-16 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -29,7 +32,7 @@ export function DashboardHeader({ title }: { title: string }) {
           onClick={toggle}
           type="button"
           aria-label="Toggle side drawer"
-          title={isOpen ? "Hide side drawer (সাইড ড্রয়ার হাইড করুন)" : "Expand side drawer (সাইড ড্রয়ার প্রসারিত করুন)"}
+          title={isOpen ? t("nav.hideSidebar") : t("nav.expandSidebar")}
           className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0 flex items-center justify-center cursor-pointer shadow-sm active:scale-95"
         >
           <Menu className="w-5 h-5" />
@@ -39,7 +42,7 @@ export function DashboardHeader({ title }: { title: string }) {
         </h1>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Branch Switcher (hidden on mobile, visible on tablet/desktop) */}
         <div className="hidden md:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
           <Store className="w-3.5 h-3.5 text-indigo-400" />
@@ -49,14 +52,14 @@ export function DashboardHeader({ title }: { title: string }) {
             onChange={(e) => setSelectedBranch(e.target.value)}
             className="bg-transparent text-slate-200 focus:outline-none cursor-pointer text-xs"
           >
-            <option value="Main Flagship (Dhanmondi)" className="bg-slate-900 text-white">
-              Main Flagship (Dhanmondi)
+            <option value="main" className="bg-slate-900 text-white">
+              {t("header.flagshipBranch")}
             </option>
-            <option value="Mirpur Retail Outlet" className="bg-slate-900 text-white">
-              Mirpur Retail Outlet
+            <option value="mirpur" className="bg-slate-900 text-white">
+              {t("header.mirpurBranch")}
             </option>
-            <option value="Uttara Sector 7 Hub" className="bg-slate-900 text-white">
-              Uttara Sector 7 Hub
+            <option value="uttara" className="bg-slate-900 text-white">
+              {t("header.uttaraBranch")}
             </option>
           </select>
         </div>
@@ -64,20 +67,32 @@ export function DashboardHeader({ title }: { title: string }) {
         {/* Quick POS Terminal Button */}
         <Link
           href="/dashboard/pos"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm shadow-emerald-600/30 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm shadow-emerald-600/30 transition-all shrink-0"
         >
           <ShoppingCart className="w-3.5 h-3.5" />
-          <span>Quick POS</span>
+          <span>{t("header.quickPos")}</span>
         </Link>
 
         {/* AI Advisor Badge */}
         <Link
           href="/dashboard/ai-advisor"
-          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-lg transition-colors"
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-lg transition-colors shrink-0"
         >
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-          <span>AI Forecast</span>
+          <span>{t("header.aiForecast")}</span>
         </Link>
+
+        {/* Language Switcher Button */}
+        <button
+          onClick={toggleLocale}
+          type="button"
+          aria-label={t("header.switchLanguage")}
+          title={t("header.switchLanguage")}
+          className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition-all flex items-center gap-1 text-xs font-bold shrink-0 shadow-sm cursor-pointer"
+        >
+          <Globe className="w-3.5 h-3.5 text-indigo-500" />
+          <span>{locale === "bn" ? "EN" : "বাং"}</span>
+        </button>
 
         {/* Theme Mode Toggle Button */}
         <button

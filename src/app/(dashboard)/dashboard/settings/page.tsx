@@ -22,12 +22,15 @@ import {
   Sun,
   Moon,
   Laptop,
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { locale, setLocale, t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -493,6 +496,82 @@ export default function SettingsPage() {
                 <p className="text-xs font-bold text-white">System (সিস্টেম অনুসারী)</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   Automatically synchronize with your device setting.
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Language Preferences */}
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-lg">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Globe className="w-4 h-4 text-indigo-400" />
+                {t("settings.langTitle")}
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {t("settings.langSub")}
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-slate-800 text-indigo-400 font-semibold border border-slate-700">
+              {t("settings.langActive")}: {locale === "bn" ? "বাংলা (BN)" : "English (EN)"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Bangla Option */}
+            <button
+              type="button"
+              onClick={() => setLocale("bn")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group cursor-pointer ${
+                locale === "bn"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm group-hover:scale-105 transition-transform">
+                  বাং
+                </div>
+                {locale === "bn" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> নির্বাচিত (Selected)
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">বাংলা (Bengali)</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  দোকানের হিসাব, বিলিং, কাস্টমার খাতা ও রিপোর্ট সম্পূর্ণ বাংলায় পরিচালনা করুন।
+                </p>
+              </div>
+            </button>
+
+            {/* English Option */}
+            <button
+              type="button"
+              onClick={() => setLocale("en")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group cursor-pointer ${
+                locale === "en"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xs group-hover:scale-105 transition-transform">
+                  EN
+                </div>
+                {locale === "en" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> Selected
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">English (ইংরেজি)</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Manage POS billing, customer ledgers, and inventory in international English.
                 </p>
               </div>
             </button>

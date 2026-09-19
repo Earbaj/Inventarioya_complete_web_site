@@ -27,11 +27,13 @@ import {
   ChevronLeft,
   ChevronRight,
   PanelLeftClose,
+  Globe,
 } from "lucide-react";
 import { AuthService } from "@/lib/api/client";
 import { User } from "@/types";
 import { useSidebar } from "@/context/SidebarContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -45,6 +47,7 @@ export function Sidebar() {
     toggleCollapse,
   } = useSidebar();
   const { isDark, toggleTheme } = useTheme();
+  const { locale, toggleLocale, t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -81,25 +84,25 @@ export function Sidebar() {
     return restrictedHrefs.includes(href);
   };
 
-  // Nav definitions
+  // Nav definitions with localization
   const allOperations = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Point of Sale (POS)", href: "/dashboard/pos", icon: ShoppingCart, highlight: true },
-    { name: "Sales & Invoices", href: "/dashboard/sales", icon: ReceiptText },
-    { name: "Inventory Catalog", href: "/dashboard/inventory", icon: Package },
-    { name: "Categories", href: "/dashboard/categories", icon: Layers, proOnly: true },
-    { name: "Suppliers & POs", href: "/dashboard/suppliers", icon: Truck, proOnly: true, adminOnly: true },
-    { name: "Shop Expenses", href: "/dashboard/expenses", icon: Wallet, proOnly: true, adminOnly: true },
-    { name: "Store Branches", href: "/dashboard/branches", icon: Building2, adminOnly: true },
-    { name: "Staff & Roles", href: "/dashboard/staff", icon: Users, proOnly: true, adminOnly: true },
-    { name: "Customer Ledgers", href: "/dashboard/customers", icon: Users, proOnly: true },
+    { name: t("nav.overview"), href: "/dashboard", icon: LayoutDashboard },
+    { name: t("nav.pos"), href: "/dashboard/pos", icon: ShoppingCart, highlight: true },
+    { name: t("nav.sales"), href: "/dashboard/sales", icon: ReceiptText },
+    { name: t("nav.inventory"), href: "/dashboard/inventory", icon: Package },
+    { name: t("nav.categories"), href: "/dashboard/categories", icon: Layers, proOnly: true },
+    { name: t("nav.suppliers"), href: "/dashboard/suppliers", icon: Truck, proOnly: true, adminOnly: true },
+    { name: t("nav.expenses"), href: "/dashboard/expenses", icon: Wallet, proOnly: true, adminOnly: true },
+    { name: t("nav.branches"), href: "/dashboard/branches", icon: Building2, adminOnly: true },
+    { name: t("nav.staff"), href: "/dashboard/staff", icon: Users, proOnly: true, adminOnly: true },
+    { name: t("nav.customers"), href: "/dashboard/customers", icon: Users, proOnly: true },
   ];
 
   const allIntelligence = [
-    { name: "Gemini AI Advisor", href: "/dashboard/ai-advisor", icon: BrainCircuit, aiBadge: true, proOnly: true, adminOnly: true },
-    { name: "Recycle Bin", href: "/dashboard/trash", icon: Trash2, adminOnly: true },
-    { name: "Subscription & Billing", href: "/dashboard/subscriptions", icon: CreditCard, adminOnly: true },
-    { name: "Shop Settings", href: "/dashboard/settings", icon: Settings },
+    { name: t("nav.aiAdvisor"), href: "/dashboard/ai-advisor", icon: BrainCircuit, aiBadge: true, proOnly: true, adminOnly: true },
+    { name: t("nav.trash"), href: "/dashboard/trash", icon: Trash2, adminOnly: true },
+    { name: t("nav.subscriptions"), href: "/dashboard/subscriptions", icon: CreditCard, adminOnly: true },
+    { name: t("nav.settings"), href: "/dashboard/settings", icon: Settings },
   ];
 
   // Filter based on role (Manager vs Admin)
@@ -175,11 +178,17 @@ export function Sidebar() {
                 </div>
                 <div className="truncate">
                   <span className="font-bold text-base tracking-tight text-white block truncate">
-                    Inventarioya
+                    {t("common.appName")}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-indigo-400 font-medium tracking-wider uppercase">
-                      {role}
+                      {role === "admin"
+                        ? locale === "bn"
+                          ? "অ্যাডমিন"
+                          : "Admin"
+                        : locale === "bn"
+                        ? "ম্যানেজার"
+                        : "Manager"}
                     </span>
                     <span
                       className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
@@ -188,8 +197,15 @@ export function Sidebar() {
                           : "bg-emerald-500/20 text-emerald-400"
                       }`}
                     >
-                      {tier}
-                      {daysRemaining !== null && ` • ${daysRemaining}d left`}
+                      {tier === "free"
+                        ? locale === "bn"
+                          ? "ফ্রি"
+                          : "Free"
+                        : locale === "bn"
+                        ? "প্রিমিয়াম"
+                        : "Premium"}
+                      {daysRemaining !== null &&
+                        ` • ${daysRemaining}${locale === "bn" ? " দিন" : "d"}`}
                     </span>
                   </div>
                 </div>
@@ -200,8 +216,8 @@ export function Sidebar() {
                 {/* Desktop Collapse to Mini Button */}
                 <button
                   onClick={toggleCollapse}
-                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                  title="Collapse side drawer to icons (সংকুচিত করুন)"
+                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  title={t("nav.collapseSidebar")}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -209,8 +225,8 @@ export function Sidebar() {
                 {/* Desktop Full Hide Button */}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-                  title="Hide side drawer (সাইড ড্রয়ার হাইড করুন)"
+                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                  title={t("nav.hideSidebar")}
                 >
                   <PanelLeftClose className="w-4 h-4" />
                 </button>
@@ -218,7 +234,7 @@ export function Sidebar() {
                 {/* Mobile Close Button */}
                 <button
                   onClick={() => setIsMobileOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors cursor-pointer"
                   aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
@@ -237,7 +253,7 @@ export function Sidebar() {
           <div>
             {!isCollapsed && (
               <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-                Operations
+                {t("nav.operations")}
               </span>
             )}
             <nav className="space-y-1">
@@ -315,7 +331,7 @@ export function Sidebar() {
               <div className="my-2 border-t border-slate-800/80 mx-2" />
             ) : (
               <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-                Intelligence & System
+                {t("nav.intelligence")}
               </span>
             )}
             <nav className="space-y-1">
@@ -398,7 +414,7 @@ export function Sidebar() {
           }`}
         >
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1.5">
               {/* User Initial Avatar */}
               <div
                 className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs uppercase cursor-pointer"
@@ -407,12 +423,21 @@ export function Sidebar() {
                 {(user?.name || "U")[0]}
               </div>
 
+              {/* Language Switcher Button */}
+              <button
+                onClick={toggleLocale}
+                title={t("header.switchLanguage")}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors text-[10px] font-bold cursor-pointer"
+              >
+                {locale === "bn" ? "EN" : "বাং"}
+              </button>
+
               {/* Theme Toggle Button */}
               <button
                 onClick={toggleTheme}
-                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                title={isDark ? t("header.lightMode") : t("header.darkMode")}
                 aria-label="Toggle Theme"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 {isDark ? (
                   <Sun className="w-4 h-4 text-amber-400" />
@@ -424,9 +449,9 @@ export function Sidebar() {
               {/* Expand Drawer Button */}
               <button
                 onClick={toggleCollapse}
-                title="Expand side drawer (প্রসারিত করুন)"
+                title={t("nav.expandSidebar")}
                 aria-label="Expand side drawer"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -434,9 +459,9 @@ export function Sidebar() {
               {/* Logout Button */}
               <button
                 onClick={() => AuthService.logout()}
-                title="Sign Out"
+                title={t("common.signOut")}
                 aria-label="Sign Out"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -452,15 +477,19 @@ export function Sidebar() {
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                {/* Language Switcher */}
+                <button
+                  onClick={toggleLocale}
+                  title={t("header.switchLanguage")}
+                  className="px-1.5 py-1 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors text-[10px] font-bold cursor-pointer"
+                >
+                  {locale === "bn" ? "EN" : "বাং"}
+                </button>
                 <button
                   onClick={toggleTheme}
-                  title={
-                    isDark
-                      ? "Switch to Light Mode (লাইট মোড)"
-                      : "Switch to Dark Mode (ডার্ক মোড)"
-                  }
+                  title={isDark ? t("header.lightMode") : t("header.darkMode")}
                   aria-label="Toggle Theme"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   {isDark ? (
                     <Sun className="w-4 h-4 text-amber-400" />
@@ -470,8 +499,8 @@ export function Sidebar() {
                 </button>
                 <button
                   onClick={() => AuthService.logout()}
-                  title="Sign Out"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                  title={t("common.signOut")}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
