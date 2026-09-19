@@ -346,6 +346,40 @@ export interface Customer {
   totalPurchases?: number;
   totalDue?: number;
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CustomerLedgerEntry {
+  id: string;
+  type: "opening" | "sale" | "return" | "payment" | string;
+  referenceId?: string;
+  date: string;
+  description: string;
+  amount: string | number;
+  previousBalance: string | number;
+  newBalance: string | number;
+}
+
+export interface PaginatedCustomerLedgerResponse {
+  data: CustomerLedgerEntry[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+export interface WhatsAppReminderResponse {
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  cleanPhone: string;
+  dueAmount: string;
+  message: string;
+  whatsappUrl: string;
 }
 
 export interface PaginatedCustomersResponse {

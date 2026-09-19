@@ -24,6 +24,9 @@ import {
   AIBusinessAdvice,
   Shop,
   Customer,
+  CustomerLedgerEntry,
+  PaginatedCustomerLedgerResponse,
+  WhatsAppReminderResponse,
   PaginatedCustomersResponse,
   PaginatedSalesResponse,
 } from "@/types";
@@ -1000,6 +1003,8 @@ export const CustomerService = {
     search?: string;
     page?: number;
     limit?: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }): Promise<PaginatedCustomersResponse> {
     try {
       const res = await apiClient.get(ApiEndpoints.customers, {
@@ -1007,6 +1012,8 @@ export const CustomerService = {
           search: params?.search || undefined,
           page: params?.page || 1,
           limit: params?.limit || 20,
+          sortBy: params?.sortBy || "createdAt",
+          sortOrder: params?.sortOrder || "desc",
         },
       });
 
@@ -1015,7 +1022,7 @@ export const CustomerService = {
       }
       return {
         data: Array.isArray(res.data) ? res.data : [],
-        meta: {
+        meta: res.data?.meta || {
           total: Array.isArray(res.data) ? res.data.length : 0,
           page: params?.page || 1,
           limit: params?.limit || 20,
@@ -1026,12 +1033,12 @@ export const CustomerService = {
       };
     } catch {
       const fallbackList: Customer[] = [
-        { id: "cust_1", name: "Foysal", phone: "879654213", address: "gsfwtsjj", openingBalance: "0.00", closingBalance: "0.00" },
-        { id: "cust_2", name: "Kessab", phone: "85421376", address: "Dhaka", openingBalance: "500.00", closingBalance: "-550.00" },
-        { id: "cust_3", name: "Hasib", phone: "5484672", address: "rgdkdj", openingBalance: "50.00", closingBalance: "-544.40" },
-        { id: "cust_4", name: "Hasan", phone: "87546", address: "tegdkav", openingBalance: "200.00", closingBalance: "280.00" },
-        { id: "cust_5", name: "Rafiq", phone: "87945", address: "fsudg", openingBalance: "100.00", closingBalance: "-1889.00" },
-        { id: "cust_6", name: "Rahim", phone: "8754632", address: "agsjkieg", openingBalance: "0.00", closingBalance: "98.32" },
+        { id: "cust_1", name: "Rahim Traders", phone: "01711223344", address: "Mirpur-10, Dhaka", openingBalance: "0.00", closingBalance: "-1500.00" },
+        { id: "cust_2", name: "Foysal", phone: "879654213", address: "gsfwtsjj", openingBalance: "0.00", closingBalance: "0.00" },
+        { id: "cust_3", name: "Kessab", phone: "85421376", address: "Dhaka", openingBalance: "500.00", closingBalance: "-550.00" },
+        { id: "cust_4", name: "Hasib", phone: "5484672", address: "rgdkdj", openingBalance: "50.00", closingBalance: "-544.40" },
+        { id: "cust_5", name: "Hasan", phone: "87546", address: "tegdkav", openingBalance: "200.00", closingBalance: "280.00" },
+        { id: "cust_6", name: "Rafiq", phone: "87945", address: "fsudg", openingBalance: "100.00", closingBalance: "-1889.00" },
       ];
       const q = (params?.search || "").toLowerCase().trim();
       const filtered = q
@@ -1051,6 +1058,20 @@ export const CustomerService = {
     }
   },
 
+  async getCustomerById(id: string): Promise<Customer> {
+    try {
+      const res = await apiClient.get(ApiEndpoints.customerById(id));
+      return res.data?.data || res.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
   async createCustomer(payload: {
     name: string;
     phone: string;
@@ -1059,19 +1080,118 @@ export const CustomerService = {
   }): Promise<Customer> {
     try {
       const res = await apiClient.post(ApiEndpoints.customers, {
-        ...payload,
+        name: payload.name.trim(),
+        phone: payload.phone.trim(),
+        address: payload.address?.trim() || "",
         openingBalance: Number(payload.openingBalance || 0),
       });
+      return res.data?.data || res.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  async updateCustomer(
+    id: string,
+    payload: {
+      name: string;
+      phone: string;
+      address?: string;
+    }
+  ): Promise<Customer> {
+    try {
+      const res = await apiClient.put(ApiEndpoints.customerById(id), {
+        name: payload.name.trim(),
+        phone: payload.phone.trim(),
+        address: payload.address?.trim() || "",
+      });
+      return res.data?.data || res.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  async deleteCustomer(id: string): Promise<{ message: string }> {
+    try {
+      const res = await apiClient.delete(ApiEndpoints.customerById(id));
       return res.data;
-    } catch {
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  async getCustomerLedger(
+    id: string,
+    params?: {
+      startDate?: string;
+      endDate?: string;
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+    }
+  ): Promise<PaginatedCustomerLedgerResponse> {
+    try {
+      const res = await apiClient.get(ApiEndpoints.customerLedger(id), {
+        params: {
+          startDate: params?.startDate || undefined,
+          endDate: params?.endDate || undefined,
+          page: params?.page || 1,
+          limit: params?.limit || 20,
+          sortBy: params?.sortBy || "date",
+          sortOrder: params?.sortOrder || "asc",
+        },
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        return res.data;
+      }
       return {
-        id: "cust_" + Date.now(),
-        name: payload.name,
-        phone: payload.phone,
-        address: payload.address || "",
-        openingBalance: "0.00",
-        closingBalance: "0.00",
+        data: Array.isArray(res.data) ? res.data : [],
+        meta: res.data?.meta || {
+          total: Array.isArray(res.data) ? res.data.length : 0,
+          page: params?.page || 1,
+          limit: params?.limit || 20,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
       };
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  async getDueReminderLink(id: string): Promise<WhatsAppReminderResponse> {
+    try {
+      const res = await apiClient.get(ApiEndpoints.customerDueReminder(id));
+      return res.data?.data || res.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 };
