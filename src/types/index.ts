@@ -300,17 +300,25 @@ export interface PaymentInfo {
 
 export interface ManualPaymentSubmission {
   id?: string;
+  userId?: string;
   shopId?: string;
   shopName?: string;
   packageId: string;
   packageName?: string;
-  amount: number;
-  paymentMethod: "BKASH" | "NAGAD" | "ROCKET" | "BANK";
-  transactionId: string;
+  amount: number | string;
+  paymentMethod: "BKASH" | "NAGAD" | "ROCKET" | "BANK" | "manual_bkash" | "manual_nagad" | "manual_bank" | "manual_rocket" | string;
+  transactionId?: string;
+  trxId?: string;
   senderPhone?: string;
+  accountNo?: string;
   screenshotUrl?: string;
-  status?: "pending" | "approved" | "rejected";
+  status?: "pending" | "approved" | "rejected" | string;
   submittedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  rejectionReason?: string | null;
 }
 
 export interface TrashItem {
