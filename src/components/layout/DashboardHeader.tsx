@@ -19,7 +19,7 @@ import { useTheme } from "@/context/ThemeContext";
 
 export function DashboardHeader({ title }: { title: string }) {
   const [selectedBranch, setSelectedBranch] = useState("Main Flagship (Dhanmondi)");
-  const { toggle } = useSidebar();
+  const { toggle, isOpen } = useSidebar();
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -27,8 +27,10 @@ export function DashboardHeader({ title }: { title: string }) {
       <div className="flex items-center gap-3">
         <button
           onClick={toggle}
-          aria-label="Toggle navigation menu"
-          className="lg:hidden p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
+          type="button"
+          aria-label="Toggle side drawer"
+          title={isOpen ? "Hide side drawer (সাইড ড্রয়ার হাইড করুন)" : "Expand side drawer (সাইড ড্রয়ার প্রসারিত করুন)"}
+          className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0 flex items-center justify-center cursor-pointer shadow-sm active:scale-95"
         >
           <Menu className="w-5 h-5" />
         </button>
