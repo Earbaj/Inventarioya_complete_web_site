@@ -252,6 +252,7 @@ export interface StaffMember {
   branchId?: string;
   branchName?: string;
   permissions?: string[];
+  permissionsObj?: UserPermissions;
   isActive: boolean;
 }
 

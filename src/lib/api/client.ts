@@ -1270,11 +1270,36 @@ export const BranchesService = {
 };
 
 function formatStaff(raw: any): StaffMember {
-  let perms: string[] = [];
-  if (Array.isArray(raw.permissions)) {
-    perms = raw.permissions;
-  } else if (raw.permissions && typeof raw.permissions === "object") {
-    perms = Object.keys(raw.permissions).filter((k) => raw.permissions[k]);
+  let permsList: string[] = [];
+  let permsObj: Record<string, boolean> = {
+    canViewBuyPrice: false,
+    canEditCustomers: false,
+    canProcessReturn: false,
+    canExportExcel: false,
+  };
+
+  if (raw.permissions && typeof raw.permissions === "object" && !Array.isArray(raw.permissions)) {
+    permsObj = {
+      canViewBuyPrice: Boolean(raw.permissions.canViewBuyPrice),
+      canEditCustomers: Boolean(raw.permissions.canEditCustomers),
+      canProcessReturn: Boolean(raw.permissions.canProcessReturn),
+      canExportExcel: Boolean(raw.permissions.canExportExcel),
+      ...raw.permissions,
+    };
+    permsList = Object.keys(permsObj).filter((k) => permsObj[k]);
+  } else if (Array.isArray(raw.permissions)) {
+    permsList = raw.permissions;
+    permsList.forEach((k) => {
+      permsObj[k] = true;
+    });
+  } else if (raw.role === "admin") {
+    permsObj = {
+      canViewBuyPrice: true,
+      canEditCustomers: true,
+      canProcessReturn: true,
+      canExportExcel: true,
+    };
+    permsList = ["canViewBuyPrice", "canEditCustomers", "canProcessReturn", "canExportExcel"];
   }
 
   return {
@@ -1285,7 +1310,8 @@ function formatStaff(raw: any): StaffMember {
     role: raw.role || "manager",
     branchId: raw.branchId || raw.branch?.id,
     branchName: raw.branchName || raw.branch?.name || (raw.branchId ? "Assigned Branch" : "All Branches"),
-    permissions: perms,
+    permissions: permsList,
+    permissionsObj: permsObj,
     isActive: raw.isActive !== undefined ? Boolean(raw.isActive) : true,
   };
 }
@@ -1306,12 +1332,24 @@ export const StaffService = {
 
   async createStaff(payload: Partial<StaffMember>): Promise<StaffMember> {
     try {
+      const defaultPermissions = {
+        canViewBuyPrice: payload.role === "admin",
+        canEditCustomers: true,
+        canProcessReturn: true,
+        canExportExcel: payload.role === "admin",
+      };
+
       const backendPayload: any = {
         name: payload.name?.trim(),
         email: payload.email?.trim(),
         password: String(payload.password || "").trim(),
         phone: payload.phone?.trim() || "",
         role: payload.role || "manager",
+        permissions:
+          payload.permissionsObj ||
+          (typeof payload.permissions === "object" && !Array.isArray(payload.permissions)
+            ? payload.permissions
+            : defaultPermissions),
       };
 
       if (payload.branchId) {
@@ -1319,11 +1357,6 @@ export const StaffService = {
       }
       if (payload.branchName) {
         backendPayload.branchName = payload.branchName;
-      }
-
-      // If permissions is provided as an object (not an array), include it
-      if (payload.permissions && typeof payload.permissions === "object" && !Array.isArray(payload.permissions)) {
-        backendPayload.permissions = payload.permissions;
       }
 
       const res = await apiClient.post(ApiEndpoints.staff, backendPayload);
@@ -1340,9 +1373,33 @@ export const StaffService = {
     }
   },
 
-  async updatePermissions(id: string, permissions: string[]): Promise<any> {
+  async updatePermissions(id: string, permissions: Record<string, boolean> | string[]): Promise<any> {
     try {
-      const res = await apiClient.patch(ApiEndpoints.staffPermissions(id), { permissions });
+      const permObj: Record<string, boolean> = {
+        canViewBuyPrice: false,
+        canEditCustomers: false,
+        canProcessReturn: false,
+        canExportExcel: false,
+      };
+
+      if (Array.isArray(permissions)) {
+        permissions.forEach((k) => {
+          permObj[k] = true;
+        });
+      } else if (typeof permissions === "object" && permissions !== null) {
+        Object.assign(permObj, permissions);
+      }
+
+      let res;
+      try {
+        res = await apiClient.patch(ApiEndpoints.staffPermissions(id), { permissions: permObj });
+      } catch {
+        try {
+          res = await apiClient.patch(ApiEndpoints.staffById(id), { permissions: permObj });
+        } catch {
+          res = await apiClient.put(ApiEndpoints.staffPermissions(id), { permissions: permObj });
+        }
+      }
       return res.data;
     } catch (error: any) {
       console.error("Failed to update staff permissions:", error);

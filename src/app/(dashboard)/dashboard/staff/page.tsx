@@ -23,14 +23,26 @@ import {
 } from "lucide-react";
 
 const allAvailablePermissions = [
-  { key: "sales_create", label: "Create POS Bills & Checkout" },
-  { key: "sales_read", label: "View Sales History & Reports" },
-  { key: "print_receipt", label: "Print Thermal Receipts" },
-  { key: "inventory_edit", label: "Modify Product Prices & Stock" },
-  { key: "inventory_read", label: "View Product Catalog" },
-  { key: "suppliers_manage", label: "Manage Vendors & Purchase Orders" },
-  { key: "expenses_manage", label: "Record & Delete Shop Expenses" },
-  { key: "trash_manage", label: "Access Recycle Bin & Restorations" },
+  {
+    key: "canViewBuyPrice",
+    label: "View Purchases / Costs",
+    description: "Allow viewing product purchase prices and wholesale costs in inventory",
+  },
+  {
+    key: "canEditCustomers",
+    label: "Edit Customer",
+    description: "Permission to modify customer profiles, phone numbers, and balances",
+  },
+  {
+    key: "canProcessReturn",
+    label: "Process Returns and refund",
+    description: "Permission to authorize sales returns, item exchanges, and cash refunds",
+  },
+  {
+    key: "canExportExcel",
+    label: "Export Excell reports",
+    description: "Permission to download sales, inventory, and financial Excel spreadsheets",
+  },
 ];
 
 export default function StaffPage() {
@@ -114,7 +126,17 @@ export default function StaffPage() {
 
   const handleOpenPermissions = (staff: StaffMember) => {
     setEditingPermissionsStaff(staff);
-    setActivePermissions(staff.permissions || []);
+    const activeKeys: string[] = [];
+    allAvailablePermissions.forEach((p) => {
+      if (Array.isArray(staff.permissions)) {
+        if (staff.permissions.includes(p.key)) activeKeys.push(p.key);
+      } else if (staff.permissionsObj && (staff.permissionsObj as any)[p.key]) {
+        activeKeys.push(p.key);
+      } else if ((staff.permissions as any)?.[p.key]) {
+        activeKeys.push(p.key);
+      }
+    });
+    setActivePermissions(activeKeys);
   };
 
   const togglePermission = (permKey: string) => {
@@ -127,10 +149,23 @@ export default function StaffPage() {
     if (!editingPermissionsStaff) return;
     setIsSubmitting(true);
     try {
-      await StaffService.updatePermissions(editingPermissionsStaff.id, activePermissions);
-      setStaffList(
-        staffList.map((s) =>
-          s.id === editingPermissionsStaff.id ? { ...s, permissions: activePermissions } : s
+      const permObj: Record<string, boolean> = {
+        canViewBuyPrice: activePermissions.includes("canViewBuyPrice"),
+        canEditCustomers: activePermissions.includes("canEditCustomers"),
+        canProcessReturn: activePermissions.includes("canProcessReturn"),
+        canExportExcel: activePermissions.includes("canExportExcel"),
+      };
+
+      await StaffService.updatePermissions(editingPermissionsStaff.id, permObj);
+      setStaffList((prev) =>
+        prev.map((s) =>
+          s.id === editingPermissionsStaff.id
+            ? {
+                ...s,
+                permissions: activePermissions,
+                permissionsObj: permObj,
+              }
+            : s
         )
       );
       setEditingPermissionsStaff(null);
@@ -226,13 +261,27 @@ export default function StaffPage() {
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
-                        <button
-                          onClick={() => handleOpenPermissions(member)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors border border-slate-700/60"
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>{member.permissions?.length || 0} Permissions</span>
-                        </button>
+                        {(() => {
+                          const activeCount = allAvailablePermissions.filter((p) => {
+                            if (Array.isArray(member.permissions)) {
+                              return member.permissions.includes(p.key);
+                            }
+                            if (member.permissionsObj) {
+                              return Boolean((member.permissionsObj as any)[p.key]);
+                            }
+                            return Boolean((member.permissions as any)?.[p.key]);
+                          }).length;
+
+                          return (
+                            <button
+                              onClick={() => handleOpenPermissions(member)}
+                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium inline-flex items-center gap-1.5 transition-colors border border-slate-700/60"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>{activeCount} of 4 Permissions</span>
+                            </button>
+                          );
+                        })()}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
@@ -256,12 +305,13 @@ export default function StaffPage() {
       {editingPermissionsStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-sm font-bold text-white">
-                  Permissions: {editingPermissionsStaff.name}
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Permissions: {editingPermissionsStaff.name}</span>
                 </h3>
-                <p className="text-[11px] text-slate-400">Configure feature access for this role</p>
+                <p className="text-[11px] text-slate-400">Configure the 4 core permissions for this employee</p>
               </div>
               <button
                 onClick={() => setEditingPermissionsStaff(null)}
@@ -271,23 +321,50 @@ export default function StaffPage() {
               </button>
             </div>
 
-            <div className="space-y-2.5 my-4 max-h-72 overflow-y-auto pr-1">
+            {/* Quick Actions */}
+            <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 py-1.5 border-y border-slate-800/80 mb-3">
+              <span>{activePermissions.length} of 4 Selected</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActivePermissions(allAvailablePermissions.map((p) => p.key))}
+                  className="text-indigo-400 hover:underline font-medium"
+                >
+                  Select All
+                </button>
+                <span>•</span>
+                <button
+                  type="button"
+                  onClick={() => setActivePermissions([])}
+                  className="text-slate-400 hover:underline font-medium"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 my-3 max-h-80 overflow-y-auto pr-1">
               {allAvailablePermissions.map((perm) => {
                 const isSelected = activePermissions.includes(perm.key);
                 return (
                   <div
                     key={perm.key}
                     onClick={() => togglePermission(perm.key)}
-                    className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between transition-colors ${
+                    className={`p-3 rounded-xl border cursor-pointer flex items-start justify-between gap-3 transition-colors ${
                       isSelected
-                        ? "bg-indigo-950/40 border-indigo-500/60 text-white"
+                        ? "bg-indigo-950/40 border-indigo-500/60 text-white shadow-sm"
                         : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                     }`}
                   >
-                    <span className="text-xs font-medium">{perm.label}</span>
+                    <div>
+                      <span className="text-xs font-bold text-white block">{perm.label}</span>
+                      <span className="text-[11px] text-slate-400 block mt-0.5 leading-snug">
+                        {perm.description}
+                      </span>
+                    </div>
                     <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center ${
-                        isSelected ? "bg-indigo-600 text-white" : "border border-slate-700"
+                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                        isSelected ? "bg-indigo-600 text-white" : "border border-slate-700 bg-slate-900"
                       }`}
                     >
                       {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -297,7 +374,7 @@ export default function StaffPage() {
               })}
             </div>
 
-            <div className="pt-2 flex justify-end gap-2 border-t border-slate-800">
+            <div className="pt-3 flex justify-end gap-2 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => setEditingPermissionsStaff(null)}
@@ -309,7 +386,7 @@ export default function StaffPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSavePermissions}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-1.5 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
