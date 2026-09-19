@@ -140,57 +140,109 @@ html:not(.dark) .hover\:border-slate-700:hover {
   border-color: #cbd5e1 !important;
 }
 
-/* Light Mode Typography & Color Contrast */
+/* ==========================================================================
+   LIGHT MODE: ALL TEXT BLACK (#0f172a / #000000)
+   ========================================================================== */
+
+/* Universal text-white rule: in light mode, ANY text-white is pitch black */
+html:not(.dark) .text-white {
+  color: #0f172a !important;
+}
+
+/* All slate text colors in light mode become dark/black */
+html:not(.dark) .text-slate-50,
 html:not(.dark) .text-slate-100 {
   color: #0f172a !important;
 }
 
 html:not(.dark) .text-slate-200 {
-  color: #1e293b !important;
-}
-
-html:not(.dark) .text-slate-300 {
-  color: #334155 !important;
-}
-
-html:not(.dark) .text-slate-400 {
-  color: #64748b !important;
-}
-
-/* Headings and generic labels with text-white */
-html:not(.dark) h1.text-white,
-html:not(.dark) h2.text-white,
-html:not(.dark) h3.text-white,
-html:not(.dark) h4.text-white,
-html:not(.dark) h5.text-white,
-html:not(.dark) h6.text-white,
-html:not(.dark) p.text-white,
-html:not(.dark) span.text-white:not([class*="bg-indigo"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-amber"]):not([class*="bg-blue"]):not([class*="bg-brand"]):not([class*="bg-slate-900"]),
-html:not(.dark) div.text-white {
   color: #0f172a !important;
 }
 
-/* Preserve Crisp White Text for Action Buttons and Colored Badges */
-html:not(.dark) [class*="bg-indigo"] .text-white,
-html:not(.dark) [class*="bg-emerald"] .text-white,
-html:not(.dark) [class*="bg-rose"] .text-white,
-html:not(.dark) [class*="bg-red"] .text-white,
-html:not(.dark) [class*="bg-purple"] .text-white,
-html:not(.dark) [class*="bg-blue"] .text-white,
-html:not(.dark) [class*="bg-brand"] .text-white,
-html:not(.dark) [class*="bg-gradient"] .text-white,
-html:not(.dark) button[class*="bg-indigo"],
-html:not(.dark) button[class*="bg-emerald"],
-html:not(.dark) button[class*="bg-rose"],
-html:not(.dark) button[class*="bg-red"],
-html:not(.dark) button[class*="bg-purple"],
-html:not(.dark) button[class*="bg-blue"],
-html:not(.dark) a[class*="bg-indigo"],
-html:not(.dark) a[class*="bg-emerald"],
-html:not(.dark) a[class*="bg-rose"],
-html:not(.dark) a[class*="bg-purple"],
-html:not(.dark) a[class*="bg-blue"] {
+html:not(.dark) .text-slate-300 {
+  color: #1e293b !important;
+}
+
+html:not(.dark) .text-slate-400 {
+  color: #334155 !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #475569 !important;
+}
+
+/* Stop hover from turning text white in light mode */
+html:not(.dark) .hover\:text-white:hover,
+html:not(.dark) .group:hover .group-hover\:text-white,
+html:not(.dark) .hover\:text-slate-100:hover,
+html:not(.dark) .hover\:text-slate-200:hover,
+html:not(.dark) .hover\:text-slate-300:hover {
+  color: #0f172a !important;
+}
+
+/* Generic elements that inherit text in light mode */
+html:not(.dark) h1,
+html:not(.dark) h2,
+html:not(.dark) h3,
+html:not(.dark) h4,
+html:not(.dark) h5,
+html:not(.dark) h6 {
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   EXCEPTIONS: SOLID SATURATED BUTTONS, BADGES, & PILLS KEEP WHITE TEXT
+   ========================================================================== */
+html:not(.dark) button[class*="bg-indigo-600"],
+html:not(.dark) button[class*="bg-indigo-500"],
+html:not(.dark) button[class*="bg-indigo-700"],
+html:not(.dark) button[class*="bg-emerald-600"],
+html:not(.dark) button[class*="bg-emerald-500"],
+html:not(.dark) button[class*="bg-rose-600"],
+html:not(.dark) button[class*="bg-rose-500"],
+html:not(.dark) button[class*="bg-red-600"],
+html:not(.dark) button[class*="bg-purple-600"],
+html:not(.dark) button[class*="bg-blue-600"],
+html:not(.dark) a[class*="bg-indigo-600"],
+html:not(.dark) a[class*="bg-indigo-500"],
+html:not(.dark) a[class*="bg-emerald-600"],
+html:not(.dark) a[class*="bg-rose-600"],
+html:not(.dark) a[class*="bg-purple-600"],
+html:not(.dark) a[class*="bg-blue-600"],
+html:not(.dark) .bg-indigo-600,
+html:not(.dark) .bg-emerald-600,
+html:not(.dark) .bg-rose-600,
+html:not(.dark) [class*="bg-indigo-600"],
+html:not(.dark) [class*="bg-indigo-500"],
+html:not(.dark) [class*="bg-emerald-600"],
+html:not(.dark) [class*="bg-emerald-500"],
+html:not(.dark) [class*="bg-rose-600"],
+html:not(.dark) [class*="bg-rose-500"],
+html:not(.dark) [class*="bg-red-600"],
+html:not(.dark) [class*="bg-purple-600"],
+html:not(.dark) [class*="bg-blue-600"],
+html:not(.dark) [class*="bg-indigo-600"] *,
+html:not(.dark) [class*="bg-indigo-500"] *,
+html:not(.dark) [class*="bg-emerald-600"] *,
+html:not(.dark) [class*="bg-emerald-500"] *,
+html:not(.dark) [class*="bg-rose-600"] *,
+html:not(.dark) [class*="bg-rose-500"] *,
+html:not(.dark) [class*="bg-red-600"] *,
+html:not(.dark) [class*="bg-purple-600"] *,
+html:not(.dark) [class*="bg-blue-600"] *,
+html:not(.dark) [class*="bg-gradient-to"] *,
+html:not(.dark) [class*="bg-gradient-to"] {
   color: #ffffff !important;
+}
+
+/* Also ensure SVGs inside colored buttons keep white stroke */
+html:not(.dark) button[class*="bg-indigo-600"] svg,
+html:not(.dark) button[class*="bg-emerald-600"] svg,
+html:not(.dark) button[class*="bg-rose-600"] svg,
+html:not(.dark) a[class*="bg-indigo-600"] svg,
+html:not(.dark) a[class*="bg-emerald-600"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 /* Light Mode Form Elements (Inputs, Selects, Textareas) */
