@@ -43,6 +43,13 @@ export function Sidebar() {
   const isFreeTier = tier === "free";
   const isManager = role === "manager";
 
+  // Sidebar subscription remaining days
+  let daysRemaining: number | null = null;
+  if (!isFreeTier && user?.subscriptionExpiresAt) {
+    const diff = Math.ceil((new Date(user.subscriptionExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (diff > 0) daysRemaining = diff;
+  }
+
   // Free Tier Restricted Feature Keys
   const isFeatureRestrictedByPlan = (href: string) => {
     if (!isFreeTier) return false;
@@ -131,6 +138,7 @@ export function Sidebar() {
                 </span>
                 <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${isFreeTier ? "bg-slate-800 text-slate-400" : "bg-emerald-500/20 text-emerald-400"}`}>
                   {tier}
+                  {daysRemaining !== null && ` • ${daysRemaining}d left`}
                 </span>
               </div>
             </div>
