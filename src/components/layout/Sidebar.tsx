@@ -22,15 +22,19 @@ import {
   Lock,
   Sparkles,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { AuthService } from "@/lib/api/client";
 import { User } from "@/types";
 import { useSidebar } from "@/context/SidebarContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isOpen, setIsOpen } = useSidebar();
+  const { isDark, toggleTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -247,10 +251,10 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Footer User Info & Logout */}
+      {/* Footer User Info, Theme Toggle & Logout */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/40">
         <div className="flex items-center justify-between px-2 py-1">
-          <div className="truncate">
+          <div className="truncate pr-2">
             <p className="text-xs font-semibold text-slate-200 truncate">
               {user?.name || "Earbaj"}
             </p>
@@ -258,13 +262,27 @@ export function Sidebar() {
               {user?.email || "user@admin.com"}
             </p>
           </div>
-          <button
-            onClick={() => AuthService.logout()}
-            title="Sign Out"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors shrink-0"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode (লাইট মোড)" : "Switch to Dark Mode (ডার্ক মোড)"}
+              aria-label="Toggle Theme"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors"
+            >
+              {isDark ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-indigo-600" />
+              )}
+            </button>
+            <button
+              onClick={() => AuthService.logout()}
+              title="Sign Out"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </aside>

@@ -24,7 +24,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-slate-950 flex text-slate-100 relative">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex relative transition-colors duration-200">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
           {children}

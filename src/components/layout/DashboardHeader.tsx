@@ -11,12 +11,16 @@ import {
   Sparkles,
   ExternalLink,
   Menu,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export function DashboardHeader({ title }: { title: string }) {
   const [selectedBranch, setSelectedBranch] = useState("Main Flagship (Dhanmondi)");
   const { toggle } = useSidebar();
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <header className="h-16 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -72,6 +76,21 @@ export function DashboardHeader({ title }: { title: string }) {
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
           <span>AI Forecast</span>
         </Link>
+
+        {/* Theme Mode Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          type="button"
+          aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={isDark ? "Switch to Light Mode (লাইট মোড)" : "Switch to Dark Mode (ডার্ক মোড)"}
+          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition-all flex items-center justify-center shrink-0 shadow-sm"
+        >
+          {isDark ? (
+            <Sun className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
+          ) : (
+            <Moon className="w-4 h-4 text-indigo-600 transition-transform hover:-rotate-12" />
+          )}
+        </button>
       </div>
     </header>
   );

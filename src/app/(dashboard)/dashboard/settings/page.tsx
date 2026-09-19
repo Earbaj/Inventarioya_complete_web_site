@@ -19,10 +19,15 @@ import {
   Store,
   RefreshCw,
   ShieldCheck,
+  Sun,
+  Moon,
+  Laptop,
 } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -388,6 +393,110 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
+        </div>
+
+        {/* Theme & Visual Appearance Section */}
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-lg">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Sun className="w-4 h-4 text-amber-400" />
+                Theme & Visual Appearance (থিম ও ভিজ্যুয়াল স্টাইল)
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Choose between Dark mode, Light (White) mode, or sync with your operating system preference.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-slate-800 text-indigo-400 font-semibold border border-slate-700">
+              Active: {theme.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {/* Dark Mode Option */}
+            <button
+              type="button"
+              onClick={() => setTheme("dark")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group ${
+                theme === "dark"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
+                  <Moon className="w-5 h-5 text-indigo-400" />
+                </div>
+                {theme === "dark" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> Selected
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Dark Mode (ডার্ক মোড)</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Deep slate & dark contrast, comfortable for long hours.
+                </p>
+              </div>
+            </button>
+
+            {/* Light Mode Option */}
+            <button
+              type="button"
+              onClick={() => setTheme("light")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group ${
+                theme === "light"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 group-hover:scale-105 transition-transform">
+                  <Sun className="w-5 h-5 text-amber-500" />
+                </div>
+                {theme === "light" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> Selected
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Light Mode (হোয়াইট মোড)</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Crisp white surfaces, clean high-contrast daytime view.
+                </p>
+              </div>
+            </button>
+
+            {/* System Default Option */}
+            <button
+              type="button"
+              onClick={() => setTheme("system")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group ${
+                theme === "system"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 group-hover:scale-105 transition-transform">
+                  <Laptop className="w-5 h-5 text-slate-300" />
+                </div>
+                {theme === "system" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> Selected
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">System (সিস্টেম অনুসারী)</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Automatically synchronize with your device setting.
+                </p>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Danger Zone: Account Deletion */}
