@@ -51,3 +51,65 @@ export function downloadCsvFile(data: any[], filename: string) {
   link.click();
   document.body.removeChild(link);
 }
+
+export function extractPersonName(user: any, fallbackShopName?: string): string {
+  if (!user) return "Admin";
+  if (user.ownerName) return user.ownerName;
+  if (user.operatorName) return user.operatorName;
+  if (user.cashierName) return user.cashierName;
+
+  const shopWords = [
+    "shop",
+    "store",
+    "enterprise",
+    "trader",
+    "traders",
+    "ltd",
+    "limited",
+    "pos",
+    "mart",
+    "center",
+    "centre",
+    "hardware",
+    "pharmacy",
+    "corp",
+    "corporation",
+    "inc",
+    "co",
+    "company",
+  ];
+
+  const rawName = (user.name || "").trim();
+  const rawNameLower = rawName.toLowerCase();
+  const isShopName =
+    shopWords.some((w) => rawNameLower.includes(w)) ||
+    (fallbackShopName ? rawName === fallbackShopName : false);
+
+  // If user.name does not look like a shop name and is not the shop name
+  if (rawName && !isShopName) {
+    return rawName;
+  }
+
+  // Extract from email (e.g. "earbaj@admin.com" -> "Earbaj", "john.doe@gmail.com" -> "John Doe")
+  if (user.email) {
+    const prefix = user.email.split("@")[0] || "";
+    const clean = prefix.replace(/[._-]/g, " ").replace(/\d+/g, "").trim();
+    if (clean) {
+      return clean
+        .split(" ")
+        .filter(Boolean)
+        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+    }
+  }
+
+  // If name has shop words like "Earbaj Shop", filter out shop words
+  if (rawName) {
+    const parts = rawName.split(" ").filter((p: string) => !shopWords.includes(p.toLowerCase()));
+    if (parts.length > 0) {
+      return parts.join(" ");
+    }
+  }
+
+  return "Admin";
+}

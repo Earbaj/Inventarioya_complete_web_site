@@ -93,6 +93,15 @@ export default function SettingsPage() {
         ...updatedUser,
         name: payload.name,
         shopName: payload.name,
+        ownerName:
+          user?.ownerName ||
+          (user?.name &&
+          user.name !== payload.name &&
+          !user.name.toLowerCase().includes("shop") &&
+          !user.name.toLowerCase().includes("store")
+            ? user.name
+            : undefined) ||
+          (user?.email ? user.email.split("@")[0] : undefined),
         phone: payload.phone ?? user?.phone,
         address: payload.address ?? user?.address,
         logoUrl: payload.logoUrl ?? user?.logoUrl,

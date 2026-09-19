@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { InventoryService, SalesService, AuthService, CustomerService } from "@/lib/api/client";
 import { ProductItem, Category, CartItem, Invoice, Customer } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, extractPersonName } from "@/lib/utils";
 import { ThermalReceipt } from "@/components/pos/ThermalReceipt";
 import {
   Search,
@@ -332,7 +332,7 @@ export default function PosTerminalPage() {
         paidAmount: Number(paidAmount),
         dueAmount: Number(dueAmount),
         paymentMethod: dueAmount === grandTotal ? "DUE" : paymentMethod,
-        cashierName: AuthService.getCurrentUser()?.name || "Active Cashier",
+        cashierName: extractPersonName(AuthService.getCurrentUser()),
       };
 
       const newInvoice = await SalesService.createSale(payload);

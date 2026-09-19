@@ -19,6 +19,7 @@ export interface User {
   role: UserRole;
   shopId?: string;
   shopName?: string;
+  ownerName?: string;
   branchId?: string;
   subscriptionTier?: "free" | "standard" | "premium" | string;
   subscriptionExpiresAt?: string;

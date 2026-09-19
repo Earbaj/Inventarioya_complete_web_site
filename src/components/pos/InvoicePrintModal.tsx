@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Invoice } from "@/types";
-import { formatCurrency, formatDate, downloadCsvFile } from "@/lib/utils";
+import { formatCurrency, formatDate, downloadCsvFile, extractPersonName } from "@/lib/utils";
 import { AuthService } from "@/lib/api/client";
 import {
   Printer,
@@ -36,6 +36,14 @@ export function InvoicePrintModal({
   const shopPhone = user?.phone || "";
   const shopEmail = user?.email || "";
   const logoUrl = user?.logoUrl || user?.avatarUrl;
+  const personName = extractPersonName(user, shopName);
+  const displayCashier =
+    invoice.cashierName &&
+    !invoice.cashierName.toLowerCase().includes("shop") &&
+    !invoice.cashierName.toLowerCase().includes("store") &&
+    invoice.cashierName !== shopName
+      ? invoice.cashierName
+      : personName;
 
   const handlePrint = () => {
     window.print();
@@ -154,19 +162,20 @@ export function InvoicePrintModal({
                       <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
                         {shopName}
                       </h1>
-                      {shopAddress && (
-                        <p className="text-[11px] text-slate-600 font-medium mt-1">
-                          {shopAddress}
+                      <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
+                        Smart Cloud POS & Retail Billing
+                      </p>
+                      <p className="text-[11px] text-slate-600 mt-1">
+                        {shopAddress || "Dhaka, Bangladesh"}
+                      </p>
+                      <p className="text-[11px] text-slate-600">
+                        Phone: {shopPhone || "+880 1700-000000"}
+                      </p>
+                      {shopEmail && (
+                        <p className="text-[10px] text-slate-500">
+                          Email: {shopEmail}
                         </p>
                       )}
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        {[
-                          shopPhone ? `Phone: ${shopPhone}` : null,
-                          shopEmail ? `Email: ${shopEmail}` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" | ")}
-                      </p>
                     </div>
                   </div>
 
@@ -236,7 +245,7 @@ export function InvoicePrintModal({
                     <Building2 className="w-3.5 h-3.5 text-indigo-600" />
                     <span>Store Register & Served By</span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900">{invoice.cashierName}</p>
+                  <p className="text-sm font-bold text-slate-900">{displayCashier}</p>
                   <p className="text-[11px] text-slate-600 mt-0.5">
                     Role: <span className="font-semibold uppercase">{invoice.createdByRole || "Admin"}</span>
                   </p>
@@ -408,8 +417,9 @@ export function InvoicePrintModal({
                   <h2 className="text-sm font-bold tracking-wider uppercase">
                     {shopName}
                   </h2>
-                  {shopAddress && <p className="text-[10px] text-slate-600">{shopAddress}</p>}
-                  {shopPhone && <p className="text-[10px] text-slate-600">Tel: {shopPhone}</p>}
+                  <p className="text-[10px] text-slate-600">{shopAddress || "Dhaka, Bangladesh"}</p>
+                  <p className="text-[10px] text-slate-600">Tel: {shopPhone || "+880 1700-000000"}</p>
+                  {shopEmail && <p className="text-[9px] text-slate-500">Email: {shopEmail}</p>}
                   <p className="text-[10px] font-bold mt-1 bg-slate-100 py-0.5">RETAIL POS RECEIPT</p>
                 </div>
 
@@ -435,7 +445,7 @@ export function InvoicePrintModal({
                   )}
                   <div className="flex justify-between">
                     <span>Cashier:</span>
-                    <span>{invoice.cashierName}</span>
+                    <span>{displayCashier}</span>
                   </div>
                   {invoice.branchName && (
                     <div className="flex justify-between">
