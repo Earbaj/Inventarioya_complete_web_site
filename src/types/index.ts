@@ -260,25 +260,41 @@ export interface SubscriptionPackage {
   id: string;
   name: string;
   price: number;
-  billingPeriod: "monthly" | "yearly";
-  features: string[];
+  currency?: string;
+  durationDays?: number;
+  billingPeriod?: "monthly" | "yearly" | string;
+  features?: string[];
   isPopular?: boolean;
-  maxBranches: number;
-  maxStaff: number;
-  hasAIFeatures: boolean;
+  limits?: {
+    customers: number | string;
+    managers: number | string;
+    items: number | string;
+    sales: number | string;
+  };
+  description?: string;
+  maxBranches?: number;
+  maxStaff?: number;
+  hasAIFeatures?: boolean;
 }
 
 export interface PaymentInfo {
-  merchantName: string;
+  merchantName?: string;
   bkashNumber?: string;
   nagadNumber?: string;
   rocketNumber?: string;
+  bankDetails?: {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    branch?: string;
+  };
   bankAccount?: {
     bankName: string;
     accountName: string;
     accountNumber: string;
-    branchName: string;
+    branchName?: string;
   };
+  instructions?: string[];
   instructionNotes?: string[];
 }
 

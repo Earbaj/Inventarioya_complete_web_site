@@ -1552,7 +1552,81 @@ export const SubscriptionsService = {
   async getPackages(): Promise<SubscriptionPackage[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.subscriptionPackages);
-      return res.data?.data || res.data || mockPackages;
+      const rawList = res.data?.data || res.data || mockPackages;
+      if (Array.isArray(rawList)) {
+        return rawList.map((p: any) => {
+          let features: string[] = Array.isArray(p.features) ? p.features : [];
+
+          if (features.length === 0) {
+            if (p.limits) {
+              features.push(
+                p.limits.customers === "unlimited"
+                  ? "Unlimited Customers (আনলিমিটেড কাস্টমার)"
+                  : `Max ${p.limits.customers} Active Customer`
+              );
+              features.push(
+                p.limits.managers === "unlimited"
+                  ? "Unlimited Staff & Managers"
+                  : `Max ${p.limits.managers} Manager/Staff`
+              );
+              features.push(
+                p.limits.items === "unlimited"
+                  ? "Unlimited Products & Inventory"
+                  : `Max ${p.limits.items} Inventory Items`
+              );
+              features.push(
+                p.limits.sales === "unlimited"
+                  ? "Unlimited POS Sales Invoices"
+                  : `Max ${p.limits.sales} Sales Invoices`
+              );
+            }
+            if (p.durationDays && p.durationDays > 0) {
+              features.push(`${p.durationDays} Days All-Access Validity`);
+            }
+            if (p.price > 0) {
+              features.push("Multi-Branch Cloud Access");
+              features.push("Thermal Receipt & Invoice Printing");
+              features.push("Automated Cloud Database Backup");
+              features.push("Priority WhatsApp Support");
+            } else {
+              features.push("Basic POS & Thermal Printing");
+              features.push("Community Support");
+            }
+          }
+
+          const billingPeriod =
+            p.billingPeriod ||
+            (p.durationDays === 365 || p.id?.includes("yearly")
+              ? "yearly"
+              : p.durationDays === 30 || p.id?.includes("monthly")
+              ? "monthly"
+              : "starter");
+
+          return {
+            id: p.id,
+            name: p.name,
+            price: Number(p.price || 0),
+            currency: p.currency || "BDT",
+            durationDays: Number(p.durationDays || 0),
+            billingPeriod,
+            features,
+            limits: p.limits,
+            description: p.description || "",
+            isPopular:
+              p.isPopular !== undefined
+                ? p.isPopular
+                : p.id === "premium_monthly" || p.id === "pkg_pro",
+            maxBranches: p.maxBranches || (p.price > 0 ? 5 : 1),
+            maxStaff:
+              p.maxStaff ||
+              (p.limits?.managers === "unlimited"
+                ? 999
+                : Number(p.limits?.managers || 1)),
+            hasAIFeatures: p.hasAIFeatures ?? p.price > 0,
+          };
+        });
+      }
+      return mockPackages;
     } catch {
       return mockPackages;
     }
@@ -1571,8 +1645,13 @@ export const SubscriptionsService = {
     try {
       const res = await apiClient.post(ApiEndpoints.submitManualPayment, payload);
       return res.data;
-    } catch {
-      return { success: true, message: "Payment submission received. Pending review by SuperAdmin." };
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
     }
   },
 

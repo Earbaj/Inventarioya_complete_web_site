@@ -81,7 +81,7 @@ export default function PricingPage() {
                 </div>
 
                 <div className="space-y-3 pt-6 border-t border-slate-800 text-xs text-slate-300 mb-8">
-                  {pkg.features.map((feat, i) => (
+                  {(pkg.features || []).map((feat, i) => (
                     <div key={i} className="flex items-center gap-2.5">
                       <div className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                         <Check className="w-3 h-3" />
