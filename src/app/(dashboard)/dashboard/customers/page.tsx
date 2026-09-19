@@ -446,7 +446,7 @@ export default function CustomersPage() {
             <div className="text-[11px] text-slate-500 mt-1">Active customer profiles</div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-sm bg-gradient-to-br from-slate-900 to-rose-950/20">
+          <div className="p-4 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-sm dark:bg-gradient-to-br dark:from-slate-900 dark:to-rose-950/20">
             <div className="flex items-center justify-between text-rose-300 text-xs mb-1">
               <span>Total Outstanding Due</span>
               <DollarSign className="w-4 h-4 text-rose-400" />

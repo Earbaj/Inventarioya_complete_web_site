@@ -224,12 +224,33 @@ html:not(.dark) .from-indigo-950\/60 {
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
 
+html:not(.dark) .from-slate-900,
+html:not(.dark) .from-slate-900\/60 {
+  --tw-gradient-from: #ffffff !important;
+  --tw-gradient-to: rgb(255 255 255 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+html:not(.dark) .from-purple-950,
+html:not(.dark) .from-purple-950\/80 {
+  --tw-gradient-from: #faf5ff !important;
+  --tw-gradient-to: rgb(250 245 255 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+html:not(.dark) .via-indigo-950,
+html:not(.dark) .via-indigo-950\/70 {
+  --tw-gradient-to: rgb(240 244 255 / 0) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #f0f4ff, var(--tw-gradient-to) !important;
+}
+
 html:not(.dark) .via-slate-900 {
   --tw-gradient-to: rgb(255 255 255 / 0) !important;
   --tw-gradient-stops: var(--tw-gradient-from), #ffffff, var(--tw-gradient-to) !important;
 }
 
-html:not(.dark) .to-slate-900 {
+html:not(.dark) .to-slate-900,
+html:not(.dark) .to-slate-900\/60 {
   --tw-gradient-to: #ffffff !important;
 }
 
@@ -237,10 +258,17 @@ html:not(.dark) .to-purple-950\/40 {
   --tw-gradient-to: #faf5ff !important;
 }
 
+html:not(.dark) .to-rose-950,
+html:not(.dark) .to-rose-950\/20,
+html:not(.dark) .to-rose-950\/40 {
+  --tw-gradient-to: #fff1f2 !important;
+}
+
 html:not(.dark) .bg-rose-950\/20 {
   background-color: #fff1f2 !important;
 }
 
+html:not(.dark) .border-rose-500\/20,
 html:not(.dark) .border-rose-500\/30 {
   border-color: #fecdd3 !important;
 }
