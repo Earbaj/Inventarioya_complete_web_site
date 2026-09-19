@@ -156,6 +156,32 @@ html:not(.dark) .text-white {
   color: #09090b !important;
 }
 
+/* Ensure colored buttons, badges, and dark containers keep their crisp white text */
+html:not(.dark) .bg-indigo-600,
+html:not(.dark) .bg-indigo-600 *,
+html:not(.dark) .bg-indigo-500,
+html:not(.dark) .bg-indigo-500 *,
+html:not(.dark) .bg-indigo-700,
+html:not(.dark) .bg-indigo-700 *,
+html:not(.dark) .bg-emerald-600,
+html:not(.dark) .bg-emerald-600 *,
+html:not(.dark) .bg-rose-600,
+html:not(.dark) .bg-rose-600 *,
+html:not(.dark) .bg-purple-600,
+html:not(.dark) .bg-purple-600 *,
+html:not(.dark) .bg-blue-600,
+html:not(.dark) .bg-blue-600 *,
+html:not(.dark) .keep-white,
+html:not(.dark) .keep-white *,
+html:not(.dark) .keep-dark,
+html:not(.dark) .keep-dark * {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .keep-dark {
+  background-color: #0f172a !important;
+}
+
 /* Base Body and Text Hierarchy in Light Mode */
 html:not(.dark) body,
 html:not(.dark) h1,

@@ -16,20 +16,20 @@ export function LandingNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/30">
-            <Boxes className="w-5 h-5 text-white" />
+            <Boxes className="w-5 h-5 text-white keep-white" />
           </div>
           <div>
             <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white block">
               {t("common.appName")}
             </span>
           </div>
-          <span className="hidden sm:inline-flex text-[11px] px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-medium ml-1">
+          <span className="hidden sm:inline-flex text-[11px] px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-semibold ml-1">
             {locale === "bn" ? "ক্লাউড পিওএস" : "Cloud POS"}
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600 dark:text-slate-300">
+        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <Link href="/#features" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
             {locale === "bn" ? "ফিচারসমূহ" : "Features"}
           </Link>
@@ -46,7 +46,7 @@ export function LandingNavbar() {
             href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium"
+            className="hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold"
           >
             <Smartphone className="w-4 h-4" />
             <span>{locale === "bn" ? "প্লে-স্টোর অ্যাপ" : "Play Store App"}</span>
@@ -61,7 +61,7 @@ export function LandingNavbar() {
             type="button"
             aria-label="Toggle language"
             title={locale === "bn" ? "Switch to English" : "বাংলায় পরিবর্তন করুন"}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm"
+            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm"
           >
             <Globe className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>{locale === "bn" ? "English" : "বাংলা"}</span>
@@ -73,7 +73,7 @@ export function LandingNavbar() {
             type="button"
             aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center justify-center cursor-pointer shadow-sm"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-all flex items-center justify-center cursor-pointer shadow-sm"
           >
             {isDark ? (
               <Sun className="w-4 h-4 text-amber-400" />
@@ -84,16 +84,16 @@ export function LandingNavbar() {
 
           <Link
             href="/login"
-            className="px-3.5 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            className="px-3.5 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
           >
             {t("common.signIn")}
           </Link>
           <Link
             href="/register"
-            className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5"
+            className="px-4 py-2 text-sm font-semibold text-white keep-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5"
           >
             {t("common.freeTrial")}
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 text-white keep-white" />
           </Link>
         </div>
 

@@ -9,13 +9,25 @@ export function ApiLogDrawer() {
   const [isOpen, setIsOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isEnabled, setIsEnabled] = useState(false);
 
   useEffect(() => {
+    // Only enable if developer explicitly turned on the debug flag
+    try {
+      if (typeof window !== "undefined" && localStorage.getItem("inventarioya_dev_drawer") === "true") {
+        setIsEnabled(true);
+      }
+    } catch {}
+
     const unsubscribe = subscribeToApiLogs((updated) => {
       setLogs([...updated]);
     });
     return () => unsubscribe();
   }, []);
+
+  if (!isEnabled) {
+    return null;
+  }
 
   const handleCopyJson = (log: ApiLogEntry) => {
     const payloadToCopy = {
