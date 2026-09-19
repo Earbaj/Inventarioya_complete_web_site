@@ -482,7 +482,18 @@ export const AuthService = {
   async getMe(): Promise<any> {
     try {
       const res = await apiClient.get(ApiEndpoints.me);
-      return res.data;
+      const data = res.data?.user || res.data;
+      if (typeof window !== "undefined" && data) {
+        const cached = localStorage.getItem(USER_KEY);
+        const current = cached ? JSON.parse(cached) : {};
+        const merged = {
+          ...current,
+          ...data,
+          shopName: data.shopName || data.name || current.shopName,
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(merged));
+      }
+      return data;
     } catch {
       if (typeof window !== "undefined") {
         const cached = localStorage.getItem(USER_KEY);
@@ -525,7 +536,15 @@ export const AuthService = {
       if (typeof window !== "undefined" && updatedUser) {
         const cached = localStorage.getItem(USER_KEY);
         const current = cached ? JSON.parse(cached) : {};
-        const merged = { ...current, ...updatedUser };
+        const merged = {
+          ...current,
+          ...updatedUser,
+          shopName: updatedUser.name || payload.name || current.shopName,
+          name: updatedUser.name || payload.name || current.name,
+          phone: updatedUser.phone ?? payload.phone ?? current.phone,
+          address: updatedUser.address ?? payload.address ?? current.address,
+          logoUrl: updatedUser.logoUrl ?? payload.logoUrl ?? current.logoUrl,
+        };
         localStorage.setItem(USER_KEY, JSON.stringify(merged));
       }
       return res.data;

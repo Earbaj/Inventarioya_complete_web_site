@@ -31,10 +31,11 @@ export function InvoicePrintModal({
   const [printMode, setPrintMode] = useState<"a4" | "thermal">(initialMode);
 
   const user = AuthService.getCurrentUser();
-  const shopName = user?.shopName || "Dhaka Mega Superstore";
-  const shopAddress = "Road 27, Dhanmondi, Dhaka-1209";
-  const shopPhone = user?.phone || "+880 1711-223344";
-  const shopEmail = user?.email || "support@inventarioya.com";
+  const shopName = user?.shopName || user?.name || "Inventarioya Store";
+  const shopAddress = user?.address || "";
+  const shopPhone = user?.phone || "";
+  const shopEmail = user?.email || "";
+  const logoUrl = user?.logoUrl || user?.avatarUrl;
 
   const handlePrint = () => {
     window.print();
@@ -138,16 +139,35 @@ export function InvoicePrintModal({
               {/* Header: Company & Invoice Meta */}
               <div className="border-b-2 border-slate-900 pb-5">
                 <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
-                      {shopName}
-                    </h1>
-                    <p className="text-[11px] text-slate-600 font-medium mt-1">
-                      {shopAddress}
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Phone: {shopPhone} | Email: {shopEmail}
-                    </p>
+                  <div className="flex items-start gap-3.5">
+                    {logoUrl && (
+                      <img
+                        src={logoUrl}
+                        alt={shopName}
+                        className="w-14 h-14 rounded-lg object-contain border border-slate-200 shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                    )}
+                    <div>
+                      <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+                        {shopName}
+                      </h1>
+                      {shopAddress && (
+                        <p className="text-[11px] text-slate-600 font-medium mt-1">
+                          {shopAddress}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {[
+                          shopPhone ? `Phone: ${shopPhone}` : null,
+                          shopEmail ? `Email: ${shopEmail}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" | ")}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="text-right shrink-0">
@@ -375,12 +395,21 @@ export function InvoicePrintModal({
               >
                 {/* Receipt Header */}
                 <div className="text-center pb-3 border-b border-dashed border-slate-400">
+                  {logoUrl && (
+                    <img
+                      src={logoUrl}
+                      alt={shopName}
+                      className="w-10 h-10 mx-auto object-contain mb-1"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  )}
                   <h2 className="text-sm font-bold tracking-wider uppercase">
-                    Dhaka Mega Superstore
+                    {shopName}
                   </h2>
-                  <p className="text-[10px] text-slate-600">Road 27, Dhanmondi, Dhaka</p>
-                  <p className="text-[10px] text-slate-600">Tel: +880 1711-223344</p>
-                  <p className="text-[10px] text-slate-600">BIN: 001928472-0101</p>
+                  {shopAddress && <p className="text-[10px] text-slate-600">{shopAddress}</p>}
+                  {shopPhone && <p className="text-[10px] text-slate-600">Tel: {shopPhone}</p>}
                   <p className="text-[10px] font-bold mt-1 bg-slate-100 py-0.5">RETAIL POS RECEIPT</p>
                 </div>
 

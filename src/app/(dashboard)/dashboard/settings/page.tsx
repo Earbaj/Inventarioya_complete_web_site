@@ -88,12 +88,23 @@ export default function SettingsPage() {
         ...payload,
       };
 
-      setUser(updatedUser);
+      const finalUser = {
+        ...user,
+        ...updatedUser,
+        name: payload.name,
+        shopName: payload.name,
+        phone: payload.phone ?? user?.phone,
+        address: payload.address ?? user?.address,
+        logoUrl: payload.logoUrl ?? user?.logoUrl,
+      };
+
+      setUser(finalUser);
       setSuccessMessage(res.message || "Shop profile updated successfully! (দোকানের তথ্য সফলভাবে আপডেট করা হয়েছে)");
       setLogoError(false);
 
-      // Dispatch event so other components (e.g. sidebar, dashboard) can refresh
+      // Dispatch event so other components (e.g. sidebar, dashboard, print templates) can refresh
       if (typeof window !== "undefined") {
+        localStorage.setItem("inventarioya_user", JSON.stringify(finalUser));
         window.dispatchEvent(new Event("storage"));
       }
     } catch (err: any) {
