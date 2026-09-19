@@ -16,6 +16,7 @@ export const ApiEndpoints = {
   forgotPassword: `${API_BASE_URL}/api/auth/forgot-password`,
   resetPassword: `${API_BASE_URL}/api/auth/reset-password`,
   me: `${API_BASE_URL}/api/auth/me`,
+  profile: `${API_BASE_URL}/api/auth/profile`,
   deleteAccount: `${API_BASE_URL}/api/auth/me`,
 
   // ===========================================================================

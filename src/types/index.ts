@@ -14,6 +14,8 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  address?: string;
+  logoUrl?: string;
   role: UserRole;
   shopId?: string;
   shopName?: string;
@@ -23,6 +25,18 @@ export interface User {
   permissions?: UserPermissions;
   avatarUrl?: string;
   createdAt?: string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+  phone?: string;
+  address?: string;
+  logoUrl?: string;
+}
+
+export interface UpdateProfileResponse {
+  message: string;
+  user: User;
 }
 
 export interface AuthResponse {

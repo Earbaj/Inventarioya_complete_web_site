@@ -513,6 +513,34 @@ export const AuthService = {
     }
   },
 
+  async updateProfile(payload: {
+    name: string;
+    phone?: string;
+    address?: string;
+    logoUrl?: string;
+  }): Promise<{ message: string; user: User }> {
+    try {
+      const res = await apiClient.put(ApiEndpoints.profile, payload);
+      const updatedUser = res.data?.user || res.data;
+      if (typeof window !== "undefined" && updatedUser) {
+        const cached = localStorage.getItem(USER_KEY);
+        const current = cached ? JSON.parse(cached) : {};
+        const merged = { ...current, ...updatedUser };
+        localStorage.setItem(USER_KEY, JSON.stringify(merged));
+      }
+      return res.data;
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message ||
+        (Array.isArray(err.response?.data?.message)
+          ? err.response.data.message.join(", ")
+          : null) ||
+        err.message ||
+        "Failed to update profile";
+      throw new Error(msg);
+    }
+  },
+
   logout() {
     if (typeof window !== "undefined") {
       localStorage.removeItem(TOKEN_KEY);

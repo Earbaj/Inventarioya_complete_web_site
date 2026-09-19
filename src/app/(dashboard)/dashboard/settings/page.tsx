@@ -3,22 +3,58 @@
 import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { AuthService } from "@/lib/api/client";
-import { User } from "@/types";
-import { Settings, UserCheck, ShieldAlert, Trash2, Mail, Phone, Building, Save } from "lucide-react";
+import { User, UpdateProfilePayload } from "@/types";
+import {
+  ShieldAlert,
+  Trash2,
+  Mail,
+  Phone,
+  Building,
+  Save,
+  MapPin,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Store,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Form states for PUT /api/auth/profile
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+
+  // Feedback states
+  const [isSaving, setIsSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Delete account modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Image load error fallback state
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     async function loadMe() {
       try {
         const u = await AuthService.getMe();
         setUser(u);
+        setName(u?.name || u?.shopName || "");
+        setPhone(u?.phone || "");
+        setAddress(u?.address || "");
+        setLogoUrl(u?.logoUrl || "");
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load user profile:", err);
       } finally {
         setLoading(false);
       }
@@ -26,58 +62,312 @@ export default function SettingsPage() {
     loadMe();
   }, []);
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      setErrorMessage("Shop Name is required.");
+      return;
+    }
+
+    setIsSaving(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    try {
+      const payload: UpdateProfilePayload = {
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+        address: address.trim() || undefined,
+        logoUrl: logoUrl.trim() || undefined,
+      };
+
+      const res = await AuthService.updateProfile(payload);
+      const updatedUser = res.user || {
+        ...user,
+        ...payload,
+      };
+
+      setUser(updatedUser);
+      setSuccessMessage(res.message || "Shop profile updated successfully! (দোকানের তথ্য সফলভাবে আপডেট করা হয়েছে)");
+      setLogoError(false);
+
+      // Dispatch event so other components (e.g. sidebar, dashboard) can refresh
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("storage"));
+      }
+    } catch (err: any) {
+      setErrorMessage(
+        err.message || "Failed to update profile. Please check your network and try again."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleResetForm = () => {
+    if (user) {
+      setName(user.name || user.shopName || "");
+      setPhone(user.phone || "");
+      setAddress(user.address || "");
+      setLogoUrl(user.logoUrl || "");
+      setLogoError(false);
+      setSuccessMessage("");
+      setErrorMessage("");
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "DELETE MY ACCOUNT") return;
     try {
       await AuthService.deleteAccount();
     } catch (err) {
-      console.error(err);
+      console.error("Failed to delete account:", err);
     }
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
-      <DashboardHeader title="Shop Settings & Owner Profile" />
+      <DashboardHeader title="Shop Settings & Owner Profile (শপ সেটিংস ও প্রোফাইল)" />
 
-      <main className="p-4 sm:p-6 space-y-6 max-w-4xl">
-        {/* Profile Card */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-lg font-bold">
-              {user?.name ? user.name[0] : "R"}
+      <main className="p-4 sm:p-6 space-y-6 max-w-5xl">
+        {/* Profile Overview Header Card */}
+        <div className="rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-900 border border-indigo-500/30 p-5 sm:p-6 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {logoUrl && !logoError ? (
+                  <img
+                    src={logoUrl}
+                    alt="Shop Logo"
+                    onError={() => setLogoError(true)}
+                    className="w-16 h-16 rounded-2xl object-cover bg-slate-950 border-2 border-indigo-500/50 shadow-md"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-indigo-600/30">
+                    {name ? name[0].toUpperCase() : user?.name ? user.name[0].toUpperCase() : "S"}
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center">
+                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                    {name || user?.name || "Shop Administrator"}
+                  </h2>
+                  <span
+                    className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
+                      user?.subscriptionTier === "premium"
+                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                        : "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
+                    }`}
+                  >
+                    {user?.subscriptionTier === "premium" ? "PREMIUM" : "FREE TIER"}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 mt-0.5 flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-indigo-400 uppercase tracking-wider">
+                    {user?.role || "Owner"}
+                  </span>
+                  <span>•</span>
+                  <span className="text-slate-400">{user?.email || "owner@inventarioya.com"}</span>
+                  {phone && (
+                    <>
+                      <span>•</span>
+                      <span className="text-slate-400 font-mono">{phone}</span>
+                    </>
+                  )}
+                </p>
+
+                {address && (
+                  <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-indigo-400 shrink-0" />
+                    <span>{address}</span>
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white">{user?.name || "Shop Administrator"}</h3>
-              <p className="text-xs text-indigo-400 font-semibold uppercase">{user?.role || "Owner"}</p>
+
+            <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+              <Link
+                href="/dashboard/subscriptions"
+                className="px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Subscription Plan</span>
+              </Link>
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800 text-xs">
+        {/* Update Shop Details Form */}
+        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-lg">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
             <div>
-              <label className="text-slate-400 block mb-1">Email Address</label>
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-medium">
-                {user?.email || "owner@inventarioya.com"}
-              </div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Store className="w-4 h-4 text-indigo-400" />
+                Update Shop & Profile Information (শপের তথ্য পরিবর্তন)
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Update your business name, contact phone, store address, and receipt logo URL.
+              </p>
             </div>
-            <div>
-              <label className="text-slate-400 block mb-1">Contact Phone</label>
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-medium">
-                {user?.phone || "+880 1711-223344"}
-              </div>
-            </div>
-            <div>
-              <label className="text-slate-400 block mb-1">Shop / Business</label>
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-medium">
-                {user?.shopName || "Dhaka Mega Superstore"}
-              </div>
-            </div>
-            <div>
-              <label className="text-slate-400 block mb-1">Cloud Sync</label>
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 font-medium">
-                Active (Flutter Mobile + Web)
-              </div>
-            </div>
+
+            <span className="text-[10px] font-mono text-slate-500 hidden sm:inline-block">
+              PUT /api/auth/profile
+            </span>
           </div>
+
+          {successMessage && (
+            <div className="mb-5 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+              <div className="flex-1 font-medium">{successMessage}</div>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+              <div className="flex-1 font-medium">{errorMessage}</div>
+            </div>
+          )}
+
+          <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Shop Name */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-indigo-400" />
+                  Shop / Business Name (দোকান বা শপের নাম) <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Rahim Super Store"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  This name appears on invoices, receipts, and customer ledgers.
+                </span>
+              </div>
+
+              {/* Contact Phone */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-indigo-400" />
+                  Contact Phone (যোগাযোগের ফোন নম্বর)
+                </label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. 01700000000"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  Customer support phone printed on POS customer receipts.
+                </span>
+              </div>
+
+              {/* Shop Physical Address */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                  Shop Address (দোকানের ঠিকানা)
+                </label>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="e.g. Shop 42, Level 2, Mirpur-10, Dhaka"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  Physical location printed at the header of sales invoices.
+                </span>
+              </div>
+
+              {/* Logo URL */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-indigo-400" />
+                  Shop Logo URL (লোগো ছবির লিঙ্ক)
+                </label>
+                <input
+                  type="url"
+                  value={logoUrl}
+                  onChange={(e) => {
+                    setLogoUrl(e.target.value);
+                    setLogoError(false);
+                  }}
+                  placeholder="https://example.com/logo.png"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  Public direct image URL (PNG/JPG) for branding receipts.
+                </span>
+              </div>
+            </div>
+
+            {/* Read-Only Account Identifiers */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-800/80">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-slate-500" />
+                  Account Login Email (অ্যাকাউন্ট ইমেইল)
+                </label>
+                <div className="w-full bg-slate-950/60 border border-slate-800/70 rounded-xl px-3.5 py-2.5 text-xs text-slate-400 flex items-center justify-between">
+                  <span>{user?.email || "owner@inventarioya.com"}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                    Read-Only
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+                  Account Role & Permissions
+                </label>
+                <div className="w-full bg-slate-950/60 border border-slate-800/70 rounded-xl px-3.5 py-2.5 text-xs text-slate-400 flex items-center justify-between">
+                  <span className="capitalize font-semibold text-indigo-300">
+                    {user?.role || "Owner"} Account
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-medium">
+                    Full Admin Control
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={handleResetForm}
+                disabled={isSaving}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Reset (পূর্বাবস্থায় ফেরান)</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSaving || !name.trim()}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSaving ? "Saving changes..." : "Save Shop Profile (পরিবর্তন সেভ করুন)"}</span>
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Danger Zone: Account Deletion */}
