@@ -21,6 +21,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { GooglePlayIcon } from "@/components/ui/GooglePlayIcon";
 
 export default function LandingPage() {
   const { locale, t, txt } = useLanguage();
@@ -717,22 +718,22 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
               <a
                 href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-3 rounded-xl bg-black hover:bg-slate-900 border border-slate-700 text-white keep-white flex items-center gap-3 transition-colors shadow-md"
+                className="px-5 py-2.5 rounded-xl bg-black hover:bg-slate-900 border border-slate-700/80 hover:border-slate-600 text-white keep-white flex items-center gap-3 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] group"
               >
-                <Smartphone className="w-6 h-6 text-emerald-400" />
+                <GooglePlayIcon className="w-7 h-7 shrink-0 transition-transform group-hover:scale-105" />
                 <div className="text-left">
-                  <p className="text-[9px] text-slate-400 uppercase tracking-wider leading-none">Get it on</p>
-                  <p className="text-sm font-bold text-white keep-white leading-tight">Google Play</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold leading-none mb-0.5">GET IT ON</p>
+                  <p className="text-base font-extrabold text-white keep-white leading-tight font-sans">Google Play</p>
                 </div>
               </a>
               <Link
                 href="/dashboard/pos"
-                className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white keep-white font-bold text-sm transition-colors shadow-md"
+                className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white keep-white font-bold text-sm transition-all shadow-md hover:scale-[1.02]"
               >
                 {txt("ওয়েব পিওএস চালান", "Open Web POS")}
               </Link>

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Boxes, Menu, X, ArrowRight, Smartphone, Sun, Moon, Globe } from "lucide-react";
+import { Boxes, Menu, X, ArrowRight, Sun, Moon, Globe } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { GooglePlayIcon } from "@/components/ui/GooglePlayIcon";
 
 export function LandingNavbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,10 +47,10 @@ export function LandingNavbar() {
             href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold"
+            className="hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-xs font-bold"
           >
-            <Smartphone className="w-4 h-4" />
-            <span>{locale === "bn" ? "প্লে-স্টোর অ্যাপ" : "Play Store App"}</span>
+            <GooglePlayIcon className="w-4 h-4 shrink-0" />
+            <span>{locale === "bn" ? "প্লে-স্টোর অ্যাপ" : "Google Play"}</span>
           </a>
         </nav>
 
@@ -143,10 +144,10 @@ export function LandingNavbar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 py-1.5 text-sm font-medium"
+            className="flex items-center gap-2 text-slate-800 dark:text-slate-200 py-1.5 text-sm font-semibold"
           >
-            <Smartphone className="w-4 h-4" />
-            {locale === "bn" ? "প্লে-স্টোর অ্যাপ ডাউনলোড" : "Download Play Store App"}
+            <GooglePlayIcon className="w-4 h-4 shrink-0" />
+            <span>{locale === "bn" ? "প্লে-স্টোর অ্যাপ ডাউনলোড" : "Download on Google Play"}</span>
           </a>
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
             <Link href="/login" onClick={() => setIsOpen(false)} className="w-full text-center py-2.5 rounded-xl text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 text-sm font-medium">

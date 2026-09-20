@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Boxes, Smartphone, Shield, Mail, Phone } from "lucide-react";
+import { Boxes, Shield, Mail, Phone } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { GooglePlayIcon } from "@/components/ui/GooglePlayIcon";
 
 export function Footer() {
   const { locale, t } = useLanguage();
@@ -26,10 +27,13 @@ export function Footer() {
             href="https://play.google.com/store/apps/details?id=com.earbaj.inventarioya&pcampaignid=web_share"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 px-3 py-1.5 rounded-lg w-fit transition-colors"
+            className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black border border-slate-800 hover:border-slate-700 text-white shadow-md transition-all group w-fit"
           >
-            <Smartphone className="w-4 h-4" />
-            <span>{t("footer.playStoreBadge")}</span>
+            <GooglePlayIcon className="w-5 h-5 shrink-0" />
+            <div className="text-left">
+              <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-none">GET IT ON</p>
+              <p className="text-xs font-extrabold text-white leading-tight">Google Play</p>
+            </div>
           </a>
         </div>
 
@@ -59,17 +63,23 @@ export function Footer() {
           <p className="text-xs text-slate-400 mb-3 leading-relaxed">
             {t("footer.supportDesc")}
           </p>
-          <div className="space-y-2 text-xs text-slate-300">
-            <div className="flex items-center gap-2">
-              <Mail className="w-3.5 h-3.5 text-indigo-400" />
-              <span>support@inventarioya.com</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone className="w-3.5 h-3.5 text-indigo-400" />
-              <span>+880 1819-000000</span>
-            </div>
+          <div className="space-y-2.5 text-xs text-slate-300">
+            <a
+              href="mailto:earbajsaria3@gmail.com"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span>earbajsaria3@gmail.com</span>
+            </a>
+            <a
+              href="tel:+8801832999277"
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span>+8801832999277</span>
+            </a>
             <div className="flex items-center gap-2 text-emerald-400 pt-1">
-              <Shield className="w-3.5 h-3.5" />
+              <Shield className="w-3.5 h-3.5 shrink-0" />
               <span>{t("footer.cloudBackup")}</span>
             </div>
           </div>
