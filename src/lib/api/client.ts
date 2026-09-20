@@ -60,6 +60,11 @@ export function subscribeToApiLogs(listener: (logs: ApiLogEntry[]) => void) {
   };
 }
 
+export function clearApiLogs() {
+  apiLogs.length = 0;
+  notifyLogListeners();
+}
+
 function notifyLogListeners() {
   logListeners.forEach((fn) => fn([...apiLogs]));
 }

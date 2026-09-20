@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { subscribeToApiLogs, ApiLogEntry } from "@/lib/api/client";
+import { subscribeToApiLogs, clearApiLogs, ApiLogEntry } from "@/lib/api/client";
 import { Terminal, X, Copy, Check, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 export function ApiLogDrawer() {
@@ -12,10 +12,27 @@ export function ApiLogDrawer() {
   const [isEnabled, setIsEnabled] = useState(false);
 
   useEffect(() => {
-    // Only enable if developer explicitly turned on the debug flag
+    // Automatically visible in debug mode (localhost / local dev network), hidden in release mode (production)
     try {
-      if (typeof window !== "undefined" && localStorage.getItem("inventarioya_dev_drawer") === "true") {
-        setIsEnabled(true);
+      if (typeof window !== "undefined") {
+        const hostname = window.location.hostname;
+        const isLocalhost =
+          hostname === "localhost" ||
+          hostname === "127.0.0.1" ||
+          hostname === "::1" ||
+          hostname === "0.0.0.0" ||
+          hostname.startsWith("192.168.") ||
+          hostname.startsWith("10.") ||
+          hostname.endsWith(".local");
+
+        const isDevEnv = process.env.NODE_ENV === "development";
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasDebugParam = urlParams.get("debug") === "true";
+        const hasDevStorage = localStorage.getItem("inventarioya_dev_drawer") === "true";
+
+        if (isLocalhost || isDevEnv || hasDebugParam || hasDevStorage) {
+          setIsEnabled(true);
+        }
       }
     } catch {}
 
@@ -46,8 +63,8 @@ export function ApiLogDrawer() {
       {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-50 px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-indigo-500/50 text-white text-xs font-mono font-bold shadow-2xl flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105"
-        title="Open Live API Response Logger"
+        className="fixed bottom-4 right-4 z-50 px-3.5 py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-indigo-500/50 text-white text-xs font-mono font-bold shadow-2xl flex items-center gap-2 backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
+        title="Open Live API Response Logger (Debug / Localhost)"
       >
         <div className={`w-2 h-2 rounded-full ${logs.length > 0 ? "bg-emerald-400 animate-pulse" : "bg-slate-500"}`} />
         <Terminal className="w-3.5 h-3.5 text-indigo-400" />
@@ -62,18 +79,34 @@ export function ApiLogDrawer() {
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-emerald-400" />
               <div>
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Live API Network & Response Inspector
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Live API Network & Response Inspector
+                  </h3>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    DEBUG
+                  </span>
+                </div>
                 <p className="text-[10px] text-slate-400">Click "Copy JSON" to send response payload to chat</p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              {logs.length > 0 && (
+                <button
+                  onClick={() => clearApiLogs()}
+                  className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Clear API logs"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Logs List */}
