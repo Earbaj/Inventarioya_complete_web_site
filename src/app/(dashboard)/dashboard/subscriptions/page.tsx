@@ -40,9 +40,17 @@ export default function SubscriptionsPage() {
 
   // Clipboard copy state
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isUpgradeRequired, setIsUpgradeRequired] = useState(false);
 
   useEffect(() => {
     setUser(AuthService.getCurrentUser());
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("upgrade") === "required") {
+        setIsUpgradeRequired(true);
+      }
+    }
 
     async function loadData() {
       try {
@@ -199,6 +207,34 @@ export default function SubscriptionsPage() {
       <DashboardHeader title={txt("দোকান সাবস্ক্রিপশন ও বিলিং", "Shop Subscription & Billing")} />
 
       <main className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-7xl">
+        {/* Upgrade Required Notification Banner */}
+        {isUpgradeRequired && (
+          <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 text-amber-300 shadow-lg animate-in fade-in duration-300">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm sm:text-base text-amber-200">
+                  {txt("ফিচারটি ব্যবহার করতে সাবস্ক্রিপশন আপগ্রেড করুন", "Subscription Upgrade Required to Access Feature")}
+                </h4>
+                <p className="text-xs sm:text-sm text-amber-300/80">
+                  {txt(
+                    "আপনি যে ফিচারটিতে প্রবেশ করার চেষ্টা করছেন তা শুধুমাত্র প্রিমিয়াম গ্রাহকদের জন্য উন্মুক্ত। নিচে থেকে আপনার সুবিধাজনক প্যাকেজটি নির্বাচন করে সহজে আপগ্রেড করুন।",
+                    "The feature you tried to access requires a Premium plan. Select a package below to upgrade your plan."
+                  )}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsUpgradeRequired(false)}
+              className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 shrink-0 cursor-pointer font-medium transition-colors"
+            >
+              {txt("বন্ধ করুন", "Dismiss")}
+            </button>
+          </div>
+        )}
+
         {/* Current Active Plan Card with Days Remaining */}
         <div className="rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-900 border border-indigo-500/40 p-5 sm:p-7 shadow-xl relative overflow-hidden">
           {/* Subtle background glow */}

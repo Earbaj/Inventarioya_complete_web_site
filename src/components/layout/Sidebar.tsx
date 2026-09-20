@@ -75,11 +75,11 @@ export function Sidebar() {
     if (!isFreeTier) return false;
     const restrictedHrefs = [
       "/dashboard/ai-advisor",
+      "/dashboard/categories",
       "/dashboard/suppliers",
       "/dashboard/expenses",
-      "/dashboard/staff",
-      "/dashboard/customers",
-      "/dashboard/categories",
+      "/dashboard/branches",
+      "/dashboard/trash",
     ];
     return restrictedHrefs.includes(href);
   };
@@ -93,14 +93,14 @@ export function Sidebar() {
     { name: t("nav.categories"), href: "/dashboard/categories", icon: Layers, proOnly: true },
     { name: t("nav.suppliers"), href: "/dashboard/suppliers", icon: Truck, proOnly: true, adminOnly: true },
     { name: t("nav.expenses"), href: "/dashboard/expenses", icon: Wallet, proOnly: true, adminOnly: true },
-    { name: t("nav.branches"), href: "/dashboard/branches", icon: Building2, adminOnly: true },
-    { name: t("nav.staff"), href: "/dashboard/staff", icon: Users, proOnly: true, adminOnly: true },
-    { name: t("nav.customers"), href: "/dashboard/customers", icon: Users, proOnly: true },
+    { name: t("nav.branches"), href: "/dashboard/branches", icon: Building2, proOnly: true, adminOnly: true },
+    { name: t("nav.staff"), href: "/dashboard/staff", icon: Users, adminOnly: true },
+    { name: t("nav.customers"), href: "/dashboard/customers", icon: Users },
   ];
 
   const allIntelligence = [
     { name: t("nav.aiAdvisor"), href: "/dashboard/ai-advisor", icon: BrainCircuit, aiBadge: true, proOnly: true, adminOnly: true },
-    { name: t("nav.trash"), href: "/dashboard/trash", icon: Trash2, adminOnly: true },
+    { name: t("nav.trash"), href: "/dashboard/trash", icon: Trash2, proOnly: true, adminOnly: true },
     { name: t("nav.subscriptions"), href: "/dashboard/subscriptions", icon: CreditCard, adminOnly: true },
     { name: t("nav.settings"), href: "/dashboard/settings", icon: Settings },
   ];
