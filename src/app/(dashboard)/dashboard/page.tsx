@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { DashboardService, SalesService } from "@/lib/api/client";
@@ -36,8 +36,9 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardOverviewPage() {
-  const { txt } = useLanguage();
+  const { locale, txt } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [allSales, setAllSales] = useState<Invoice[]>([]);
   const [recentSales, setRecentSales] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -53,6 +54,7 @@ export default function DashboardOverviewPage() {
         console.log("📊 [Dashboard Stats Data Received]:", statsData);
         setStats(statsData);
         const salesList = Array.isArray(salesData) ? salesData : salesData?.data || [];
+        setAllSales(salesList);
         setRecentSales(
           statsData?.recentSales && statsData.recentSales.length > 0
             ? statsData.recentSales
@@ -78,9 +80,71 @@ export default function DashboardOverviewPage() {
   const totalItems = stats?.totalItemsCount ?? 0;
   const lowStock = stats?.lowStockCount ?? stats?.lowStockItems ?? 0;
   const totalCustomers = stats?.totalCustomersCount ?? stats?.totalCustomers ?? 0;
-  const totalInvoices = stats?.totalInvoicesCount ?? stats?.todayOrders ?? 0;
+  const totalInvoices = stats?.totalInvoicesCount ?? (allSales.length > 0 ? allSales.length : (stats?.todayOrders ?? 0));
 
   const collectionRatio = totalSales > 0 ? Math.round((totalPaid / totalSales) * 100) : 0;
+
+  // Real 7-day sales calculation - Never use hardcoded/fake numbers
+  const chartData = useMemo(() => {
+    // If backend provides a populated salesChartData from real stats, use it
+    if (
+      stats?.salesChartData &&
+      Array.isArray(stats.salesChartData) &&
+      stats.salesChartData.length > 0 &&
+      stats.salesChartData.some((d) => d.amount > 0)
+    ) {
+      return stats.salesChartData;
+    }
+
+    const dayNamesBn = ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহঃ", "শুক্র", "শনি"];
+    const dayNamesEn = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const days: { date: string; fullDate: string; amount: number; orders: number }[] = [];
+    const now = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const dayOfWeek = d.getDay();
+      const dateStr = d.toISOString().split("T")[0]; // YYYY-MM-DD
+      const label = locale === "bn" ? dayNamesBn[dayOfWeek] : dayNamesEn[dayOfWeek];
+
+      days.push({
+        date: label,
+        fullDate: dateStr,
+        amount: 0,
+        orders: 0,
+      });
+    }
+
+    // Populate with real invoices from store
+    const sourceInvoices = allSales.length > 0 ? allSales : recentSales;
+    if (sourceInvoices.length > 0) {
+      sourceInvoices.forEach((inv) => {
+        if (!inv) return;
+        const invDateStr = inv.createdAt || inv.date;
+        if (!invDateStr) return;
+
+        const invDate = new Date(invDateStr);
+        if (isNaN(invDate.getTime())) return;
+        const formattedInvDate = invDate.toISOString().split("T")[0];
+
+        const targetDay = days.find((day) => day.fullDate === formattedInvDate);
+        if (targetDay) {
+          const invAmount = Number(
+            inv.netGrandTotal ?? inv.grandTotal ?? inv.netTotal ?? inv.paidAmount ?? 0
+          );
+          targetDay.amount += invAmount;
+          targetDay.orders += 1;
+        }
+      });
+    }
+
+    return days;
+  }, [stats?.salesChartData, allSales, recentSales, locale]);
+
+  const hasAnyWeeklySales = chartData.some((d) => d.amount > 0);
+  const totalWeeklySales = chartData.reduce((acc, d) => acc + d.amount, 0);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -292,36 +356,50 @@ export default function DashboardOverviewPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-white">{txt("সাপ্তাহিক বিক্রয় ট্রেন্ড", "Weekly Sales Velocity")}</h3>
-                <p className="text-xs text-slate-400">{txt("প্রতিদিনের মোট বিক্রয় পরিসংখ্যানের গ্রাফ", "Daily sales revenue trends across all branch checkouts")}</p>
+                <p className="text-xs text-slate-400">
+                  {hasAnyWeeklySales
+                    ? txt(
+                        `গত ৭ দিনে মোট বিক্রয়: ${formatCurrency(totalWeeklySales)}`,
+                        `Total revenue in last 7 days: ${formatCurrency(totalWeeklySales)}`
+                      )
+                    : txt("প্রতিদিনের মোট বিক্রয় পরিসংখ্যানের গ্রাফ", "Daily sales revenue trends across all branch checkouts")}
+                </p>
               </div>
               <span className="self-start sm:self-auto text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-medium">
                 {txt("গত ৭ দিন", "Last 7 Days")}
               </span>
             </div>
 
-            <div className="h-64 w-full">
+            <div className="h-64 w-full relative">
+              {!hasAnyWeeklySales && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-xs font-medium text-slate-300 shadow-md backdrop-blur-sm">
+                    <span className="w-2 h-2 rounded-full bg-slate-500" />
+                    <span>{txt("গত ৭ দিনে কোনো বিক্রয় সম্পন্ন হয়নি (৳০.০০)", "No sales recorded in the last 7 days (৳0.00)")}</span>
+                  </div>
+                </div>
+              )}
+
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={stats?.salesChartData || [
-                    { date: txt("সোম", "Mon"), amount: 28500 },
-                    { date: txt("মঙ্গল", "Tue"), amount: 31200 },
-                    { date: txt("বুধ", "Wed"), amount: 24800 },
-                    { date: txt("বৃহঃ", "Thu"), amount: 39500 },
-                    { date: txt("শুক্র", "Fri"), amount: 48900 },
-                    { date: txt("শনি", "Sat"), amount: 54100 },
-                    { date: txt("রবি", "Sun"), amount: 34250 },
-                  ]}
+                  data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={hasAnyWeeklySales ? 0.4 : 0.05} />
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                   <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={11}
+                    tickLine={false}
+                    domain={[0, (dataMax: number) => (dataMax > 0 ? Math.ceil(dataMax * 1.15) : 1000)]}
+                    tickFormatter={(val) => `৳${val}`}
+                  />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", fontSize: "12px" }}
                     formatter={(value: any) => [formatCurrency(Number(value)), txt("রেভিনিউ", "Revenue")]}

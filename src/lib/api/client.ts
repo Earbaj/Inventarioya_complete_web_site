@@ -578,36 +578,28 @@ export const DashboardService = {
   async getStats(): Promise<DashboardStats> {
     try {
       const res = await apiClient.get(ApiEndpoints.dashboardStats);
-      return res.data;
+      return res.data?.data || res.data;
     } catch {
       return {
-        totalSalesRevenue: "10362.03",
-        totalPaidCollected: "3268.55",
-        totalDueAmount: "7093.48",
-        totalExpenses: "4250.00",
-        netProfit: "-971.00",
-        totalItemsCount: 9,
-        lowStockCount: 8,
-        totalCustomersCount: 6,
-        totalCustomerDue: "1944.40",
-        totalInvoicesCount: 22,
-        todaySales: 10362.03,
-        todayOrders: 22,
-        totalRevenue: 10362.03,
-        totalCustomers: 6,
-        lowStockItems: 8,
-        monthlyRevenue: 10362.03,
-        totalDueBalance: 7093.48,
-        recentSales: mockInvoices,
-        salesChartData: [
-          { date: "Mon", amount: 1200, orders: 3 },
-          { date: "Tue", amount: 1800, orders: 4 },
-          { date: "Wed", amount: 1400, orders: 3 },
-          { date: "Thu", amount: 2200, orders: 5 },
-          { date: "Fri", amount: 2900, orders: 6 },
-          { date: "Sat", amount: 3400, orders: 7 },
-          { date: "Sun", amount: 3268, orders: 6 },
-        ],
+        totalSalesRevenue: "0.00",
+        totalPaidCollected: "0.00",
+        totalDueAmount: "0.00",
+        totalExpenses: "0.00",
+        netProfit: "0.00",
+        totalItemsCount: 0,
+        lowStockCount: 0,
+        totalCustomersCount: 0,
+        totalCustomerDue: "0.00",
+        totalInvoicesCount: 0,
+        todaySales: 0,
+        todayOrders: 0,
+        totalRevenue: 0,
+        totalCustomers: 0,
+        lowStockItems: 0,
+        monthlyRevenue: 0,
+        totalDueBalance: 0,
+        recentSales: [],
+        salesChartData: [],
       };
     }
   },
@@ -638,11 +630,11 @@ export const DashboardService = {
   async getSalesReport(params?: { startDate?: string; endDate?: string }) {
     try {
       const res = await apiClient.get(ApiEndpoints.reportsSales, { params });
-      return res.data;
+      return res.data?.data || res.data;
     } catch {
       return {
-        summary: { totalSales: 489300, totalOrders: 384, averageOrderValue: 1274 },
-        invoices: mockInvoices,
+        summary: { totalSales: 0, totalOrders: 0, averageOrderValue: 0 },
+        invoices: [],
       };
     }
   },
@@ -769,7 +761,7 @@ export const SalesService = {
         ? res.data.data
         : Array.isArray(res.data)
         ? res.data
-        : mockInvoices;
+        : [];
 
       const normalizedData = rawList.map(normalizeInvoice);
 
@@ -787,11 +779,10 @@ export const SalesService = {
         meta,
       };
     } catch {
-      const normalizedData = mockInvoices.map(normalizeInvoice);
       return {
-        data: normalizedData,
+        data: [],
         meta: {
-          total: normalizedData.length,
+          total: 0,
           page: 1,
           limit: params?.limit || 50,
           totalPages: 1,
