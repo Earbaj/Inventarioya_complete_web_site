@@ -1591,6 +1591,110 @@ export const StaffService = {
   },
 };
 
+export function normalizePaymentSubmission(raw: any): ManualPaymentSubmission {
+  if (!raw) return {} as ManualPaymentSubmission;
+
+  const id = raw.id || raw._id || "";
+  const shopId =
+    raw.shopId ||
+    raw.shop_id ||
+    raw.shop?._id ||
+    raw.shop?.id ||
+    raw.userId ||
+    raw.user_id ||
+    "";
+
+  const shopName =
+    raw.shopName ||
+    raw.shop_name ||
+    raw.shop?.name ||
+    raw.shop?.shopName ||
+    raw.shop?.title ||
+    raw.user?.shopName ||
+    raw.user?.name ||
+    raw.businessName ||
+    raw.companyName ||
+    "";
+
+  const packageId =
+    raw.packageId ||
+    raw.package_id ||
+    raw.package?._id ||
+    raw.package?.id ||
+    raw.package ||
+    "premium_monthly";
+
+  let packageName =
+    raw.packageName ||
+    raw.package_name ||
+    raw.package?.name ||
+    raw.package?.title ||
+    raw.planName ||
+    raw.plan ||
+    "";
+
+  if (!packageName || packageName === packageId) {
+    if (typeof packageId === "string") {
+      if (packageId.includes("year")) {
+        packageName = "Premium Yearly";
+      } else if (packageId.includes("month") || packageId.includes("premium")) {
+        packageName = "Premium Monthly";
+      } else if (packageId.includes("standard")) {
+        packageName = "Standard Plan";
+      } else if (packageId.includes("free")) {
+        packageName = "Free Plan";
+      } else {
+        packageName = packageId
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+    }
+  }
+
+  const amount = Number(raw.amount ?? raw.price ?? 0);
+  const paymentMethod =
+    raw.paymentMethod || raw.method || raw.payment_method || "manual_bkash";
+  const transactionId =
+    raw.transactionId ||
+    raw.transaction_id ||
+    raw.trxId ||
+    raw.trx_id ||
+    raw.txId ||
+    "";
+  const senderPhone =
+    raw.senderPhone ||
+    raw.sender_phone ||
+    raw.accountNo ||
+    raw.account_no ||
+    raw.phone ||
+    "";
+  const status = (raw.status || "pending").toLowerCase();
+  const submittedAt =
+    raw.submittedAt ||
+    raw.createdAt ||
+    raw.created_at ||
+    new Date().toISOString();
+
+  return {
+    id,
+    shopId,
+    shopName,
+    packageId,
+    packageName,
+    amount,
+    paymentMethod,
+    transactionId,
+    trxId: transactionId,
+    senderPhone,
+    accountNo: senderPhone,
+    status,
+    submittedAt,
+    createdAt: submittedAt,
+    approvedAt: raw.approvedAt || raw.approved_at || null,
+    rejectionReason: raw.rejectionReason || raw.rejection_reason || null,
+  };
+}
+
 export const SubscriptionsService = {
   async getPackages(): Promise<SubscriptionPackage[]> {
     try {
@@ -1648,20 +1752,26 @@ export const SubscriptionsService = {
           return {
             id: p.id,
             name: p.name,
+            nameBn: p.nameBn || p.name,
             price: Number(p.price || 0),
             currency: p.currency || "BDT",
-            durationDays: Number(p.durationDays || 0),
+            durationDays: Number(p.durationDays || (p.durationMonths ? p.durationMonths * 30 : 30)),
             billingPeriod,
             features,
-            limits: p.limits,
-            description: p.description || "",
-            isPopular:
-              p.isPopular !== undefined
-                ? p.isPopular
-                : p.id === "premium_monthly" || p.id === "pkg_pro",
-            maxBranches: p.maxBranches || (p.price > 0 ? 5 : 1),
-            maxStaff:
-              p.maxStaff ||
+            featuresBn: Array.isArray(p.featuresBn) ? p.featuresBn : undefined,
+            isPopular: Boolean(p.isPopular),
+            maxProducts:
+              p.maxProducts ??
+              (p.limits?.products === "unlimited"
+                ? 999999
+                : Number(p.limits?.products || 100)),
+            maxInvoicesPerMonth:
+              p.maxInvoicesPerMonth ??
+              (p.limits?.invoices === "unlimited"
+                ? 999999
+                : Number(p.limits?.invoices || 500)),
+            maxStaffAccounts:
+              p.maxStaffAccounts ??
               (p.limits?.managers === "unlimited"
                 ? 999
                 : Number(p.limits?.managers || 1)),
@@ -1701,9 +1811,14 @@ export const SubscriptionsService = {
   async getMyPayments(): Promise<ManualPaymentSubmission[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.myPayments);
-      return res.data?.data || res.data || mockManualPayments;
+      const rawList = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : mockManualPayments;
+      return rawList.map((item: any) => normalizePaymentSubmission(item));
     } catch {
-      return mockManualPayments;
+      return mockManualPayments.map((item) => normalizePaymentSubmission(item));
     }
   },
 
@@ -1711,9 +1826,16 @@ export const SubscriptionsService = {
   async getPendingPayments(): Promise<ManualPaymentSubmission[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.pendingPayments);
-      return res.data?.data || res.data || mockManualPayments.filter((p) => p.status === "pending");
+      const rawList = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : mockManualPayments.filter((p) => p.status === "pending");
+      return rawList.map((item: any) => normalizePaymentSubmission(item));
     } catch {
-      return mockManualPayments.filter((p) => p.status === "pending");
+      return mockManualPayments
+        .filter((p) => p.status === "pending")
+        .map((item) => normalizePaymentSubmission(item));
     }
   },
 

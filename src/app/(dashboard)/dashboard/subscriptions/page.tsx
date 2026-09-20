@@ -107,10 +107,16 @@ export default function SubscriptionsPage() {
       const selectedPkg = packages.find((p) => p.id === selectedPkgId);
       const cleanTrx = transactionId.trim().toUpperCase();
       const cleanPhone = senderPhone.trim();
+      const currentUser = AuthService.getCurrentUser() || user;
+      const currentShopName = currentUser?.shopName || currentUser?.name || "Shop";
+      const currentShopId = currentUser?.shopId || currentUser?.id || "";
+      const currentPkgName = selectedPkg?.name || (selectedPkgId?.includes("year") ? "Premium Yearly" : "Premium Monthly");
 
       const payload: ManualPaymentSubmission = {
+        shopId: currentShopId,
+        shopName: currentShopName,
         packageId: selectedPkgId || "premium_monthly",
-        packageName: selectedPkg?.name || "Premium Monthly",
+        packageName: currentPkgName,
         amount: Number(amount),
         paymentMethod,
         trxId: cleanTrx,
