@@ -25,8 +25,9 @@ import {
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -397,38 +398,69 @@ export default function DashboardOverviewPage() {
               )}
 
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
+                <BarChart
                   data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  margin={{ top: 15, right: 10, left: -15, bottom: 0 }}
+                  barSize={32}
                 >
-                  <defs>
-                    <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={hasAnyWeeklySales ? 0.4 : 0.05} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                  <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#64748b" 
+                    fontSize={11} 
+                    tickLine={false} 
+                    axisLine={{ stroke: '#334155' }}
+                  />
                   <YAxis
                     stroke="#64748b"
                     fontSize={11}
                     tickLine={false}
+                    axisLine={{ stroke: '#334155' }}
                     domain={[0, (dataMax: number) => (dataMax > 0 ? Math.ceil(dataMax * 1.15) : 1000)]}
-                    tickFormatter={(val) => `৳${val}`}
+                    tickFormatter={(val) => `৳${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", fontSize: "12px" }}
-                    formatter={(value: any) => [formatCurrency(Number(value)), txt("রেভিনিউ", "Revenue")]}
+                    cursor={{ fill: "rgba(99, 102, 241, 0.08)", radius: 8 }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-slate-900/95 border border-slate-700/80 p-3 rounded-xl shadow-2xl backdrop-blur-md text-xs">
+                            <p className="font-semibold text-slate-300 mb-1 flex items-center justify-between gap-4">
+                              <span>{data.fullDate}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold">{data.date}</span>
+                            </p>
+                            <p className="text-white font-bold text-sm flex items-center justify-between gap-4">
+                              <span className="text-slate-400 font-normal">{txt("মোট বিক্রয়:", "Sales:")}</span>
+                              <span className="text-emerald-400 font-mono">{formatCurrency(data.amount)}</span>
+                            </p>
+                            <p className="text-slate-400 flex items-center justify-between gap-4 mt-0.5">
+                              <span>{txt("ইনভয়েস সংখ্যা:", "Orders:")}</span>
+                              <span className="text-white font-mono">{data.orders} {txt("টি", "orders")}</span>
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
-                  <Area
-                    type="monotone"
+                  <Bar
                     dataKey="amount"
-                    stroke="#6366f1"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#salesGrad)"
-                  />
-                </AreaChart>
+                    radius={[6, 6, 2, 2]}
+                  >
+                    {chartData.map((entry, index) => {
+                      const isZero = entry.amount === 0;
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={isZero ? "#334155" : "#6366f1"}
+                          opacity={isZero ? 0.35 : 0.9}
+                          className="transition-all hover:opacity-100 hover:fill-indigo-400 cursor-pointer"
+                        />
+                      );
+                    })}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
