@@ -131,7 +131,7 @@ export function DashboardHeader({ title }: { title: string }) {
         {/* AI Advisor Badge */}
         <Link
           href="/dashboard/ai-advisor"
-          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-lg transition-colors shrink-0"
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 rounded-lg transition-colors shrink-0"
         >
           <Sparkles className="w-3.5 h-3.5 text-purple-400" />
           <span>{t("header.aiForecast")}</span>
