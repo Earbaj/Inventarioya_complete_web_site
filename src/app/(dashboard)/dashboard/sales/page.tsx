@@ -6,6 +6,7 @@ import { SalesService, AuthService } from "@/lib/api/client";
 import { Invoice } from "@/types";
 import { formatCurrency, formatDate, downloadCsvFile, extractPersonName } from "@/lib/utils";
 import { InvoicePrintModal } from "@/components/pos/InvoicePrintModal";
+import { ChevronDown } from "lucide-react";
 import {
   Search,
   Download,
@@ -270,14 +271,15 @@ export default function SalesHistoryPage() {
             </div>
 
             {/* Status Filter */}
-            <select
-              aria-label={txt("স্ট্যাটাস অনুযায়ী ফিল্টার", "Filter by Status")}
+            <div className="relative">
+              <select
+            
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
+              className="appearance-none bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-indigo-500"
             >
               <option value="ALL">{txt("সকল স্ট্যাটাস", "All Status")}</option>
               <option value="PAID">{txt("পরিশোধিত (Paid)", "Paid")}</option>
@@ -285,22 +287,32 @@ export default function SalesHistoryPage() {
               <option value="DUE">{txt("বাকি (Due)", "Due")}</option>
               <option value="REFUNDED">{txt("রিফান্ডকৃত (Refunded)", "Refunded")}</option>
             </select>
+            <ChevronDown
+    size={14}
+    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+  />
+            </div>
 
             {/* Date Range Filter */}
-            <select
-              aria-label={txt("তারিখ অনুযায়ী ফিল্টার", "Filter by Date")}
+            <div className="relative">
+              <select
               value={dateFilter}
               onChange={(e) => {
                 setDateFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none shrink-0"
+              className="appearance-none bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-indigo-500"
             >
               <option value="ALL">{txt("সকল তারিখ", "All Dates")}</option>
               <option value="TODAY">{txt("আজকের বিক্রয়", "Today")}</option>
               <option value="LAST_7_DAYS">{txt("গত ৭ দিন", "Last 7 Days")}</option>
               <option value="LAST_30_DAYS">{txt("গত ৩০ দিন", "Last 30 Days")}</option>
             </select>
+            <ChevronDown
+    size={14}
+    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+  />
+            </div>
           </div>
 
           {/* Action Buttons: Print Report & CSV */}
