@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -14,16 +14,64 @@ import {
   Sun,
   Moon,
   Globe,
+  RefreshCw,
 } from "lucide-react";
 import { useSidebar } from "@/context/SidebarContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { BranchesService } from "@/lib/api/client";
+import { Branch } from "@/types";
 
 export function DashboardHeader({ title }: { title: string }) {
-  const [selectedBranch, setSelectedBranch] = useState("main");
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>("");
+  const [loadingBranches, setLoadingBranches] = useState<boolean>(true);
   const { toggle, isOpen } = useSidebar();
   const { isDark, toggleTheme } = useTheme();
   const { locale, toggleLocale, t } = useLanguage();
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadBranches() {
+      try {
+        const data = await BranchesService.getBranches();
+        if (isMounted) {
+          const list = Array.isArray(data) ? data : [];
+          setBranches(list);
+
+          // Retrieve saved branch from localStorage or default to main / first branch
+          const savedBranch = typeof window !== "undefined" ? localStorage.getItem("selected_branch_id") : null;
+          if (savedBranch && list.some((b) => b.id === savedBranch)) {
+            setSelectedBranch(savedBranch);
+          } else if (list.length > 0) {
+            const main = list.find((b) => b.isMainBranch) || list[0];
+            setSelectedBranch(main.id);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("selected_branch_id", main.id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load branches in header:", err);
+      } finally {
+        if (isMounted) setLoadingBranches(false);
+      }
+    }
+
+    loadBranches();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleBranchChange = (branchId: string) => {
+    setSelectedBranch(branchId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("selected_branch_id", branchId);
+      // Dispatch custom event so any other components listening can react
+      window.dispatchEvent(new CustomEvent("branchChanged", { detail: { branchId } }));
+    }
+  };
 
   return (
     <header className="h-16 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -43,25 +91,32 @@ export function DashboardHeader({ title }: { title: string }) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Branch Switcher (hidden on mobile, visible on tablet/desktop) */}
+        {/* Dynamic Branch Switcher (hidden on mobile, visible on tablet/desktop) */}
         <div className="hidden md:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
           <Store className="w-3.5 h-3.5 text-indigo-400" />
-          <select
-            aria-label="Active Branch"
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-            className="bg-transparent text-slate-200 focus:outline-none cursor-pointer text-xs"
-          >
-            <option value="main" className="bg-slate-900 text-white">
-              {t("header.flagshipBranch")}
-            </option>
-            <option value="mirpur" className="bg-slate-900 text-white">
-              {t("header.mirpurBranch")}
-            </option>
-            <option value="uttara" className="bg-slate-900 text-white">
-              {t("header.uttaraBranch")}
-            </option>
-          </select>
+          {loadingBranches ? (
+            <span className="text-slate-400 text-xs flex items-center gap-1">
+              <RefreshCw className="w-3 h-3 animate-spin text-indigo-400" />
+              <span>Loading...</span>
+            </span>
+          ) : branches.length === 0 ? (
+            <span className="text-slate-400 text-xs">
+              {t("header.flagshipBranch") || "Main Store"}
+            </span>
+          ) : (
+            <select
+              aria-label="Active Branch"
+              value={selectedBranch}
+              onChange={(e) => handleBranchChange(e.target.value)}
+              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer text-xs max-w-[170px] truncate"
+            >
+              {branches.map((b) => (
+                <option key={b.id} value={b.id} className="bg-slate-900 text-white">
+                  {b.name} {b.isMainBranch ? "★" : ""}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Quick POS Terminal Button */}
