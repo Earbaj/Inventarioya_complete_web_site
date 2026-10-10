@@ -32,6 +32,9 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -162,6 +165,60 @@ export default function DashboardOverviewPage() {
 
   const hasAnyWeeklySales = chartData.some((d) => d.amount > 0);
   const totalWeeklySales = chartData.reduce((acc, d) => acc + d.amount, 0);
+
+  // Payment Breakdown for Donut/Pie Chart
+  const paymentBreakdownData = useMemo(() => {
+    const sourceInvoices = allSales.length > 0 ? allSales : recentSales;
+
+    let cashTotal = 0;
+    let digitalTotal = 0;
+    let dueTotal = 0;
+
+    sourceInvoices.forEach((inv) => {
+      const paid = Number(inv.paidAmount || 0);
+      const due = Number(inv.dueAmount || 0);
+      const method = (inv.paymentMethod || "CASH").toUpperCase();
+
+      if (method === "CASH") {
+        cashTotal += paid;
+      } else {
+        // BKASH, NAGAD, CARD, BANK
+        digitalTotal += paid;
+      }
+      dueTotal += due;
+    });
+
+    // If no invoices yet but stats exist
+    if (cashTotal === 0 && digitalTotal === 0 && dueTotal === 0 && totalSales > 0) {
+      cashTotal = totalPaid;
+      dueTotal = totalDue;
+    }
+
+    const totalCalculated = cashTotal + digitalTotal + dueTotal;
+
+    return [
+      {
+        name: txt("নগদ আদায়", "Cash Collected"),
+        value: cashTotal,
+        color: "#10b981", // Emerald
+        percentage: totalCalculated > 0 ? Math.round((cashTotal / totalCalculated) * 100) : 0,
+      },
+      {
+        name: txt("ডিজিটাল পেমেন্ট", "Digital / Bank"),
+        value: digitalTotal,
+        color: "#6366f1", // Indigo
+        percentage: totalCalculated > 0 ? Math.round((digitalTotal / totalCalculated) * 100) : 0,
+      },
+      {
+        name: txt("বকেয়া / বাকি", "Due / Credit"),
+        value: dueTotal,
+        color: "#f43f5e", // Rose
+        percentage: totalCalculated > 0 ? Math.round((dueTotal / totalCalculated) * 100) : 0,
+      },
+    ].filter((item) => item.value >= 0);
+  }, [allSales, recentSales, totalSales, totalPaid, totalDue, txt]);
+
+  const hasPaymentData = paymentBreakdownData.some((item) => item.value > 0);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
@@ -465,37 +522,109 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
 
-          {/* Quick AI & POS Action Widget */}
-          <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-purple-950/40 border border-indigo-500/30 flex flex-col justify-between">
+          {/* Payment & Revenue Breakdown Donut/Pie Chart */}
+          <div className="p-4 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 text-purple-400 text-xs font-bold mb-2">
-                <Sparkles className="w-4 h-4" />
-                <span>{txt("জেমিনাই এআই স্মার্ট পরামর্শক", "Gemini AI Smart Advisor")}</span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  <h3 className="text-sm font-bold text-white">
+                    {txt("পেমেন্ট ও বকেয়া অনুপাত", "Payment Breakdown")}
+                  </h3>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
+                  {collectionRatio}% {txt("আদায়", "Collected")}
+                </span>
               </div>
-              <h4 className="text-base font-bold text-white mb-2">
-                {txt(`স্টক সতর্কতা: ${lowStock} টি পণ্যের স্টক শেষ হওয়ার পথে`, `Restock Alert: ${lowStock} Items Under Stock Limit`)}
-              </h4>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                {txt(`আপনার মোট ${totalItems} টির মধ্যে ${lowStock} টি পণ্যের স্টক সংকটাপন্ন অবস্থায় রয়েছে। দ্রুত সাপ্লায়ার থেকে রিস্টক করার পরামর্শ দেওয়া হচ্ছে।`, `You have ${lowStock} out of ${totalItems} items approaching critical inventory thresholds. Automated replenishment is recommended.`)}
+              <p className="text-xs text-slate-400 mb-4">
+                {txt("নগদ, ডিজিটাল পেমেন্ট ও বকেয়া বিক্রয়ের তুলনামূলক চার্ট", "Cash, digital channels & outstanding customer credit distribution")}
               </p>
-              <div className="mt-4 p-3 rounded-xl bg-slate-900/80 border border-indigo-500/20 text-xs text-indigo-300">
-                {netProfit < 0
-                  ? txt(`বর্তমান আর্থিক চিত্র অনুযায়ী দোকানে মোট ${formatCurrency(totalExpenses)} টাকা ব্যয়ের পর নিট ঘাটতি রয়েছে ${formatCurrency(Math.abs(netProfit))} টাকা।`, `Current financial overview shows a Net Deficit / Loss of ${formatCurrency(Math.abs(netProfit))} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`)
-                  : txt(`বর্তমান আর্থিক চিত্র অনুযায়ী দোকানে মোট ${formatCurrency(totalExpenses)} টাকা ব্যয়ের পর প্রকৃত নিট লাভ রয়েছে ${formatCurrency(netProfit)} টাকা।`, `Current financial overview shows a Net Profit of ${formatCurrency(netProfit)} with ${formatCurrency(totalExpenses)} in shop expenses recorded.`)}
+
+              {/* Donut Chart Container */}
+              <div className="h-44 w-full relative flex items-center justify-center">
+                {!hasPaymentData ? (
+                  <div className="text-center text-slate-500 text-xs">
+                    {txt("কোনো পেমেন্ট তথ্য পাওয়া যায়নি", "No transaction records found yet")}
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0f172a",
+                          borderColor: "#334155",
+                          borderRadius: "10px",
+                          fontSize: "12px",
+                        }}
+                        formatter={(val: any, name: any) => [
+                          `${formatCurrency(Number(val))}`,
+                          name,
+                        ]}
+                      />
+                      <Pie
+                        data={paymentBreakdownData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={48}
+                        outerRadius={68}
+                        paddingAngle={4}
+                        dataKey="value"
+                      >
+                        {paymentBreakdownData.map((entry, index) => (
+                          <Cell
+                            key={`pie-cell-${index}`}
+                            fill={entry.color}
+                            stroke="#0f172a"
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+
+                {/* Center KPI in Donut */}
+                {hasPaymentData && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-[10px] text-slate-400 uppercase font-medium">
+                      {txt("মোট বিক্রয়", "Total")}
+                    </span>
+                    <span className="text-xs font-bold text-white font-mono">
+                      {formatCurrency(totalSales)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Legend & Breakdown Details */}
+              <div className="mt-3 space-y-2 pt-2 border-t border-slate-800/80">
+                {paymentBreakdownData.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-slate-300 font-medium">{item.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-white font-semibold">
+                        {formatCurrency(item.value)}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono w-9 text-right">
+                        {item.percentage}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="pt-6 space-y-2">
-              <Link
-                href="/dashboard/ai-advisor"
-                className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
-              >
-                {txt("সম্পূর্ণ এআই প্রেডিকশন দেখুন", "View Full AI Predictions")}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+            {/* Quick POS Shortcut */}
+            <div className="pt-4">
               <Link
                 href="/dashboard/pos"
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-600/20 active:scale-95"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
                 {txt("পিওএস ক্যাশ রেজিস্টার খুলুন", "Open POS Cash Register")}
