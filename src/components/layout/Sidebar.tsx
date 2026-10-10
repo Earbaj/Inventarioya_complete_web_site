@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -38,6 +38,7 @@ import { useLanguage } from "@/context/LanguageContext";
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const navScrollRef = useRef<HTMLDivElement>(null);
   const {
     isMobileOpen,
     setIsMobileOpen,
@@ -53,6 +54,35 @@ export function Sidebar() {
   useEffect(() => {
     const u = AuthService.getCurrentUser();
     setUser(u);
+  }, []);
+
+  // Isolate scroll events on the sidebar nav container to prevent parent page scroll chaining
+  useEffect(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const isScrollable = scrollHeight > clientHeight;
+      if (!isScrollable) {
+        e.preventDefault();
+        return;
+      }
+
+      const delta = e.deltaY;
+      const isAtTop = scrollTop <= 0;
+      const isAtBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight;
+
+      if ((delta < 0 && isAtTop) || (delta > 0 && isAtBottom)) {
+        // Prevent scrolling from bubbling up to the document / main page
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+    };
   }, []);
 
   const role = (user?.role || "admin").toLowerCase();
@@ -136,7 +166,7 @@ export function Sidebar() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-slate-900 border-r border-slate-800 flex flex-col h-screen transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 bg-slate-900/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col h-screen max-h-screen overscroll-contain transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0 ${
           // Mobile open/close
           isMobileOpen
             ? "translate-x-0 shadow-2xl w-64"
@@ -152,15 +182,15 @@ export function Sidebar() {
       >
         {/* Brand Header */}
         <div
-          className={`h-16 border-b border-slate-800 flex items-center transition-all ${
-            isCollapsed ? "justify-center px-2" : "justify-between px-4 sm:px-5"
+          className={`h-16 border-b border-slate-800/80 bg-slate-950/30 flex items-center shrink-0 transition-all ${
+            isCollapsed ? "justify-center px-2" : "justify-between px-4"
           }`}
         >
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center">
               <Link
                 href="/dashboard"
-                className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/30 hover:scale-105 transition-transform"
+                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all"
                 title="Inventarioya Dashboard"
               >
                 <Boxes className="w-5 h-5 text-white" />
@@ -171,17 +201,17 @@ export function Sidebar() {
               <Link
                 href="/dashboard"
                 onClick={() => setIsMobileOpen(false)}
-                className="flex items-center gap-2.5 truncate"
+                className="flex items-center gap-3 truncate group"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/25 shrink-0 group-hover:scale-105 transition-transform">
                   <Boxes className="w-5 h-5 text-white" />
                 </div>
                 <div className="truncate">
-                  <span className="font-bold text-base tracking-tight text-white block truncate">
+                  <span className="font-bold text-[15px] tracking-tight text-white block truncate leading-snug group-hover:text-indigo-300 transition-colors">
                     {t("common.appName")}
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-indigo-400 font-medium tracking-wider uppercase">
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">
                       {role === "admin"
                         ? locale === "bn"
                           ? "অ্যাডমিন"
@@ -191,10 +221,10 @@ export function Sidebar() {
                         : "Manager"}
                     </span>
                     <span
-                      className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
                         isFreeTier
-                          ? "bg-slate-800 text-slate-400"
-                          : "bg-emerald-500/20 text-emerald-400"
+                          ? "bg-slate-800 text-slate-400 border border-slate-700/50"
+                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                       }`}
                     >
                       {tier === "free"
@@ -216,7 +246,7 @@ export function Sidebar() {
                 {/* Desktop Collapse to Mini Button */}
                 <button
                   onClick={toggleCollapse}
-                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer"
                   title={t("nav.collapseSidebar")}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -225,7 +255,7 @@ export function Sidebar() {
                 {/* Desktop Full Hide Button */}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
                   title={t("nav.hideSidebar")}
                 >
                   <PanelLeftClose className="w-4 h-4" />
@@ -234,7 +264,7 @@ export function Sidebar() {
                 {/* Mobile Close Button */}
                 <button
                   onClick={() => setIsMobileOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 lg:hidden transition-colors cursor-pointer"
                   aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
@@ -246,13 +276,14 @@ export function Sidebar() {
 
         {/* Nav List */}
         <div
-          className={`flex-1 overflow-y-auto space-y-4 py-4 ${
+          ref={navScrollRef}
+          className={`flex-1 overflow-y-auto overscroll-contain space-y-5 py-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent ${
             isCollapsed ? "px-2" : "px-3"
           }`}
         >
           <div>
             {!isCollapsed && (
-              <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/90 block mb-2">
                 {t("nav.operations")}
               </span>
             )}
@@ -267,26 +298,26 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       onClick={(e) => handleNavClick(e, item.href, isLocked)}
-                      className={`flex items-center rounded-lg text-xs font-medium transition-all ${
+                      className={`flex items-center rounded-xl text-xs font-medium transition-all ${
                         isCollapsed
                           ? "justify-center p-2.5"
-                          : "justify-between px-3 py-2"
+                          : "justify-between px-3 py-2.5"
                       } ${
                         isLocked
                           ? "opacity-60 text-slate-400 hover:bg-slate-800/40 hover:opacity-80"
                           : isActive
-                          ? "bg-indigo-600 text-white shadow-sm"
+                          ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/25"
                           : item.highlight
                           ? "text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
-                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                          : "text-slate-300 hover:bg-slate-800/70 hover:text-white"
                       }`}
                     >
                       <div
-                        className={`flex items-center gap-2.5 ${
+                        className={`flex items-center gap-3 ${
                           isCollapsed ? "justify-center" : "truncate"
                         }`}
                       >
-                        <Icon className="w-4 h-4 shrink-0" />
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : ""}`} />
                         {!isCollapsed && <span className="truncate">{item.name}</span>}
                       </div>
 
@@ -297,7 +328,7 @@ export function Sidebar() {
                             PRO
                           </span>
                         ) : item.highlight && !isActive ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                             LIVE
                           </span>
                         ) : null
@@ -306,15 +337,15 @@ export function Sidebar() {
 
                     {/* Floating Tooltip in Collapsed Mode */}
                     {isCollapsed && (
-                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
+                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
                         <span>{item.name}</span>
                         {isLocked && (
-                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/20 px-1 py-0.5 rounded">
+                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
                             PRO
                           </span>
                         )}
                         {item.highlight && !isActive && (
-                          <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/20 px-1 py-0.5 rounded">
+                          <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/20 px-1 py-0.5 rounded border border-emerald-500/30">
                             LIVE
                           </span>
                         )}
@@ -330,7 +361,7 @@ export function Sidebar() {
             {isCollapsed ? (
               <div className="my-2 border-t border-slate-800/80 mx-2" />
             ) : (
-              <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/90 block mb-2">
                 {t("nav.intelligence")}
               </span>
             )}
@@ -345,26 +376,30 @@ export function Sidebar() {
                     <Link
                       href={item.href}
                       onClick={(e) => handleNavClick(e, item.href, isLocked)}
-                      className={`flex items-center rounded-lg text-xs font-medium transition-all ${
+                      className={`flex items-center rounded-xl text-xs font-medium transition-all ${
                         isCollapsed
                           ? "justify-center p-2.5"
-                          : "justify-between px-3 py-2"
+                          : "justify-between px-3 py-2.5"
                       } ${
                         isLocked
                           ? "opacity-60 text-slate-400 hover:bg-slate-800/40 hover:opacity-80"
                           : isActive
-                          ? "bg-indigo-600 text-white shadow-sm"
-                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                          ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/25"
+                          : "text-slate-300 hover:bg-slate-800/70 hover:text-white"
                       }`}
                     >
                       <div
-                        className={`flex items-center gap-2.5 ${
+                        className={`flex items-center gap-3 ${
                           isCollapsed ? "justify-center" : "truncate"
                         }`}
                       >
                         <Icon
                           className={`w-4 h-4 shrink-0 ${
-                            item.aiBadge && !isLocked ? "text-purple-400" : ""
+                            isActive
+                              ? "text-white"
+                              : item.aiBadge && !isLocked
+                              ? "text-purple-400"
+                              : ""
                           }`}
                         />
                         {!isCollapsed && <span className="truncate">{item.name}</span>}
@@ -377,7 +412,7 @@ export function Sidebar() {
                             PRO
                           </span>
                         ) : item.aiBadge ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                             AI
                           </span>
                         ) : null
@@ -386,15 +421,15 @@ export function Sidebar() {
 
                     {/* Floating Tooltip in Collapsed Mode */}
                     {isCollapsed && (
-                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
+                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
                         <span>{item.name}</span>
                         {isLocked && (
-                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/20 px-1 py-0.5 rounded">
+                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
                             PRO
                           </span>
                         )}
                         {item.aiBadge && (
-                          <span className="text-[9px] text-purple-300 font-bold bg-purple-500/20 px-1 py-0.5 rounded">
+                          <span className="text-[9px] text-purple-300 font-bold bg-purple-500/20 px-1 py-0.5 rounded border border-purple-500/30">
                             AI
                           </span>
                         )}
@@ -409,15 +444,15 @@ export function Sidebar() {
 
         {/* Footer User Info, Theme Toggle & Logout */}
         <div
-          className={`border-t border-slate-800 bg-slate-950/40 transition-all ${
-            isCollapsed ? "p-2" : "p-3"
+          className={`border-t border-slate-800/80 bg-slate-950/60 shrink-0 transition-all ${
+            isCollapsed ? "p-2.5" : "p-3"
           }`}
         >
           {isCollapsed ? (
-            <div className="flex flex-col items-center gap-1.5">
+            <div className="flex flex-col items-center gap-2">
               {/* User Initial Avatar */}
               <div
-                className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs uppercase cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-indigo-600/25 text-indigo-300 border border-indigo-500/30 flex items-center justify-center font-bold text-xs uppercase cursor-pointer shadow-sm hover:scale-105 transition-transform"
                 title={`${user?.name || "User"} (${user?.email || ""})`}
               >
                 {(user?.name || "U")[0]}
@@ -427,7 +462,7 @@ export function Sidebar() {
               <button
                 onClick={toggleLocale}
                 title={t("header.switchLanguage")}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors text-[10px] font-bold cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 transition-colors text-[10px] font-bold cursor-pointer"
               >
                 {locale === "bn" ? "EN" : "বাং"}
               </button>
@@ -437,12 +472,12 @@ export function Sidebar() {
                 onClick={toggleTheme}
                 title={isDark ? t("header.lightMode") : t("header.darkMode")}
                 aria-label="Toggle Theme"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800/80 transition-colors cursor-pointer"
               >
                 {isDark ? (
                   <Sun className="w-4 h-4 text-amber-400" />
                 ) : (
-                  <Moon className="w-4 h-4 text-indigo-600" />
+                  <Moon className="w-4 h-4 text-indigo-400" />
                 )}
               </button>
 
@@ -451,7 +486,7 @@ export function Sidebar() {
                 onClick={toggleCollapse}
                 title={t("nav.expandSidebar")}
                 aria-label="Expand side drawer"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -461,15 +496,15 @@ export function Sidebar() {
                 onClick={() => AuthService.logout()}
                 title={t("common.signOut")}
                 aria-label="Sign Out"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between px-2 py-1">
+            <div className="flex items-center justify-between px-1 py-0.5">
               <div className="truncate pr-2">
-                <p className="text-xs font-semibold text-slate-200 truncate">
+                <p className="text-xs font-semibold text-slate-200 truncate leading-snug">
                   {user?.name || "Earbaj"}
                 </p>
                 <p className="text-[10px] text-slate-400 truncate">
@@ -481,7 +516,7 @@ export function Sidebar() {
                 <button
                   onClick={toggleLocale}
                   title={t("header.switchLanguage")}
-                  className="px-1.5 py-1 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors text-[10px] font-bold cursor-pointer"
+                  className="px-2 py-1 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800/80 transition-colors text-[10px] font-bold cursor-pointer"
                 >
                   {locale === "bn" ? "EN" : "বাং"}
                 </button>
@@ -489,18 +524,18 @@ export function Sidebar() {
                   onClick={toggleTheme}
                   title={isDark ? t("header.lightMode") : t("header.darkMode")}
                   aria-label="Toggle Theme"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 dark:hover:text-amber-300 hover:bg-slate-800/80 transition-colors cursor-pointer"
                 >
                   {isDark ? (
                     <Sun className="w-4 h-4 text-amber-400" />
                   ) : (
-                    <Moon className="w-4 h-4 text-indigo-600" />
+                    <Moon className="w-4 h-4 text-indigo-400" />
                   )}
                 </button>
                 <button
                   onClick={() => AuthService.logout()}
                   title={t("common.signOut")}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
