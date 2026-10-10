@@ -43,6 +43,7 @@ import {
   Banknote,
   Receipt,
 } from "lucide-react";
+import { ShimmerTableRows, ShimmerCard } from "@/components/ui/ShimmerSkeleton";
 
 function WhatsAppIcon({ className = "w-4 h-4", style }: { className?: string; style?: React.CSSProperties }) {
   return (
@@ -571,47 +572,56 @@ export default function CustomersPage() {
         )}
 
         {/* Top Summary Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>{txt("মোট কাস্টমার", "Total Customers")}</span>
-              <Users className="w-4 h-4 text-indigo-400" />
-            </div>
-            <div className="text-2xl font-bold text-white mt-1">{totalCount}</div>
-            <div className="text-[11px] text-slate-500 mt-1">{txt("সক্রিয় কাস্টমার প্রোফাইল", "Active customer profiles")}</div>
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
           </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>{txt("মোট কাস্টমার", "Total Customers")}</span>
+                <Users className="w-4 h-4 text-indigo-400" />
+              </div>
+              <div className="text-2xl font-bold text-white mt-1">{totalCount}</div>
+              <div className="text-[11px] text-slate-500 mt-1">{txt("সক্রিয় কাস্টমার প্রোফাইল", "Active customer profiles")}</div>
+            </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-sm dark:bg-gradient-to-br dark:from-slate-900 dark:to-rose-950/20">
-            <div className="flex items-center justify-between text-rose-300 text-xs mb-1">
-              <span>{txt("সর্বমোট অপরিশোধিত বাকি", "Total Outstanding Due")}</span>
-              <DollarSign className="w-4 h-4 text-rose-400" />
+            <div className="p-4 rounded-2xl bg-slate-900 border border-rose-500/20 shadow-sm dark:bg-gradient-to-br dark:from-slate-900 dark:to-rose-950/20">
+              <div className="flex items-center justify-between text-rose-300 text-xs mb-1">
+                <span>{txt("সর্বমোট অপরিশোধিত বাকি", "Total Outstanding Due")}</span>
+                <DollarSign className="w-4 h-4 text-rose-400" />
+              </div>
+              <div className="text-2xl font-black text-rose-400 mt-1">
+                {formatCurrency(totalOutstandingDue)}
+              </div>
+              <div className="text-[11px] text-rose-400/80 mt-1">
+                {txt("মোট অপরিশোধিত বাকি", "Total unpaid customer balance")}
+              </div>
             </div>
-            <div className="text-2xl font-black text-rose-400 mt-1">
-              {formatCurrency(totalOutstandingDue)}
-            </div>
-            <div className="text-[11px] text-rose-400/80 mt-1">
-              {txt("মোট অপরিশোধিত বাকি", "Total unpaid customer balance")}
-            </div>
-          </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/20 shadow-sm">
-            <div className="flex items-center justify-between text-amber-400 text-xs mb-1">
-              <span>{txt("বকেয়া বাকি সহ খাতা", "With Outstanding Due")}</span>
-              <AlertCircle className="w-4 h-4 text-amber-400" />
+            <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/20 shadow-sm">
+              <div className="flex items-center justify-between text-amber-400 text-xs mb-1">
+                <span>{txt("বকেয়া বাকি সহ খাতা", "With Outstanding Due")}</span>
+                <AlertCircle className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="text-2xl font-bold text-amber-400 mt-1">{customersWithDue}</div>
+              <div className="text-[11px] text-slate-500 mt-1">{txt("বাকি খরিদ্দার একাউন্ট", "Pending customer accounts")}</div>
             </div>
-            <div className="text-2xl font-bold text-amber-400 mt-1">{customersWithDue}</div>
-            <div className="text-[11px] text-slate-500 mt-1">{txt("বাকি খরিদ্দার একাউন্ট", "Pending customer accounts")}</div>
-          </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/20 shadow-sm">
-            <div className="flex items-center justify-between text-emerald-400 text-xs mb-1">
-              <span>{txt("পরিশোধিত একাউন্ট", "Cleared Accounts")}</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/20 shadow-sm">
+              <div className="flex items-center justify-between text-emerald-400 text-xs mb-1">
+                <span>{txt("পরিশোধিত একাউন্ট", "Cleared Accounts")}</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="text-2xl font-bold text-emerald-400 mt-1">{clearedCustomers}</div>
+              <div className="text-[11px] text-slate-500 mt-1">{txt("কোনো বকেয়া নেই (৳০)", "Zero due balance")}</div>
             </div>
-            <div className="text-2xl font-bold text-emerald-400 mt-1">{clearedCustomers}</div>
-            <div className="text-[11px] text-slate-500 mt-1">{txt("কোনো বকেয়া নেই (৳০)", "Zero due balance")}</div>
           </div>
-        </div>
+        )}
 
         {/* Search, Filter & Action Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -724,14 +734,7 @@ export default function CustomersPage() {
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {loading ? (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-500">
-                      <div className="inline-flex items-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
-                        {txt("কাস্টমার লোড হচ্ছে...", "Loading customers...")}
-                      </div>
-                    </td>
-                  </tr>
+                  <ShimmerTableRows rows={8} cols={7} />
                 ) : customers.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-500">
@@ -1836,12 +1839,7 @@ export default function CustomersPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {paymentHistoryLoading ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-500">
-                          <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-emerald-400" />
-                          {txt("পেমেন্ট হিস্ট্রি লোড হচ্ছে...", "Loading payment collection records...")}
-                        </td>
-                      </tr>
+                      <ShimmerTableRows rows={5} cols={6} />
                     ) : paymentHistoryList.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="py-12 text-center text-slate-500">

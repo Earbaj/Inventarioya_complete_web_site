@@ -7,6 +7,7 @@ import { TrashItem } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { Trash2, RotateCcw, ShieldAlert, Sparkles, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerTableRows } from "@/components/ui/ShimmerSkeleton";
 
 export default function TrashPage() {
   const { txt } = useLanguage();
@@ -134,7 +135,9 @@ export default function TrashPage() {
                 </tr>
               </thead>
               <tbody className="divide-y dark:divide-slate-800 divide-slate-100">
-                {trashItems.length === 0 ? (
+                {loading ? (
+                  <ShimmerTableRows rows={5} cols={6} />
+                ) : trashItems.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-500">
                       {txt("রিসাইকেল বিন বর্তমানে খালি।", "Recycle Bin is currently empty.")}

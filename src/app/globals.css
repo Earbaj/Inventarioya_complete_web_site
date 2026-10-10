@@ -471,3 +471,19 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   }
 }
 
+/* ==========================================================================
+   SHIMMER SKELETON ANIMATION
+   ========================================================================== */
+@keyframes shimmerWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmerWave 1.6s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+

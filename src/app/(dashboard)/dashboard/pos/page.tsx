@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerPosProduct, ShimmerItem } from "@/components/ui/ShimmerSkeleton";
 
 export default function PosTerminalPage() {
   const { txt, isBangla } = useLanguage();
@@ -467,35 +468,53 @@ export default function PosTerminalPage() {
 
           {/* Category Filter Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-2 no-scrollbar">
-            <button
-              onClick={() => setSelectedCategory("all")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
-                selectedCategory === "all"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-900 text-slate-400 hover:text-white"
-              }`}
-            >
-              {txt(`সকল ক্যাটাগরি (${products.length})`, `All Categories (${products.length})`)}
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
-                  selectedCategory === cat.id
-                    ? "bg-indigo-600 text-white"
-                    : "bg-slate-900 text-slate-400 hover:text-white"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {loading ? (
+              <>
+                <ShimmerItem className="w-24 h-7 shrink-0" rounded="rounded-lg" />
+                <ShimmerItem className="w-20 h-7 shrink-0" rounded="rounded-lg" />
+                <ShimmerItem className="w-20 h-7 shrink-0" rounded="rounded-lg" />
+                <ShimmerItem className="w-20 h-7 shrink-0" rounded="rounded-lg" />
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setSelectedCategory("all")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
+                    selectedCategory === "all"
+                      ? "bg-indigo-600 text-white"
+                      : "bg-slate-900 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {txt(`সকল ক্যাটাগরি (${products.length})`, `All Categories (${products.length})`)}
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition-colors ${
+                      selectedCategory === cat.id
+                        ? "bg-indigo-600 text-white"
+                        : "bg-slate-900 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Products Grid */}
           <div className="flex-1 overflow-y-auto pr-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-              {filteredProducts.map((product) => {
+              {loading ? (
+                <ShimmerPosProduct count={8} />
+              ) : filteredProducts.length === 0 ? (
+                <div className="col-span-full py-16 text-center text-slate-500 text-xs">
+                  {txt("কোনো পণ্য পাওয়া যায়নি", "No products found")}
+                </div>
+              ) : (
+                filteredProducts.map((product) => {
                 const inCart = cart.find((item) => item.id === product.id);
                 const isOutOfStock = product.stockQuantity <= 0;
                 const isLowStock = !isOutOfStock && product.stockQuantity <= product.minStockAlert;
@@ -560,7 +579,8 @@ export default function PosTerminalPage() {
                     </div>
                   </div>
                 );
-              })}
+              })
+              )}
             </div>
           </div>
         </div>

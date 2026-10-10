@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerCard, ShimmerTableRows, ShimmerGridCards } from "@/components/ui/ShimmerSkeleton";
 
 export default function SuppliersPage() {
   const { txt } = useLanguage();
@@ -455,59 +456,68 @@ export default function SuppliersPage() {
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl w-full mx-auto">
         {/* KPI Stat Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("মোট অর্ডার", "Total Orders")}</span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center">
-                <FileText className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-xl font-bold dark:text-white text-slate-900 font-mono">{purchaseOrders.length}</p>
-            <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
-              {txt(`সক্রিয় ${suppliers.length} টি ভেন্ডর থেকে`, `From ${suppliers.length} active vendors`)}
-            </p>
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
           </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("মোট অর্ডার", "Total Orders")}</span>
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 flex items-center justify-center">
+                  <FileText className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-xl font-bold dark:text-white text-slate-900 font-mono">{purchaseOrders.length}</p>
+              <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
+                {txt(`সক্রিয় ${suppliers.length} টি ভেন্ডর থেকে`, `From ${suppliers.length} active vendors`)}
+              </p>
+            </div>
 
-          <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("মোট ক্রয়", "Total Purchase")}</span>
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center">
-                <DollarSign className="w-4 h-4" />
+            <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("মোট ক্রয়", "Total Purchase")}</span>
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center">
+                  <DollarSign className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-xl font-bold dark:text-white text-slate-900 font-mono">{formatCurrency(totalPurchaseValue)}</p>
+              <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
+                {txt("সর্বমোট ক্রয়কৃত পণ্যের মূল্য", "Gross procurement value")}
+              </p>
             </div>
-            <p className="text-xl font-bold dark:text-white text-slate-900 font-mono">{formatCurrency(totalPurchaseValue)}</p>
-            <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
-              {txt("সর্বমোট ক্রয়কৃত পণ্যের মূল্য", "Gross procurement value")}
-            </p>
-          </div>
 
-          <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("পরিশোধিত", "Paid to Vendors")}</span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4" />
+            <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("পরিশোধিত", "Paid to Vendors")}</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(totalPaidToSuppliers)}</p>
+              <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
+                {txt("পরিশোধিত অর্থ", "Settled payments")}
+              </p>
             </div>
-            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(totalPaidToSuppliers)}</p>
-            <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
-              {txt("পরিশোধিত অর্থ", "Settled payments")}
-            </p>
-          </div>
 
-          <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("বাকি / দেনা", "Balance Due")}</span>
-              <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center">
-                <AlertCircle className="w-4 h-4" />
+            <div className="dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold dark:text-slate-400 text-slate-500">{txt("বাকি / দেনা", "Balance Due")}</span>
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 dark:text-rose-400 flex items-center justify-center">
+                  <AlertCircle className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-xl font-bold text-rose-600 dark:text-rose-400 font-mono">{formatCurrency(totalDueToSuppliers)}</p>
+              <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
+                {txt("বকেয়া দেনা দায়", "Pending vendor liabilities")}
+              </p>
             </div>
-            <p className="text-xl font-bold text-rose-600 dark:text-rose-400 font-mono">{formatCurrency(totalDueToSuppliers)}</p>
-            <p className="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
-              {txt("বকেয়া দেনা দায়", "Pending vendor liabilities")}
-            </p>
           </div>
-        </div>
+        )}
 
         {/* Tab & Action Bar */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -604,7 +614,9 @@ export default function SuppliersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-slate-800/80 divide-slate-100">
-                  {filteredPurchaseOrders.length === 0 ? (
+                  {isLoading ? (
+                    <ShimmerTableRows rows={6} cols={9} />
+                  ) : filteredPurchaseOrders.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center text-slate-500">
                         {searchQuery
@@ -695,7 +707,9 @@ export default function SuppliersPage() {
         ) : (
           /* Suppliers Directory Tab */
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {filteredSuppliers.length === 0 ? (
+            {isLoading ? (
+              <ShimmerGridCards count={6} />
+            ) : filteredSuppliers.length === 0 ? (
               <div className="col-span-3 p-12 text-center dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 rounded-2xl text-slate-500">
                 {searchQuery
                   ? txt("কোনো সাপ্লায়ারের সন্ধান মেলেনি।", "No suppliers match your search.")

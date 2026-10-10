@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerTableRows } from "@/components/ui/ShimmerSkeleton";
 
 export default function StaffPage() {
   const { txt } = useLanguage();
@@ -231,10 +232,12 @@ export default function StaffPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {staffList.length === 0 ? (
+                {isLoading ? (
+                  <ShimmerTableRows rows={5} cols={6} />
+                ) : staffList.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-500">
-                      {isLoading ? txt("কর্মী তালিকা লোড হচ্ছে...", "Loading staff members...") : txt("এখনও কোনো কর্মী যোগ করা হয়নি।", "No staff members recorded yet.")}
+                      {txt("এখনও কোনো কর্মী যোগ করা হয়নি।", "No staff members recorded yet.")}
                     </td>
                   </tr>
                 ) : (

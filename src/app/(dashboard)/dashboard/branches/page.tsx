@@ -6,10 +6,12 @@ import { BranchesService } from "@/lib/api/client";
 import { Branch } from "@/types";
 import { Building2, Plus, Phone, MapPin, CheckCircle2, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerGridCards } from "@/components/ui/ShimmerSkeleton";
 
 export default function BranchesPage() {
   const { txt } = useLanguage();
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newBranch, setNewBranch] = useState<Partial<Branch>>({
     name: "",
@@ -20,6 +22,7 @@ export default function BranchesPage() {
 
   useEffect(() => {
     async function loadBranches() {
+      setLoading(true);
       try {
         const data = await BranchesService.getBranches();
         let list = Array.isArray(data) ? [...data] : [];
@@ -38,6 +41,8 @@ export default function BranchesPage() {
         setBranches(list);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     }
     loadBranches();
@@ -85,7 +90,9 @@ export default function BranchesPage() {
 
         {/* Branches Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {branches.length === 0 ? (
+          {loading ? (
+            <ShimmerGridCards count={3} />
+          ) : branches.length === 0 ? (
             <div className="col-span-full py-12 text-center text-slate-500">
               {txt("কোনো শাখা পাওয়া যায়নি।", "No branch outlets found.")}
             </div>

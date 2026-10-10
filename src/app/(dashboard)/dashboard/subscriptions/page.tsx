@@ -20,10 +20,12 @@ import {
   Calendar,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerCard, ShimmerItem } from "@/components/ui/ShimmerSkeleton";
 
 export default function SubscriptionsPage() {
   const { txt } = useLanguage();
   const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [myPayments, setMyPayments] = useState<ManualPaymentSubmission[]>([]);
   const [selectedPkgId, setSelectedPkgId] = useState<string>("premium_monthly");
@@ -53,6 +55,7 @@ export default function SubscriptionsPage() {
     }
 
     async function loadData() {
+      setLoading(true);
       try {
         const [pkgs, pInfo, myP] = await Promise.all([
           SubscriptionsService.getPackages(),
@@ -72,6 +75,8 @@ export default function SubscriptionsPage() {
         }
       } catch (err) {
         console.error("Failed to load subscription data", err);
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
@@ -413,7 +418,47 @@ export default function SubscriptionsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {packages.map((pkg) => {
+            {loading ? (
+              <>
+                <div className="rounded-2xl border border-slate-800 p-5 bg-slate-900/60 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <ShimmerItem className="h-6 w-1/2 rounded-md" />
+                    <ShimmerItem className="h-4 w-3/4 rounded-md" />
+                    <ShimmerItem className="h-8 w-1/3 rounded-lg mt-4" />
+                  </div>
+                  <div className="space-y-2 pt-4 border-t border-slate-800">
+                    <ShimmerItem className="h-4 w-full rounded" />
+                    <ShimmerItem className="h-4 w-5/6 rounded" />
+                    <ShimmerItem className="h-4 w-4/6 rounded" />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-indigo-500/30 p-5 bg-indigo-950/20 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <ShimmerItem className="h-6 w-1/2 rounded-md" />
+                    <ShimmerItem className="h-4 w-3/4 rounded-md" />
+                    <ShimmerItem className="h-8 w-1/3 rounded-lg mt-4" />
+                  </div>
+                  <div className="space-y-2 pt-4 border-t border-slate-800">
+                    <ShimmerItem className="h-4 w-full rounded" />
+                    <ShimmerItem className="h-4 w-5/6 rounded" />
+                    <ShimmerItem className="h-4 w-4/6 rounded" />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-800 p-5 bg-slate-900/60 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <ShimmerItem className="h-6 w-1/2 rounded-md" />
+                    <ShimmerItem className="h-4 w-3/4 rounded-md" />
+                    <ShimmerItem className="h-8 w-1/3 rounded-lg mt-4" />
+                  </div>
+                  <div className="space-y-2 pt-4 border-t border-slate-800">
+                    <ShimmerItem className="h-4 w-full rounded" />
+                    <ShimmerItem className="h-4 w-5/6 rounded" />
+                    <ShimmerItem className="h-4 w-4/6 rounded" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              packages.map((pkg) => {
               const isSelected = selectedPkgId === pkg.id;
               const isPopular = pkg.id === "premium_monthly" || pkg.isPopular;
 
@@ -500,7 +545,8 @@ export default function SubscriptionsPage() {
                   </button>
                 </div>
               );
-            })}
+            })
+          )}
           </div>
         </div>
 

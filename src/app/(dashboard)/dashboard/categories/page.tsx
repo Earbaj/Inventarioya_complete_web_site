@@ -6,6 +6,7 @@ import { InventoryService } from "@/lib/api/client";
 import { Category } from "@/types";
 import { Layers, Plus, Search, FolderPlus, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerGridCards } from "@/components/ui/ShimmerSkeleton";
 
 export default function CategoriesPage() {
   const { txt } = useLanguage();
@@ -73,7 +74,9 @@ export default function CategoriesPage() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {filteredCategories.length === 0 ? (
+          {loading ? (
+            <ShimmerGridCards count={6} />
+          ) : filteredCategories.length === 0 ? (
             <div className="col-span-full py-12 text-center text-slate-500">
               {txt("কোনো ক্যাটাগরি পাওয়া যায়নি।", "No categories found.")}
             </div>

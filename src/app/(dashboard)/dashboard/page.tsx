@@ -40,6 +40,7 @@ import {
 } from "recharts";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerCard, ShimmerTableRows, ShimmerItem } from "@/components/ui/ShimmerSkeleton";
 
 export default function DashboardOverviewPage() {
   const { locale, txt } = useLanguage();
@@ -300,9 +301,17 @@ export default function DashboardOverviewPage() {
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* Primary Financial KPI Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Total Sales Revenue */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Card 1: Total Sales Revenue */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden group hover:border-slate-700 transition-colors">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-400">{txt("মোট বিক্রয় রেভিনিউ", "Total Sales Revenue")}</span>
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
@@ -421,9 +430,18 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
         </div>
+      )}
 
         {/* Secondary Store Operations Metrics (Counts & Urgencies) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <ShimmerItem height="68px" rounded="rounded-xl" />
+            <ShimmerItem height="68px" rounded="rounded-xl" />
+            <ShimmerItem height="68px" rounded="rounded-xl" />
+            <ShimmerItem height="68px" rounded="rounded-xl" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Link
             href="/dashboard/inventory"
             className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all group"
@@ -496,6 +514,7 @@ export default function DashboardOverviewPage() {
             </div>
           </Link>
         </div>
+        )}
 
         {/* Sales Trend Chart & AI Banner */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -866,7 +885,9 @@ export default function DashboardOverviewPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {recentSales.length === 0 ? (
+                {loading ? (
+                  <ShimmerTableRows rows={5} cols={8} />
+                ) : recentSales.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-8 text-center text-slate-500">
                       {txt("এখনও কোনো ইনভয়েস তৈরি হয়নি।", "No invoices found yet.")}

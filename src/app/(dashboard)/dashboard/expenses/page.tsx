@@ -7,10 +7,12 @@ import { Expense } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Wallet, Plus, Trash2, Calendar, Tag, X, DollarSign } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerTableRows, ShimmerCard } from "@/components/ui/ShimmerSkeleton";
 
 export default function ExpensesPage() {
   const { txt } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newExp, setNewExp] = useState<Partial<Expense>>({
     title: "",
@@ -22,11 +24,14 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     async function loadExpenses() {
+      setLoading(true);
       try {
         const data = await ExpensesService.getExpenses();
         setExpenses(data);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     }
     loadExpenses();
@@ -103,7 +108,9 @@ export default function ExpensesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {expenses.length === 0 ? (
+                {loading ? (
+                  <ShimmerTableRows rows={6} cols={6} />
+                ) : expenses.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-500">
                       {txt("কোনো খরচের রেকর্ড পাওয়া যায়নি।", "No expenses recorded yet.")}

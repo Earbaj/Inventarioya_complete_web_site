@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { ShimmerTableRows, ShimmerCard } from "@/components/ui/ShimmerSkeleton";
 
 export default function InventoryPage() {
   const { txt } = useLanguage();
@@ -223,63 +224,72 @@ export default function InventoryPage() {
 
       <main className="p-4 sm:p-6 space-y-6 max-w-7xl">
         {/* KPI Overview Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                {txt("মোট প্রোডাক্ট", "Total Products")}
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-                <Package className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-2xl font-black text-white mt-2 font-mono">{products.length}</p>
-            <p className="text-[10px] text-slate-500 mt-1">{txt("ক্যাটালগ পণ্য আইটেম", "Unique catalog items")}</p>
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
           </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  {txt("মোট প্রোডাক্ট", "Total Products")}
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                  <Package className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-black text-white mt-2 font-mono">{products.length}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{txt("ক্যাটালগ পণ্য আইটেম", "Unique catalog items")}</p>
+            </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                {txt("মোট স্টক ইউনিট", "Total Stock Units")}
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
-                <Layers className="w-4 h-4" />
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  {txt("মোট স্টক ইউনিট", "Total Stock Units")}
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                  <Layers className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-2xl font-black text-white mt-2 font-mono">{totalStockCount}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{txt("মজুদ থাকা মোট ইউনিট", "On-hand physical units")}</p>
             </div>
-            <p className="text-2xl font-black text-white mt-2 font-mono">{totalStockCount}</p>
-            <p className="text-[10px] text-slate-500 mt-1">{txt("মজুদ থাকা মোট ইউনিট", "On-hand physical units")}</p>
-          </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">
-                {txt("কম স্টক সতর্কবার্তা", "Low Stock Warning")}
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4" />
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">
+                  {txt("কম স্টক সতর্কবার্তা", "Low Stock Warning")}
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-2xl font-black text-rose-400 mt-2 font-mono">
+                {lowStockProducts.length}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">{txt("দ্রুত রি-অর্ডার করা প্রয়োজন", "Needs reordering soon")}</p>
             </div>
-            <p className="text-2xl font-black text-rose-400 mt-2 font-mono">
-              {lowStockProducts.length}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1">{txt("দ্রুত রি-অর্ডার করা প্রয়োজন", "Needs reordering soon")}</p>
-          </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
-                {txt("সক্রিয় ক্যাটাগরি", "Active Categories")}
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4" />
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
+                  {txt("সক্রিয় ক্যাটাগরি", "Active Categories")}
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
               </div>
+              <p className="text-2xl font-black text-emerald-400 mt-2 font-mono">
+                {categories.length || 3}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">{txt("পণ্য শ্রেণি বিভাগ", "Classification groups")}</p>
             </div>
-            <p className="text-2xl font-black text-emerald-400 mt-2 font-mono">
-              {categories.length || 3}
-            </p>
-            <p className="text-[10px] text-slate-500 mt-1">{txt("পণ্য শ্রেণি বিভাগ", "Classification groups")}</p>
           </div>
-        </div>
+        )}
 
         {/* Filter Bar & Action Buttons */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-slate-900/60 p-3 sm:p-4 rounded-2xl border border-slate-800">
@@ -375,14 +385,7 @@ export default function InventoryPage() {
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {loading ? (
-                  <tr>
-                    <td colSpan={canViewBuyPrice ? 8 : 7} className="py-12 text-center text-slate-400">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
-                        <span className="text-xs">{txt("ইনভেন্টরি ক্যাটালগ লোড হচ্ছে...", "Loading inventory catalog...")}</span>
-                      </div>
-                    </td>
-                  </tr>
+                  <ShimmerTableRows rows={8} cols={canViewBuyPrice ? 8 : 7} />
                 ) : paginatedProducts.length === 0 ? (
                   <tr>
                     <td colSpan={canViewBuyPrice ? 8 : 7} className="py-12 text-center text-slate-500">
