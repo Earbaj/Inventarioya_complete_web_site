@@ -275,7 +275,7 @@ export default function PosTerminalPage() {
     });
   };
 
-  // Update Cart Item Quantity
+  // Update Cart Item Quantity with +/-
   const updateQuantity = (productId: string, delta: number) => {
     setCart((prev) =>
       prev
@@ -291,6 +291,34 @@ export default function PosTerminalPage() {
             return newQty > 0
               ? { ...item, cartQuantity: newQty, lineTotal: newQty * item.sellingPrice }
               : null;
+          }
+          return item;
+        })
+        .filter(Boolean) as CartItem[]
+    );
+  };
+
+  // Set Cart Item Quantity directly via text/number input
+  const setExactQuantity = (productId: string, quantityInput: number) => {
+    setCart((prev) =>
+      prev
+        .map((item) => {
+          if (item.id === productId) {
+            if (quantityInput <= 0) {
+              return null; // Remove item if quantity is 0 or negative
+            }
+            if (quantityInput > item.stockQuantity) {
+              setStockWarning(
+                `Only ${item.stockQuantity} ${item.unit || "pcs"} available in stock for "${item.name}". Set to maximum.`
+              );
+              const maxQty = item.stockQuantity;
+              return { ...item, cartQuantity: maxQty, lineTotal: maxQty * item.sellingPrice };
+            }
+            return {
+              ...item,
+              cartQuantity: quantityInput,
+              lineTotal: quantityInput * item.sellingPrice,
+            };
           }
           return item;
         })
@@ -396,16 +424,22 @@ export default function PosTerminalPage() {
     <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
       <DashboardHeader title={txt("পয়েন্ট অফ সেল (হাই-স্পিড ক্লাউড পিওএস)", "High-Speed Cloud POS Terminal")} />
 
-      {/* Floating Stock Warning Notification */}
+      {/* Floating Stock Warning / Error Notification */}
       {stockWarning && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-rose-950/95 border border-rose-500 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2.5 backdrop-blur-sm animate-in fade-in slide-in-from-top-3">
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{stockWarning}</span>
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[92vw] sm:w-auto bg-red-50 dark:bg-slate-900 border border-red-200 dark:border-red-800/80 text-red-900 dark:text-red-100 px-4 py-3 rounded-2xl shadow-xl shadow-red-900/10 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-700/60 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+            </div>
+            <span className="leading-snug font-medium break-words text-red-800 dark:text-red-200">{stockWarning}</span>
+          </div>
           <button
+            type="button"
             onClick={() => setStockWarning(null)}
-            className="ml-2 text-rose-300 hover:text-white"
+            className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-800/60 active:scale-95 text-red-700 dark:text-red-300 transition-all shrink-0 cursor-pointer"
+            title={txt("বন্ধ করুন", "Dismiss")}
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -782,21 +816,41 @@ export default function PosTerminalPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-0.5">
                     <button
+                      type="button"
                       onClick={() => updateQuantity(item.id, -1)}
-                      className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors"
+                      className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                      title={txt("পরিমাণ ১ কমান", "Decrease quantity by 1")}
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="text-xs font-bold text-white w-5 text-center">
-                      {item.cartQuantity}
-                    </span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.stockQuantity}
+                      value={item.cartQuantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val)) {
+                          setExactQuantity(item.id, val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (isNaN(val) || val <= 0) {
+                          setExactQuantity(item.id, 1);
+                        }
+                      }}
+                      className="w-11 h-6 bg-transparent text-center text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      title={txt("সরাসরি পরিমাণ লিখুন", "Type exact quantity directly")}
+                    />
                     <button
+                      type="button"
                       onClick={() => updateQuantity(item.id, 1)}
                       disabled={item.cartQuantity >= item.stockQuantity}
-                      className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 flex items-center justify-center transition-colors"
-                      title={item.cartQuantity >= item.stockQuantity ? txt("সর্বোচ্চ মজুত পৌঁছে গেছে", "Maximum available stock reached") : txt("পরিমাণ বৃদ্ধি করুন", "Increase quantity")}
+                      className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                      title={item.cartQuantity >= item.stockQuantity ? txt("সর্বোচ্চ মজুত পৌঁছে গেছে", "Maximum available stock reached") : txt("পরিমাণ ১ বৃদ্ধি করুন", "Increase quantity by 1")}
                     >
                       <Plus className="w-3 h-3" />
                     </button>
