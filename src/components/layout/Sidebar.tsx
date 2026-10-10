@@ -326,7 +326,7 @@ export function Sidebar() {
                             PRO
                           </span>
                         ) : item.highlight && !isActive ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-slate border border-emerald-500/30">
                             LIVE
                           </span>
                         ) : null
@@ -396,7 +396,7 @@ export function Sidebar() {
                             isActive
                               ? "text-white"
                               : item.aiBadge && !isLocked
-                              ? "text-purple-300"
+                              ? "text-slate"
                               : "text-slate-300 group-hover:text-white"
                           }`}
                         />
@@ -405,12 +405,12 @@ export function Sidebar() {
 
                       {!isCollapsed && (
                         isLocked ? (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-slate border border-amber-500/30">
                             <Lock className="w-2.5 h-2.5" />
                             PRO
                           </span>
                         ) : item.aiBadge ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/25 text-purple-300 border border-purple-500/40">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/25 text-slate border border-purple-500/40">
                             AI
                           </span>
                         ) : null
@@ -422,12 +422,12 @@ export function Sidebar() {
                       <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
                         <span>{item.name}</span>
                         {isLocked && (
-                          <span className="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
+                          <span className="text-[9px] text-slate font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
                             PRO
                           </span>
                         )}
                         {item.aiBadge && (
-                          <span className="text-[9px] text-purple-300 font-bold bg-purple-500/20 px-1 py-0.5 rounded border border-purple-500/30">
+                          <span className="text-[9px] text-slate font-bold bg-purple-500/20 px-1 py-0.5 rounded border border-purple-500/30">
                             AI
                           </span>
                         )}
