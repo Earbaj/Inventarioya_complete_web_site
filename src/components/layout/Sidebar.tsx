@@ -190,7 +190,7 @@ export function Sidebar() {
             <div className="flex flex-col items-center">
               <Link
                 href="/dashboard"
-                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all"
+                className="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"
                 title="Inventarioya Dashboard"
               >
                 <Boxes className="w-5 h-5 text-white" />
@@ -203,7 +203,7 @@ export function Sidebar() {
                 onClick={() => setIsMobileOpen(false)}
                 className="flex items-center gap-3 truncate group"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Boxes className="w-5 h-5 text-white" />
                 </div>
                 <div className="truncate">
@@ -221,10 +221,10 @@ export function Sidebar() {
                         : "Manager"}
                     </span>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                      className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                         isFreeTier
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                          : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                          ? "bg-amber-500/20 text-slate-300 border border-amber-500/30"
+                          : "bg-emerald-500/20 text-slate-300 border border-emerald-500/30"
                       }`}
                     >
                       {tier === "free"
@@ -234,8 +234,6 @@ export function Sidebar() {
                         : locale === "bn"
                         ? "প্রিমিয়াম"
                         : "Premium"}
-                      {daysRemaining !== null &&
-                        ` • ${daysRemaining}${locale === "bn" ? " দিন" : "d"}`}
                     </span>
                   </div>
                 </div>

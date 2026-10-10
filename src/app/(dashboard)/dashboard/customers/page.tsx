@@ -88,6 +88,7 @@ export default function CustomersPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [paymentNote, setPaymentNote] = useState<string>("");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
@@ -330,6 +331,7 @@ export default function CustomersPage() {
     const due = getDueAmount(customer);
     setPaymentAmount(due > 0 ? String(due) : "");
     setPaymentMethod("cash");
+    setPaymentNote("");
     setPaymentError(null);
     setShowPaymentModal(true);
   };
@@ -1456,12 +1458,12 @@ export default function CustomersPage() {
       {/* 4.1 CUSTOMER PAYMENT COLLECTION MODAL (POST /api/payments)                */}
       {/* ========================================================================= */}
       {showPaymentModal && activeCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-emerald-500/30 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 relative overflow-hidden">
             {/* Top Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-slate-800 text-emerald-400 flex items-center justify-center border border-slate-700/60">
                   <Banknote className="w-5 h-5" />
                 </div>
                 <div>
@@ -1482,7 +1484,7 @@ export default function CustomersPage() {
             </div>
 
             {/* Customer Summary Card */}
-            <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 mb-5 space-y-2">
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-400 font-medium">{txt("কাস্টমারের নাম:", "Customer Name:")}</span>
                 <span className="text-xs font-bold text-white">{activeCustomer.name}</span>
@@ -1491,7 +1493,7 @@ export default function CustomersPage() {
                 <span className="text-xs text-slate-400 font-medium">{txt("ফোন নম্বর:", "Phone:")}</span>
                 <span className="text-xs font-mono text-slate-300">{activeCustomer.phone}</span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-800/80">
+              <div className="flex justify-between items-center pt-2 border-t border-slate-800">
                 <span className="text-xs text-rose-400 font-semibold">{txt("বর্তমান বকেয়া বাকি:", "Current Outstanding Due:")}</span>
                 <span className="text-sm font-black font-mono text-rose-400">
                   {formatCurrency(getDueAmount(activeCustomer))}
@@ -1527,7 +1529,7 @@ export default function CustomersPage() {
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
                     placeholder={txt("উদাঃ ৫০০", "e.g. 500")}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-4 py-2.5 text-sm font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono transition-colors"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-4 py-2.5 text-sm font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono transition-colors"
                   />
                 </div>
                 {/* Quick Due Fill Buttons */}
@@ -1536,7 +1538,7 @@ export default function CustomersPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentAmount(String(getDueAmount(activeCustomer)))}
-                      className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors"
+                      className="text-[11px] px-2.5 py-1 rounded-lg bg-transparent hover:bg-slate-800 text-emerald-400 border border-emerald-500/40 transition-colors"
                     >
                       {txt("সম্পূর্ণ বকেয়া (Full Due)", "Full Due")}: {formatCurrency(getDueAmount(activeCustomer))}
                     </button>
@@ -1544,7 +1546,7 @@ export default function CustomersPage() {
                       <button
                         type="button"
                         onClick={() => setPaymentAmount(String(Math.round(getDueAmount(activeCustomer) / 2)))}
-                        className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+                        className="text-[11px] px-2.5 py-1 rounded-lg bg-transparent hover:bg-slate-800 text-slate-300 border border-slate-800 transition-colors"
                       >
                         50% Due: {formatCurrency(Math.round(getDueAmount(activeCustomer) / 2))}
                       </button>
@@ -1553,33 +1555,51 @@ export default function CustomersPage() {
                 )}
               </div>
 
+              {/* Payment Method Selector - Plain no bg, color only when selected */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   {txt("পেমেন্ট মেথড (Payment Method) *", "Payment Method *")}
                 </label>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {[
-                    { id: "cash", label: "Cash", sub: "নগদ" },
-                    { id: "bkash", label: "bKash", sub: "বিকাশ" },
-                    { id: "nagad", label: "Nagad", sub: "নগদ" },
-                    { id: "card", label: "Card", sub: "কার্ড" },
-                    { id: "bank", label: "Bank", sub: "ব্যাংক" },
-                  ].map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setPaymentMethod(m.id)}
-                      className={`p-2 rounded-xl text-center border transition-all ${
-                        paymentMethod === m.id
-                          ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-950 font-bold"
-                          : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white"
-                      }`}
-                    >
-                      <div className="text-xs font-bold leading-tight">{m.label}</div>
-                      <div className="text-[10px] opacity-75">{m.sub}</div>
-                    </button>
-                  ))}
+                    { id: "cash", label: "Cash", sub: "নগদ", activeClass: "border-emerald-500 text-emerald-400 bg-emerald-500/10" },
+                    { id: "bkash", label: "bKash", sub: "বিকাশ", activeClass: "border-pink-500 text-pink-400 bg-pink-500/10" },
+                    { id: "nagad", label: "Nagad", sub: "নগদ", activeClass: "border-orange-500 text-orange-400 bg-orange-500/10" },
+                    { id: "card", label: "Card", sub: "কার্ড", activeClass: "border-indigo-500 text-indigo-400 bg-indigo-500/10" },
+                    { id: "bank", label: "Bank", sub: "ব্যাংক", activeClass: "border-blue-500 text-blue-400 bg-blue-500/10" },
+                  ].map((m) => {
+                    const isSelected = paymentMethod === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPaymentMethod(m.id)}
+                        className={`p-2.5 rounded-xl text-center border transition-all ${
+                          isSelected
+                            ? `${m.activeClass} font-bold`
+                            : "bg-transparent text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white"
+                        }`}
+                      >
+                        <div className="text-xs font-bold leading-tight">{m.label}</div>
+                        <div className="text-[10px] opacity-75">{m.sub}</div>
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
+
+              {/* Payment Purpose / Summary Note Field */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  {txt("জমার বিবরণ / নোট (Purpose / Summary)", "Payment Purpose / Note (Optional)")}
+                </label>
+                <input
+                  type="text"
+                  value={paymentNote}
+                  onChange={(e) => setPaymentNote(e.target.value)}
+                  placeholder={txt("কী বাবদ টাকা জমা দিল? (উদাঃ পূর্বের চালানের বাকি, আংশিক পরিশোধ)", "e.g. Previous invoice due, partial payment")}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                />
               </div>
 
               {/* Action Buttons */}
@@ -1587,14 +1607,14 @@ export default function CustomersPage() {
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-colors"
+                  className="px-4 py-2.5 bg-transparent hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl border border-slate-800 transition-colors"
                 >
                   {txt("বাতিল", "Cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={paymentLoading || !paymentAmount}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-emerald-950"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors"
                 >
                   {paymentLoading ? (
                     <>

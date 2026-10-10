@@ -866,34 +866,37 @@ export default function PosTerminalPage() {
 
           {/* Calculation & Payment Tender */}
           <div className="p-4 border-t border-slate-800 bg-slate-950/60 space-y-3">
-            {/* Payment Method Pills */}
-            <div className="grid grid-cols-5 gap-1">
-              {(["CASH", "CARD", "BKASH", "NAGAD", "DUE"] as const).map((method) => {
-                const isSelected = paymentMethod === method;
-                const isDue = method === "DUE";
+            {/* Payment Method Pills - Plain no bg, color only when selected, no shadows */}
+            <div className="grid grid-cols-5 gap-1.5">
+              {(
+                [
+                  { id: "CASH", label: "CASH", bn: "নগদ", active: "border-emerald-500 text-emerald-400 bg-emerald-500/10" },
+                  { id: "CARD", label: "CARD", bn: "কার্ড", active: "border-indigo-500 text-indigo-400 bg-indigo-500/10" },
+                  { id: "BKASH", label: "BKASH", bn: "বিকাশ", active: "border-pink-500 text-pink-400 bg-pink-500/10" },
+                  { id: "NAGAD", label: "NAGAD", bn: "নগদ", active: "border-orange-500 text-orange-400 bg-orange-500/10" },
+                  { id: "DUE", label: "DUE", bn: "বাকি", active: "border-rose-500 text-rose-400 bg-rose-500/10" },
+                ] as const
+              ).map((item) => {
+                const isSelected = paymentMethod === item.id;
                 return (
                   <button
-                    key={method}
+                    key={item.id}
                     type="button"
                     onClick={() => {
-                      setPaymentMethod(method);
-                      if (method === "DUE") {
+                      setPaymentMethod(item.id);
+                      if (item.id === "DUE") {
                         setPaidAmount(0);
                       } else if (paidAmount === 0) {
                         setPaidAmount(grandTotal);
                       }
                     }}
-                    className={`py-1 rounded text-[10px] font-bold transition-all ${
+                    className={`py-1.5 px-1 rounded-lg text-[10px] font-bold border transition-all ${
                       isSelected
-                        ? isDue
-                          ? "bg-rose-600 text-white shadow-md shadow-rose-600/30 ring-1 ring-rose-400"
-                          : "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                        : isDue
-                        ? "bg-rose-950/40 text-rose-300 border border-rose-800/60 hover:bg-rose-900/40"
-                        : "bg-slate-800 text-slate-400 hover:text-white"
+                        ? `${item.active} font-extrabold`
+                        : "bg-transparent text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white"
                     }`}
                   >
-                    {method === "DUE" ? txt("DUE (বাকি)", "DUE") : method === "CASH" ? txt("CASH (নগদ)", "CASH") : method}
+                    {item.id === "DUE" ? txt("DUE (বাকি)", "DUE") : item.id === "CASH" ? txt("CASH (নগদ)", "CASH") : item.label}
                   </button>
                 );
               })}
