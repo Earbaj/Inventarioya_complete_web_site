@@ -40,33 +40,49 @@ export default function DashboardOverviewPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [allSales, setAllSales] = useState<Invoice[]>([]);
   const [recentSales, setRecentSales] = useState<Invoice[]>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        console.log("Fetching /api/dashboard/stats and /api/sales...");
-        const [statsData, salesData] = await Promise.all([
-          DashboardService.getStats(),
-          SalesService.getSales(),
-        ]);
-        console.log("📊 [Dashboard Stats Data Received]:", statsData);
-        setStats(statsData);
-        const salesList = Array.isArray(salesData) ? salesData : salesData?.data || [];
-        setAllSales(salesList);
-        setRecentSales(
-          statsData?.recentSales && statsData.recentSales.length > 0
-            ? statsData.recentSales
-            : salesList.slice(0, 7)
-        );
-      } catch (err) {
-        console.error("❌ [Dashboard Page Failed to load data]:", err);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async (activeBranch?: string) => {
+    try {
+      const branchToFilter = activeBranch !== undefined 
+        ? activeBranch 
+        : (typeof window !== "undefined" ? localStorage.getItem("selected_branch_id") || "ALL" : "ALL");
+
+      const [statsData, salesData] = await Promise.all([
+        DashboardService.getStats({ branchId: branchToFilter }),
+        SalesService.getSales({ branchId: branchToFilter }),
+      ]);
+      setStats(statsData);
+      const salesList = Array.isArray(salesData) ? salesData : salesData?.data || [];
+      setAllSales(salesList);
+
+      const filtered = branchToFilter && branchToFilter !== "ALL"
+        ? salesList.filter((s: Invoice) => !s.branchId || s.branchId === branchToFilter)
+        : salesList;
+
+      setRecentSales(filtered.slice(0, 7));
+    } catch (err) {
+      console.error("❌ [Dashboard Page Failed to load data]:", err);
+    } finally {
+      setLoading(false);
     }
-    loadData();
+  };
+
+  useEffect(() => {
+    const savedBranch = typeof window !== "undefined" ? localStorage.getItem("selected_branch_id") || "ALL" : "ALL";
+    setSelectedBranchId(savedBranch);
+    loadData(savedBranch);
+
+    const onBranchChanged = (e: any) => {
+      const newBranchId = e?.detail?.branchId || "ALL";
+      setSelectedBranchId(newBranchId);
+      loadData(newBranchId);
+    };
+
+    window.addEventListener("branchChanged", onBranchChanged);
+    return () => window.removeEventListener("branchChanged", onBranchChanged);
   }, []);
 
   const totalSales = Number(stats?.totalSalesRevenue ?? stats?.totalRevenue ?? 0);

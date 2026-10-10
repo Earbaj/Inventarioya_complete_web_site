@@ -579,9 +579,13 @@ export const AuthService = {
 };
 
 export const DashboardService = {
-  async getStats(): Promise<DashboardStats> {
+  async getStats(params?: { branchId?: string }): Promise<DashboardStats> {
     try {
-      const res = await apiClient.get(ApiEndpoints.dashboardStats);
+      const queryParams: any = {};
+      if (params?.branchId && params.branchId !== "ALL" && params.branchId !== "br_001" && params.branchId !== "main") {
+        queryParams.branchId = params.branchId;
+      }
+      const res = await apiClient.get(ApiEndpoints.dashboardStats, { params: queryParams });
       return res.data?.data || res.data;
     } catch {
       return {
@@ -631,9 +635,13 @@ export const DashboardService = {
     }
   },
 
-  async getSalesReport(params?: { startDate?: string; endDate?: string }) {
+  async getSalesReport(params?: { startDate?: string; endDate?: string; branchId?: string }) {
     try {
-      const res = await apiClient.get(ApiEndpoints.reportsSales, { params });
+      const queryParams: any = { ...params };
+      if (queryParams.branchId && (queryParams.branchId === "ALL" || queryParams.branchId === "br_001" || queryParams.branchId === "main")) {
+        delete queryParams.branchId;
+      }
+      const res = await apiClient.get(ApiEndpoints.reportsSales, { params: queryParams });
       return res.data?.data || res.data;
     } catch {
       return {
@@ -748,8 +756,10 @@ export const SalesService = {
     status?: string;
     startDate?: string;
     endDate?: string;
+    branchId?: string;
   }): Promise<PaginatedSalesResponse> {
     try {
+      const isCustomBranch = params?.branchId && params.branchId !== "ALL" && params.branchId !== "br_001" && params.branchId !== "main";
       const res = await apiClient.get(ApiEndpoints.sales, {
         params: {
           page: params?.page || 1,
@@ -758,6 +768,7 @@ export const SalesService = {
           status: params?.status && params.status !== "ALL" ? params.status.toLowerCase() : undefined,
           startDate: params?.startDate || undefined,
           endDate: params?.endDate || undefined,
+          branchId: isCustomBranch ? params?.branchId : undefined,
         },
       });
 

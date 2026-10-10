@@ -22,7 +22,20 @@ export default function BranchesPage() {
     async function loadBranches() {
       try {
         const data = await BranchesService.getBranches();
-        setBranches(data);
+        let list = Array.isArray(data) ? [...data] : [];
+        const hasMain = list.some((b) => b.isMainBranch || b.id === "br_001" || b.id === "main");
+        if (!hasMain) {
+          const defaultMain: Branch = {
+            id: "br_001",
+            name: txt("মেইন ফ্ল্যাগশিপ (ধানমন্ডি)", "Main Flagship Branch"),
+            address: "Road 27, Dhanmondi, Dhaka",
+            phone: "+880 2-9112233",
+            managerName: "Rahim Uddin",
+            isMainBranch: true,
+          };
+          list = [defaultMain, ...list];
+        }
+        setBranches(list);
       } catch (err) {
         console.error(err);
       }
@@ -34,9 +47,18 @@ export default function BranchesPage() {
     e.preventDefault();
     try {
       const created = await BranchesService.createBranch(newBranch);
-      setBranches([...branches, created]);
+      setBranches((prev) => [...prev, created]);
       setShowAddModal(false);
       setNewBranch({ name: "", address: "", phone: "", managerName: "" });
+
+      // Notify DashboardHeader and whole app
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("branchCreated", {
+            detail: { branchId: created.id, branch: created },
+          })
+        );
+      }
     } catch (err) {
       console.error(err);
     }

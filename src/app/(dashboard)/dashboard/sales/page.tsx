@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { SalesService, AuthService } from "@/lib/api/client";
-import { Invoice } from "@/types";
+import { SalesService, AuthService, BranchesService } from "@/lib/api/client";
+import { Invoice, Branch } from "@/types";
 import { formatCurrency, formatDate, downloadCsvFile, extractPersonName } from "@/lib/utils";
 import { InvoicePrintModal } from "@/components/pos/InvoicePrintModal";
 import { ChevronDown } from "lucide-react";
@@ -26,6 +26,7 @@ import {
   X,
   User,
   ShoppingBag,
+  Store,
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -33,6 +34,8 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function SalesHistoryPage() {
   const { txt } = useLanguage();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchFilter, setBranchFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [dateFilter, setDateFilter] = useState("ALL"); // ALL, TODAY, LAST_7_DAYS, LAST_30_DAYS
@@ -47,14 +50,16 @@ export default function SalesHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
-  const loadSales = async (page = 1, limit = 50) => {
+  const loadSales = async (page = 1, limit = 50, branch = branchFilter) => {
     setLoading(true);
     try {
+      const isCustom = branch && branch !== "ALL" && branch !== "br_001" && branch !== "main";
       const res = await SalesService.getSales({
         page,
         limit,
         status: statusFilter !== "ALL" ? statusFilter : undefined,
         search: searchQuery.trim() || undefined,
+        branchId: isCustom ? branch : undefined,
       });
 
       if (res && res.data) {
@@ -76,13 +81,29 @@ export default function SalesHistoryPage() {
 
   useEffect(() => {
     setUser(AuthService.getCurrentUser());
-    loadSales(1, 100);
+    const initialBranch = typeof window !== "undefined" ? localStorage.getItem("selected_branch_id") || "ALL" : "ALL";
+    setBranchFilter(initialBranch);
+    loadSales(1, 100, initialBranch);
+
+    // Load branches for filtering
+    BranchesService.getBranches()
+      .then((b) => setBranches(Array.isArray(b) ? b : []))
+      .catch(() => {});
+
+    // Listen to header branch changes
+    const onBranchChanged = (e: any) => {
+      const newBranch = e?.detail?.branchId || "ALL";
+      setBranchFilter(newBranch);
+      loadSales(1, 100, newBranch);
+    };
+    window.addEventListener("branchChanged", onBranchChanged);
+    return () => window.removeEventListener("branchChanged", onBranchChanged);
   }, []);
 
   const canExportExcel =
     user?.role === "admin" || user?.permissions?.canExportExcel !== false;
 
-  // Filter invoices locally based on search, status, and date filter
+  // Filter invoices locally based on search, status, date filter, and branch filter
   const filteredInvoices = useMemo(() => {
     return invoices.filter((inv) => {
       const q = searchQuery.toLowerCase().trim();
@@ -103,6 +124,30 @@ export default function SalesHistoryPage() {
         inv.status?.toUpperCase() === statusFilter.toUpperCase() ||
         inv.paymentStatus?.toUpperCase() === statusFilter.toUpperCase();
 
+      // Branch filter check
+      let matchesBranch = true;
+      if (branchFilter !== "ALL") {
+        const branchObj = branches.find((b) => b.id === branchFilter);
+        const isMain = branchObj?.isMainBranch || branchFilter === "br_001" || branchFilter === "main";
+        const branchName = branchObj ? branchObj.name.toLowerCase() : "";
+        const invBranchId = inv.branchId || "";
+        const invBranchName = (inv.branchName || "").toLowerCase();
+
+        if (isMain) {
+          // If Main branch selected, include sales with main branch ID, null, empty, or matching main name
+          matchesBranch =
+            !invBranchId ||
+            invBranchId === branchFilter ||
+            invBranchId === "br_001" ||
+            invBranchId === "main" ||
+            (branchName && invBranchName.includes(branchName));
+        } else {
+          matchesBranch =
+            invBranchId === branchFilter ||
+            (branchName && invBranchName.includes(branchName));
+        }
+      }
+
       let matchesDate = true;
       if (dateFilter !== "ALL") {
         const itemDate = new Date(inv.createdAt || inv.date || "");
@@ -120,9 +165,9 @@ export default function SalesHistoryPage() {
         }
       }
 
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearch && matchesStatus && matchesBranch && matchesDate;
     });
-  }, [invoices, searchQuery, statusFilter, dateFilter]);
+  }, [invoices, searchQuery, statusFilter, dateFilter, branchFilter, branches]);
 
   // Overall Totals based on filtered list
   const totalSalesRevenue = filteredInvoices.reduce(
@@ -292,6 +337,31 @@ export default function SalesHistoryPage() {
     className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
   />
             </div>
+
+            {/* Branch Filter */}
+            {branches.length > 0 && (
+              <div className="relative">
+                <select
+                  value={branchFilter}
+                  onChange={(e) => {
+                    setBranchFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="appearance-none bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl pl-3 pr-9 py-2 focus:outline-none focus:border-indigo-500 max-w-[150px] truncate"
+                >
+                  <option value="ALL">{txt("সকল শাখা (All Branches)", "All Branches")}</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} {b.isMainBranch ? "★" : ""}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+              </div>
+            )}
 
             {/* Date Range Filter */}
             <div className="relative">

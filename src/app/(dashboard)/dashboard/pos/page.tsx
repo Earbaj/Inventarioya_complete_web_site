@@ -318,6 +318,9 @@ export default function PosTerminalPage() {
     setIsCheckingOut(true);
 
     try {
+      const activeBranchId = typeof window !== "undefined" ? localStorage.getItem("selected_branch_id") : null;
+      const currentUser = AuthService.getCurrentUser();
+
       const payload = {
         customerId: selectedCustomer?.id || "walk-in",
         customerName: customerName || "Walk-in Customer",
@@ -335,7 +338,8 @@ export default function PosTerminalPage() {
         paidAmount: Number(paidAmount),
         dueAmount: Number(dueAmount),
         paymentMethod: dueAmount === grandTotal ? "DUE" : paymentMethod,
-        cashierName: extractPersonName(AuthService.getCurrentUser()),
+        cashierName: extractPersonName(currentUser),
+        branchId: activeBranchId || currentUser?.branchId || null,
       };
 
       const newInvoice = await SalesService.createSale(payload);

@@ -36,7 +36,21 @@ export function DashboardHeader({ title }: { title: string }) {
       try {
         const data = await BranchesService.getBranches();
         if (isMounted) {
-          const list = Array.isArray(data) ? data : [];
+          let list = Array.isArray(data) ? [...data] : [];
+
+          // Ensure default main flagship branch is always present in list
+          const hasMain = list.some((b) => b.isMainBranch || b.id === "br_001" || b.id === "main");
+          if (!hasMain) {
+            const defaultMain: Branch = {
+              id: "br_001",
+              name: t("header.flagshipBranch") || "Main Flagship Branch",
+              address: "Road 27, Dhanmondi, Dhaka",
+              phone: "+880 2-9112233",
+              isMainBranch: true,
+            };
+            list = [defaultMain, ...list];
+          }
+
           setBranches(list);
 
           // Retrieve saved branch from localStorage or default to main / first branch
@@ -59,8 +73,25 @@ export function DashboardHeader({ title }: { title: string }) {
     }
 
     loadBranches();
+
+    // Listen for custom branch creation or branch updates across the app
+    const handleBranchCreated = (e: any) => {
+      loadBranches();
+      if (e?.detail?.branchId) {
+        setSelectedBranch(e.detail.branchId);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("selected_branch_id", e.detail.branchId);
+        }
+      }
+    };
+
+    window.addEventListener("branchCreated", handleBranchCreated);
+    window.addEventListener("branchesUpdated", loadBranches);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("branchCreated", handleBranchCreated);
+      window.removeEventListener("branchesUpdated", loadBranches);
     };
   }, []);
 
