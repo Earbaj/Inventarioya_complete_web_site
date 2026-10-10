@@ -64,6 +64,7 @@ export const ApiEndpoints = {
   customerLedger: (id: string) => `${API_BASE_URL}/api/customers/${id}/ledger`,
   customerDueReminder: (id: string) =>
     `${API_BASE_URL}/api/customers/${id}/due-reminder-link`,
+  customerPayments: `${API_BASE_URL}/api/payments`,
 
   // ===========================================================================
   // STAFF & MANAGER ENDPOINTS

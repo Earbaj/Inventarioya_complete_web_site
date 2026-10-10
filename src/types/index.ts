@@ -445,3 +445,46 @@ export interface PaginatedSalesResponse {
   };
 }
 
+export type PaymentMethod = "cash" | "bkash" | "nagad" | "card" | "bank" | string;
+
+export interface ProcessCustomerPaymentPayload {
+  customerId: string;
+  amount: number;
+  paymentMethod: "cash" | "bkash" | "nagad" | "card" | "bank" | string;
+}
+
+export interface CustomerPaymentResponse {
+  id: string;
+  customerId: string;
+  customerName: string;
+  amount: string | number;
+  paymentMethod: string;
+  date: string;
+  receivedBy?: string;
+  previousBalance?: string | number;
+  newBalance?: string | number;
+}
+
+export interface CustomerPaymentHistoryItem {
+  id: string;
+  customerId: string;
+  customerName: string;
+  amount: string | number;
+  paymentMethod: string;
+  date: string;
+  receivedBy?: string;
+}
+
+export interface PaginatedCustomerPaymentsResponse {
+  data: CustomerPaymentHistoryItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+

@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
-import { AIService, AuthService, CustomerService } from "@/lib/api/client";
+import { AIService, AuthService, CustomerService, PaymentService } from "@/lib/api/client";
 import {
   Customer,
   CustomerLedgerEntry,
   WhatsAppReminderResponse,
   AICustomerCreditScore,
+  CustomerPaymentHistoryItem,
 } from "@/types";
 import { formatCurrency, formatDate, downloadCsvFile, extractPersonName } from "@/lib/utils";
 import {
@@ -36,6 +37,10 @@ import {
   ShieldCheck,
   CheckCircle2,
   DollarSign,
+  CreditCard,
+  History,
+  Banknote,
+  Receipt,
 } from "lucide-react";
 
 function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
@@ -77,6 +82,23 @@ export default function CustomersPage() {
   const [selectedCustomerForPdf, setSelectedCustomerForPdf] = useState<Customer | null>(null);
   const [pdfLedgerEntries, setPdfLedgerEntries] = useState<CustomerLedgerEntry[]>([]);
   const [pdfLedgerLoading, setPdfLedgerLoading] = useState(false);
+
+  // Payment Collection Modal state (POST /api/payments)
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Payment Collection History Modal state (GET /api/payments)
+  const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+  const [paymentHistoryList, setPaymentHistoryList] = useState<CustomerPaymentHistoryItem[]>([]);
+  const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
+  const [paymentHistoryPage, setPaymentHistoryPage] = useState(1);
+  const [paymentHistoryTotalPages, setPaymentHistoryTotalPages] = useState(1);
+  const [paymentHistoryMethodFilter, setPaymentHistoryMethodFilter] = useState("");
+  const [paymentHistoryStartDate, setPaymentHistoryStartDate] = useState("");
+  const [paymentHistoryEndDate, setPaymentHistoryEndDate] = useState("");
 
   // Selected customer for action
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
@@ -298,6 +320,98 @@ export default function CustomersPage() {
       console.error("Failed to load customer ledger", err);
     } finally {
       setLedgerLoading(false);
+    }
+  };
+
+  // Open Payment Collection Modal (POST /api/payments)
+  const handleOpenPayment = (customer: Customer) => {
+    setActiveCustomer(customer);
+    const due = getDueAmount(customer);
+    setPaymentAmount(due > 0 ? String(due) : "");
+    setPaymentMethod("cash");
+    setPaymentError(null);
+    setShowPaymentModal(true);
+  };
+
+  // Submit Payment Collection
+  const handleSubmitPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeCustomer) return;
+    const numAmt = Number(paymentAmount);
+    if (!numAmt || numAmt <= 0) {
+      setPaymentError(txt("দয়া করে সঠিক পেমেন্টের পরিমাণ লিখুন।", "Please enter a valid payment amount greater than 0."));
+      return;
+    }
+
+    setPaymentLoading(true);
+    setPaymentError(null);
+
+    try {
+      const res = await PaymentService.processPayment({
+        customerId: activeCustomer.id,
+        amount: numAmt,
+        paymentMethod: paymentMethod,
+      });
+
+      setShowPaymentModal(false);
+      showToast(
+        txt(
+          `${activeCustomer.name}-এর কাছ থেকে ৳${numAmt} পেমেন্ট সফলভাবে জমা হয়েছে! লেজার ও ব্যালেন্স আপডেট করা হয়েছে।`,
+          `Successfully collected payment of ৳${numAmt} from ${activeCustomer.name}! Customer ledger and balance updated.`
+        )
+      );
+
+      // Refresh customers list to reflect new closing balance
+      loadCustomers();
+
+      // If ledger modal is open, refresh ledger entries
+      if (showLedgerModal) {
+        loadLedger(activeCustomer.id, 1, ledgerStartDate, ledgerEndDate, ledgerSortOrder);
+      }
+    } catch (err: any) {
+      setPaymentError(err.message || txt("পেমেন্ট সম্পন্ন করতে সমস্যা হয়েছে।", "Failed to process customer payment."));
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // Open Payment Collection History Modal (GET /api/payments)
+  const handleOpenPaymentHistory = (customer?: Customer) => {
+    if (customer) {
+      setActiveCustomer(customer);
+    }
+    setShowPaymentHistoryModal(true);
+    setPaymentHistoryPage(1);
+    loadPaymentHistory(customer?.id, 1, paymentHistoryMethodFilter, paymentHistoryStartDate, paymentHistoryEndDate);
+  };
+
+  const loadPaymentHistory = async (
+    customerId?: string,
+    pg: number = 1,
+    method?: string,
+    start?: string,
+    end?: string
+  ) => {
+    setPaymentHistoryLoading(true);
+    try {
+      const res = await PaymentService.getPayments({
+        customerId: customerId || undefined,
+        paymentMethod: method || undefined,
+        startDate: start || undefined,
+        endDate: end || undefined,
+        page: pg,
+        limit: 10,
+        sortBy: "date",
+        sortOrder: "desc",
+      });
+      setPaymentHistoryList(res.data || []);
+      if (res.meta) {
+        setPaymentHistoryTotalPages(res.meta.totalPages || 1);
+      }
+    } catch (err: any) {
+      console.error("Failed to load customer payment history:", err);
+    } finally {
+      setPaymentHistoryLoading(false);
     }
   };
 
@@ -537,6 +651,15 @@ export default function CustomersPage() {
               {txt("রিপোর্ট / লেজার প্রিন্ট", "Print / PDF Report")}
             </button>
 
+            <button
+              onClick={() => handleOpenPaymentHistory()}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-emerald-500/30 text-emerald-300 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors shrink-0"
+              title={txt("সকল কাস্টমারের পেমেন্ট জমার হিস্ট্রি দেখুন", "View Customer Payment Collections History")}
+            >
+              <History className="w-4 h-4 text-emerald-400" />
+              {txt("পেমেন্ট হিস্ট্রি", "Payment History")}
+            </button>
+
             {canExportExcel && (
               <button
                 onClick={handleExportCustomers}
@@ -655,6 +778,20 @@ export default function CustomersPage() {
 
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {/* Process Due Payment Button (POST /api/payments) */}
+                            <button
+                              onClick={() => handleOpenPayment(cust)}
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
+                              title={
+                                due > 0
+                                  ? txt(`কাস্টমারের বকেয়া টাকা জমা নিন (বকেয়া: ${formatCurrency(due)})`, `Collect Due Payment (Due: ${formatCurrency(due)})`)
+                                  : txt("কাস্টমারের পেমেন্ট জমা নিন", "Collect Customer Payment")
+                              }
+                            >
+                              <Banknote className="w-3.5 h-3.5 text-emerald-400" />
+                              {txt("পেমেন্ট জমা", "Payment")}
+                            </button>
+
                             {/* View Ledger Statement Button */}
                             <button
                               onClick={() => handleOpenLedger(cust)}
@@ -1027,6 +1164,24 @@ export default function CustomersPage() {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => handleOpenPayment(activeCustomer)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
+                  title={txt("কাস্টমারের বকেয়া টাকা জমা নিন", "Collect Customer Due Payment")}
+                >
+                  <Banknote className="w-3.5 h-3.5" />
+                  {txt("পেমেন্ট জমা", "Collect Payment")}
+                </button>
+
+                <button
+                  onClick={() => handleOpenPaymentHistory(activeCustomer)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                  title={txt("এই কাস্টমারের সকল পেমেন্ট জমার হিস্ট্রি দেখুন", "View Customer Payment Collections History")}
+                >
+                  <History className="w-3.5 h-3.5 text-emerald-400" />
+                  {txt("পেমেন্ট হিস্ট্রি", "Payments")}
+                </button>
+
+                <button
                   onClick={() => handleOpenWhatsAppReminder(activeCustomer)}
                   className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
                 >
@@ -1268,6 +1423,414 @@ export default function CustomersPage() {
                       const newPg = Math.min(ledgerTotalPages, ledgerPage + 1);
                       setLedgerPage(newPg);
                       loadLedger(activeCustomer.id, newPg, ledgerStartDate, ledgerEndDate, ledgerSortOrder);
+                    }}
+                    className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-white disabled:opacity-40"
+                  >
+                    {txt("পরবর্তী", "Next")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4.1 CUSTOMER PAYMENT COLLECTION MODAL (POST /api/payments)                */}
+      {/* ========================================================================= */}
+      {showPaymentModal && activeCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-emerald-500/30 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative overflow-hidden">
+            {/* Top Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-inner">
+                  <Banknote className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    {txt("কাস্টমার বকেয়া পেমেন্ট জমা", "Collect Customer Due Payment")}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {txt("বকেয়া টাকা জমা নিন ও লেজারে এন্ট্রি করুন", "Process payment against outstanding balance")}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Customer Summary Card */}
+            <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 mb-5 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-400 font-medium">{txt("কাস্টমারের নাম:", "Customer Name:")}</span>
+                <span className="text-xs font-bold text-white">{activeCustomer.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-400 font-medium">{txt("ফোন নম্বর:", "Phone:")}</span>
+                <span className="text-xs font-mono text-slate-300">{activeCustomer.phone}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-800/80">
+                <span className="text-xs text-rose-400 font-semibold">{txt("বর্তমান বকেয়া বাকি:", "Current Outstanding Due:")}</span>
+                <span className="text-sm font-black font-mono text-rose-400">
+                  {formatCurrency(getDueAmount(activeCustomer))}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[11px] text-slate-500">
+                <span>{txt("লেজার স্থিতি (Closing Balance):", "Closing Balance:")}</span>
+                <span className="font-mono">{formatCurrency(activeCustomer.closingBalance || 0)}</span>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {paymentError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+
+            {/* Payment Form */}
+            <form onSubmit={handleSubmitPayment} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  {txt("পেমেন্টের পরিমাণ (৳) *", "Payment Amount (৳) *")}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">৳</span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="1"
+                    required
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    placeholder={txt("উদাঃ ৫০০", "e.g. 500")}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-4 py-2.5 text-sm font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono transition-colors"
+                  />
+                </div>
+                {/* Quick Due Fill Buttons */}
+                {getDueAmount(activeCustomer) > 0 && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentAmount(String(getDueAmount(activeCustomer)))}
+                      className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors"
+                    >
+                      {txt("সম্পূর্ণ বকেয়া (Full Due)", "Full Due")}: {formatCurrency(getDueAmount(activeCustomer))}
+                    </button>
+                    {getDueAmount(activeCustomer) > 500 && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentAmount(String(Math.round(getDueAmount(activeCustomer) / 2)))}
+                        className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+                      >
+                        50% Due: {formatCurrency(Math.round(getDueAmount(activeCustomer) / 2))}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  {txt("পেমেন্ট মেথড (Payment Method) *", "Payment Method *")}
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {[
+                    { id: "cash", label: "Cash", sub: "নগদ" },
+                    { id: "bkash", label: "bKash", sub: "বিকাশ" },
+                    { id: "nagad", label: "Nagad", sub: "নগদ" },
+                    { id: "card", label: "Card", sub: "কার্ড" },
+                    { id: "bank", label: "Bank", sub: "ব্যাংক" },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(m.id)}
+                      className={`p-2 rounded-xl text-center border transition-all ${
+                        paymentMethod === m.id
+                          ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-950 font-bold"
+                          : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white"
+                      }`}
+                    >
+                      <div className="text-xs font-bold leading-tight">{m.label}</div>
+                      <div className="text-[10px] opacity-75">{m.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-colors"
+                >
+                  {txt("বাতিল", "Cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={paymentLoading || !paymentAmount}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-emerald-950"
+                >
+                  {paymentLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      {txt("জমা হচ্ছে...", "Processing...")}
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      {txt("পেমেন্ট জমা নিশ্চিত করুন", "Confirm Payment Collection")}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4.2 CUSTOMER PAYMENTS COLLECTION HISTORY MODAL (GET /api/payments)       */}
+      {/* ========================================================================= */}
+      {showPaymentHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-slate-950 border-b border-slate-800 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    {activeCustomer
+                      ? txt(`${activeCustomer.name} - এর পেমেন্ট জমার হিস্ট্রি`, `${activeCustomer.name} - Payment History`)
+                      : txt("সকল কাস্টমারের পেমেন্ট কালেকশন হিস্ট্রি", "Customer Payment Collections History")}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {txt("সকল সংগৃহীত বকেয়া পেমেন্টের তালিকা ও হিসাব", "Customer due payments collection history")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {activeCustomer && (
+                  <button
+                    onClick={() => {
+                      setActiveCustomer(null);
+                      setPaymentHistoryPage(1);
+                      loadPaymentHistory(undefined, 1, paymentHistoryMethodFilter, paymentHistoryStartDate, paymentHistoryEndDate);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                  >
+                    {txt("সকল কাস্টমার দেখুন", "View All Customers")}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowPaymentHistoryModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors ml-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="p-4 border-b border-slate-800 bg-slate-900/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Method Filter */}
+                <select
+                  value={paymentHistoryMethodFilter}
+                  onChange={(e) => {
+                    const newMethod = e.target.value;
+                    setPaymentHistoryMethodFilter(newMethod);
+                    setPaymentHistoryPage(1);
+                    loadPaymentHistory(activeCustomer?.id, 1, newMethod, paymentHistoryStartDate, paymentHistoryEndDate);
+                  }}
+                  className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 text-xs focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">{txt("সকল পেমেন্ট মেথড", "All Payment Methods")}</option>
+                  <option value="cash">Cash (নগদ)</option>
+                  <option value="bkash">bKash (বিকাশ)</option>
+                  <option value="nagad">Nagad (নগদ)</option>
+                  <option value="card">Card (কার্ড)</option>
+                  <option value="bank">Bank (ব্যাংক)</option>
+                </select>
+
+                {/* Date range filter */}
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-400 text-[11px]">{txt("হতে:", "From:")}</span>
+                  <input
+                    type="date"
+                    value={paymentHistoryStartDate}
+                    onChange={(e) => setPaymentHistoryStartDate(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 text-[11px]">{txt("পর্যন্ত:", "To:")}</span>
+                  <input
+                    type="date"
+                    value={paymentHistoryEndDate}
+                    onChange={(e) => setPaymentHistoryEndDate(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <button
+                  onClick={() =>
+                    loadPaymentHistory(
+                      activeCustomer?.id,
+                      1,
+                      paymentHistoryMethodFilter,
+                      paymentHistoryStartDate,
+                      paymentHistoryEndDate
+                    )
+                  }
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors font-semibold"
+                >
+                  {txt("ফিল্টার", "Filter")}
+                </button>
+
+                {(paymentHistoryStartDate || paymentHistoryEndDate || paymentHistoryMethodFilter) && (
+                  <button
+                    onClick={() => {
+                      setPaymentHistoryStartDate("");
+                      setPaymentHistoryEndDate("");
+                      setPaymentHistoryMethodFilter("");
+                      setPaymentHistoryPage(1);
+                      loadPaymentHistory(activeCustomer?.id, 1, "", "", "");
+                    }}
+                    className="text-slate-400 hover:text-white text-[11px] underline"
+                  >
+                    {txt("রিসেট", "Clear Filter")}
+                  </button>
+                )}
+              </div>
+
+              <div className="text-[11px] text-slate-400">
+                {txt("মোট পেমেন্ট ট্রানজেকশন:", "Total Payments:")}{" "}
+                <span className="font-semibold text-white">{paymentHistoryList.length}</span>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="rounded-xl border border-slate-800 overflow-hidden bg-slate-950/40">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                    <tr>
+                      <th className="py-2.5 px-4">{txt("তারিখ ও সময়", "Date & Time")}</th>
+                      <th className="py-2.5 px-4">{txt("কাস্টমার", "Customer")}</th>
+                      <th className="py-2.5 px-4">{txt("পেমেন্ট মাধ্যম", "Payment Method")}</th>
+                      <th className="py-2.5 px-4 text-right">{txt("জমার পরিমাণ (৳)", "Amount Collected (৳)")}</th>
+                      <th className="py-2.5 px-4 text-right">{txt("রিসিভড বাই", "Received By")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {paymentHistoryLoading ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-500">
+                          <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-emerald-400" />
+                          {txt("পেমেন্ট হিস্ট্রি লোড হচ্ছে...", "Loading payment collection records...")}
+                        </td>
+                      </tr>
+                    ) : paymentHistoryList.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-500">
+                          <History className="w-8 h-8 mx-auto mb-2 opacity-30 text-emerald-400" />
+                          {txt("কোনো পেমেন্ট কালেকশন রেকর্ড পাওয়া যায়নি।", "No payment collection records found.")}
+                        </td>
+                      </tr>
+                    ) : (
+                      paymentHistoryList.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                          <td className="py-2.5 px-4 text-slate-300 font-mono text-[11px]">
+                            {formatDate(item.date)}
+                          </td>
+                          <td className="py-2.5 px-4 font-semibold text-white">
+                            <div>{item.customerName || "Customer"}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">ID: {item.customerId?.slice(0, 10)}...</div>
+                          </td>
+                          <td className="py-2.5 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                item.paymentMethod?.toLowerCase() === "bkash"
+                                  ? "bg-pink-500/20 text-pink-400 border border-pink-500/30"
+                                  : item.paymentMethod?.toLowerCase() === "nagad"
+                                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                                  : item.paymentMethod?.toLowerCase() === "card"
+                                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                  : item.paymentMethod?.toLowerCase() === "bank"
+                                  ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                  : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              }`}
+                            >
+                              {item.paymentMethod}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-4 text-right font-mono font-black text-emerald-400 text-sm">
+                            +{formatCurrency(item.amount)}
+                          </td>
+                          <td className="py-2.5 px-4 text-right text-slate-400 font-mono text-[11px]">
+                            {item.receivedBy ? item.receivedBy.slice(0, 10) + "..." : "Shop Admin"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {paymentHistoryTotalPages > 1 && (
+              <div className="px-6 py-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 shrink-0">
+                <div>
+                  {txt("পৃষ্ঠা", "Page")}{" "}
+                  <span className="font-semibold text-white">{paymentHistoryPage}</span> {txt("এর মধ্যে", "of")}{" "}
+                  <span className="font-semibold text-white">{paymentHistoryTotalPages}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={paymentHistoryPage <= 1}
+                    onClick={() => {
+                      const newPg = Math.max(1, paymentHistoryPage - 1);
+                      setPaymentHistoryPage(newPg);
+                      loadPaymentHistory(
+                        activeCustomer?.id,
+                        newPg,
+                        paymentHistoryMethodFilter,
+                        paymentHistoryStartDate,
+                        paymentHistoryEndDate
+                      );
+                    }}
+                    className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-white disabled:opacity-40"
+                  >
+                    {txt("পূর্ববর্তী", "Prev")}
+                  </button>
+                  <button
+                    disabled={paymentHistoryPage >= paymentHistoryTotalPages}
+                    onClick={() => {
+                      const newPg = Math.min(paymentHistoryTotalPages, paymentHistoryPage + 1);
+                      setPaymentHistoryPage(newPg);
+                      loadPaymentHistory(
+                        activeCustomer?.id,
+                        newPg,
+                        paymentHistoryMethodFilter,
+                        paymentHistoryStartDate,
+                        paymentHistoryEndDate
+                      );
                     }}
                     className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-white disabled:opacity-40"
                   >

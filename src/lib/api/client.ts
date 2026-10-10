@@ -29,6 +29,10 @@ import {
   WhatsAppReminderResponse,
   PaginatedCustomersResponse,
   PaginatedSalesResponse,
+  CustomerPaymentResponse,
+  ProcessCustomerPaymentPayload,
+  CustomerPaymentHistoryItem,
+  PaginatedCustomerPaymentsResponse,
 } from "@/types";
 
 // Token storage key
@@ -1238,6 +1242,82 @@ export const CustomerService = {
     }
   },
 };
+
+export const PaymentService = {
+  /**
+   * Process customer payment against outstanding due balance
+   * POST /api/payments
+   */
+  async processPayment(payload: ProcessCustomerPaymentPayload): Promise<CustomerPaymentResponse> {
+    try {
+      const res = await apiClient.post(ApiEndpoints.customerPayments, {
+        customerId: payload.customerId,
+        amount: Number(payload.amount),
+        paymentMethod: payload.paymentMethod.toLowerCase(),
+      });
+      return res.data?.data || res.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * List customer payment collection history (Paginated & Filtered)
+   * GET /api/payments
+   */
+  async getPayments(params?: {
+    customerId?: string;
+    paymentMethod?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "date" | "amount" | string;
+    sortOrder?: "asc" | "desc";
+  }): Promise<PaginatedCustomerPaymentsResponse> {
+    try {
+      const res = await apiClient.get(ApiEndpoints.customerPayments, {
+        params: {
+          customerId: params?.customerId || undefined,
+          paymentMethod: params?.paymentMethod || undefined,
+          startDate: params?.startDate || undefined,
+          endDate: params?.endDate || undefined,
+          page: params?.page || 1,
+          limit: params?.limit || 10,
+          sortBy: params?.sortBy || "date",
+          sortOrder: params?.sortOrder || "desc",
+        },
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        return res.data;
+      }
+      return {
+        data: Array.isArray(res.data) ? res.data : [],
+        meta: res.data?.meta || {
+          total: Array.isArray(res.data) ? res.data.length : 0,
+          page: params?.page || 1,
+          limit: params?.limit || 10,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        const errMsg = error.response.data.message;
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+};
+
 
 export const ExpensesService = {
   async getExpenses(): Promise<Expense[]> {
