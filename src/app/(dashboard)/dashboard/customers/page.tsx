@@ -102,6 +102,21 @@ export default function CustomersPage() {
   const [paymentHistoryStartDate, setPaymentHistoryStartDate] = useState("");
   const [paymentHistoryEndDate, setPaymentHistoryEndDate] = useState("");
 
+  // Payment Detail Modal state (for viewing full payment transaction info)
+  const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<{
+    id?: string;
+    customerName?: string;
+    customerPhone?: string;
+    amount?: number | string;
+    paymentMethod?: string;
+    date?: string;
+    receivedBy?: string;
+    description?: string;
+    previousBalance?: number | string;
+    newBalance?: number | string;
+    referenceId?: string;
+  } | null>(null);
+
   // Selected customer for action
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
 
@@ -1181,10 +1196,10 @@ export default function CustomersPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                 <button
                   onClick={() => handleOpenPayment(activeCustomer)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm whitespace-nowrap shrink-0"
                   title={txt("কাস্টমারের বকেয়া টাকা জমা নিন", "Collect Customer Due Payment")}
                 >
                   <Banknote className="w-3.5 h-3.5" />
@@ -1192,17 +1207,8 @@ export default function CustomersPage() {
                 </button>
 
                 <button
-                  onClick={() => handleOpenPaymentHistory(activeCustomer)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
-                  title={txt("এই কাস্টমারের সকল পেমেন্ট জমার হিস্ট্রি দেখুন", "View Customer Payment Collections History")}
-                >
-                  <History className="w-3.5 h-3.5 text-emerald-400" />
-                  {txt("পেমেন্ট হিস্ট্রি", "Payments")}
-                </button>
-
-                <button
                   onClick={() => handleOpenWhatsAppReminder(activeCustomer)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
                 >
                   <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
                   {txt("বাকি তাগাদা", "Due Reminder")}
@@ -1211,7 +1217,7 @@ export default function CustomersPage() {
                 {canExportExcel && (
                   <button
                     onClick={handleExportSingleLedger}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
                   >
                     <Download className="w-3.5 h-3.5 text-emerald-400" />
                     CSV
@@ -1220,7 +1226,7 @@ export default function CustomersPage() {
 
                 <button
                   onClick={() => handleOpenCustomerPdf(activeCustomer, ledgerEntries)}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
                   title={txt("পূর্ণাঙ্গ কাস্টমার লেজার স্টেটমেন্ট প্রিন্ট করুন", "Print Complete Customer Ledger Statement (A-Z)")}
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -1229,7 +1235,7 @@ export default function CustomersPage() {
 
                 <button
                   onClick={() => setShowLedgerModal(false)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors ml-1"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors ml-1 shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1386,10 +1392,61 @@ export default function CustomersPage() {
                             </td>
 
                             <td className="py-2.5 px-4 text-white font-medium max-w-sm">
-                              <div>{entry.description}</div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span>{entry.description}</span>
+                                {entry.type === "payment" && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedPaymentDetail({
+                                        id: entry.id,
+                                        customerName: activeCustomer.name,
+                                        customerPhone: activeCustomer.phone,
+                                        amount: entry.amount,
+                                        paymentMethod: entry.description.toLowerCase().includes("bkash")
+                                          ? "bKash"
+                                          : entry.description.toLowerCase().includes("nagad")
+                                          ? "Nagad"
+                                          : entry.description.toLowerCase().includes("card")
+                                          ? "Card"
+                                          : entry.description.toLowerCase().includes("bank")
+                                          ? "Bank"
+                                          : "Cash",
+                                        date: entry.date,
+                                        receivedBy: "Shop Admin",
+                                        description: entry.description,
+                                        previousBalance: entry.previousBalance,
+                                        newBalance: entry.newBalance,
+                                        referenceId: entry.referenceId,
+                                      })
+                                    }
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition-colors inline-flex items-center gap-1"
+                                    title={txt("পেমেন্ট বিবরণ দেখুন", "View Payment Details")}
+                                  >
+                                    <Receipt className="w-2.5 h-2.5" />
+                                    {txt("রসিদ / বিবরণ", "Details")}
+                                  </button>
+                                )}
+                              </div>
                               {entry.referenceId && (
-                                <div className="text-[10px] text-slate-500 font-mono">
-                                  Ref: {entry.referenceId.slice(0, 12)}...
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-1.5">
+                                  {entry.type === "sale" ? (
+                                    <span className="text-amber-400/90 font-medium">
+                                      {txt("ইনভয়েস নং:", "Invoice No:")} INV-{entry.referenceId.slice(-6).toUpperCase()}
+                                    </span>
+                                  ) : entry.type === "payment" ? (
+                                    <span className="text-emerald-400/90 font-medium">
+                                      {txt("পেমেন্ট ভাউচার:", "Voucher:")} PAY-{entry.referenceId.slice(-6).toUpperCase()}
+                                    </span>
+                                  ) : entry.type === "return" ? (
+                                    <span className="text-sky-400/90 font-medium">
+                                      {txt("ফেরত মেমো:", "Return Memo:")} RET-{entry.referenceId.slice(-6).toUpperCase()}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400">
+                                      {txt("রেফারেন্স:", "Ref:")} #{entry.referenceId.slice(-6).toUpperCase()}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </td>
@@ -1772,19 +1829,20 @@ export default function CustomersPage() {
                       <th className="py-2.5 px-4">{txt("পেমেন্ট মাধ্যম", "Payment Method")}</th>
                       <th className="py-2.5 px-4 text-right">{txt("জমার পরিমাণ (৳)", "Amount Collected (৳)")}</th>
                       <th className="py-2.5 px-4 text-right">{txt("রিসিভড বাই", "Received By")}</th>
+                      <th className="py-2.5 px-4 text-center">{txt("অ্যাকশন", "Action")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
                     {paymentHistoryLoading ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-500">
+                        <td colSpan={6} className="py-12 text-center text-slate-500">
                           <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-1 text-emerald-400" />
                           {txt("পেমেন্ট হিস্ট্রি লোড হচ্ছে...", "Loading payment collection records...")}
                         </td>
                       </tr>
                     ) : paymentHistoryList.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-500">
+                        <td colSpan={6} className="py-12 text-center text-slate-500">
                           <History className="w-8 h-8 mx-auto mb-2 opacity-30 text-emerald-400" />
                           {txt("কোনো পেমেন্ট কালেকশন রেকর্ড পাওয়া যায়নি।", "No payment collection records found.")}
                         </td>
@@ -1821,6 +1879,27 @@ export default function CustomersPage() {
                           </td>
                           <td className="py-2.5 px-4 text-right text-slate-400 font-mono text-[11px]">
                             {item.receivedBy ? item.receivedBy.slice(0, 10) + "..." : "Shop Admin"}
+                          </td>
+                          <td className="py-2.5 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedPaymentDetail({
+                                  id: item.id,
+                                  customerName: item.customerName,
+                                  amount: item.amount,
+                                  paymentMethod: item.paymentMethod,
+                                  date: item.date,
+                                  receivedBy: item.receivedBy || "Shop Admin",
+                                  referenceId: item.id,
+                                })
+                              }
+                              className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors"
+                              title={txt("পেমেন্ট বিবরণ দেখুন", "View Payment Details")}
+                            >
+                              <Receipt className="w-3 h-3 text-emerald-400" />
+                              {txt("বিবরণ", "Details")}
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -1876,6 +1955,135 @@ export default function CustomersPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4.3 CUSTOMER PAYMENT DETAILS RECEIPT MODAL                                */}
+      {/* ========================================================================= */}
+      {selectedPaymentDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Receipt className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    {txt("পেমেন্ট বিবরণ ও রসিদ", "Payment Details & Receipt")}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {txt("কাস্টমার বকেয়া পরিশোধের সম্পূর্ণ বিবরণ", "Customer payment receipt information")}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPaymentDetail(null)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-3.5 text-xs">
+              <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                <span className="text-slate-400 font-medium">{txt("পরিশোধের পরিমাণ", "Paid Amount")}:</span>
+                <span className="text-lg font-black text-emerald-400 font-mono">
+                  {formatCurrency(selectedPaymentDetail.amount || 0)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-800/80">
+                  <span className="text-[10px] text-slate-500 uppercase block font-semibold">
+                    {txt("কাস্টমার", "Customer")}
+                  </span>
+                  <span className="font-bold text-white text-xs mt-0.5 block">
+                    {selectedPaymentDetail.customerName || "Customer"}
+                  </span>
+                  {selectedPaymentDetail.customerPhone && (
+                    <span className="text-[11px] text-slate-400 font-mono block">
+                      {selectedPaymentDetail.customerPhone}
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-800/80">
+                  <span className="text-[10px] text-slate-500 uppercase block font-semibold">
+                    {txt("পেমেন্ট মেথড", "Method")}
+                  </span>
+                  <span className="font-bold text-emerald-400 uppercase text-xs mt-0.5 block">
+                    {selectedPaymentDetail.paymentMethod || "Cash"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-800/80 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">{txt("তারিখ ও সময়:", "Date & Time:")}</span>
+                  <span className="font-mono text-slate-200">
+                    {selectedPaymentDetail.date ? formatDate(selectedPaymentDetail.date) : "N/A"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">{txt("রিসিভ করেছেন:", "Received By:")}</span>
+                  <span className="text-slate-200 font-medium">
+                    {selectedPaymentDetail.receivedBy || "Shop Admin"}
+                  </span>
+                </div>
+
+                {selectedPaymentDetail.referenceId && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">{txt("ভাউচার নং:", "Voucher No:")}</span>
+                    <span className="font-mono font-semibold text-emerald-400">
+                      PAY-{selectedPaymentDetail.referenceId.slice(-6).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                {selectedPaymentDetail.previousBalance !== undefined && (
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+                    <span className="text-slate-400">{txt("পূর্বের ব্যালেন্স:", "Prev Balance:")}</span>
+                    <span className="font-mono text-slate-300">
+                      {formatCurrency(selectedPaymentDetail.previousBalance)}
+                    </span>
+                  </div>
+                )}
+
+                {selectedPaymentDetail.newBalance !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">{txt("নতুন ব্যালেন্স:", "New Balance:")}</span>
+                    <span className="font-mono font-bold text-white">
+                      {formatCurrency(selectedPaymentDetail.newBalance)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {selectedPaymentDetail.description && (
+                <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-800/80">
+                  <span className="text-[10px] text-slate-500 uppercase block font-semibold mb-1">
+                    {txt("বিবরণ / উদ্দেশ্য", "Description / Purpose")}
+                  </span>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    {selectedPaymentDetail.description}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedPaymentDetail(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl transition-colors"
+              >
+                {txt("বন্ধ করুন", "Close")}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2159,12 +2367,13 @@ export default function CustomersPage() {
                 {selectedCustomerForPdf ? (
                   <div className="space-y-6">
                     {/* Customer Info Card */}
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {/* Customer Info Card (Simplified B&W, No Customer ID) */}
+                    <div className="bg-white p-3.5 rounded border border-black/30 grid grid-cols-3 gap-4">
                       <div>
                         <span className="text-[10px] text-slate-500 uppercase font-semibold block">
                           Customer Name
                         </span>
-                        <span className="text-sm font-bold text-slate-900">
+                        <span className="text-sm font-bold text-black">
                           {selectedCustomerForPdf.name}
                         </span>
                       </div>
@@ -2172,7 +2381,7 @@ export default function CustomersPage() {
                         <span className="text-[10px] text-slate-500 uppercase font-semibold block">
                           Phone Number
                         </span>
-                        <span className="text-sm font-medium text-slate-800 font-mono">
+                        <span className="text-sm font-medium text-black font-mono">
                           {selectedCustomerForPdf.phone}
                         </span>
                       </div>
@@ -2180,16 +2389,8 @@ export default function CustomersPage() {
                         <span className="text-[10px] text-slate-500 uppercase font-semibold block">
                           Address
                         </span>
-                        <span className="text-sm font-medium text-slate-800">
+                        <span className="text-sm font-medium text-black">
                           {selectedCustomerForPdf.address || "N/A"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">
-                          Customer ID
-                        </span>
-                        <span className="text-xs font-mono text-slate-600">
-                          {selectedCustomerForPdf.id.slice(0, 14)}...
                         </span>
                       </div>
                     </div>
@@ -2216,86 +2417,74 @@ export default function CustomersPage() {
                       return (
                         <>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="p-3.5 rounded-lg border border-slate-200 bg-slate-50">
-                              <span className="text-[10px] text-slate-500 uppercase font-semibold block">
+                            <div className="p-3 rounded border border-black/30 bg-white">
+                              <span className="text-[10px] text-slate-600 uppercase font-semibold block">
                                 Opening Balance (প্রারম্ভিক)
                               </span>
-                              <span className="text-base font-black text-slate-900 mt-1 block font-mono">
+                              <span className="text-sm font-bold text-black mt-0.5 block font-mono">
                                 {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
                               </span>
                             </div>
-                            <div className="p-3.5 rounded-lg border border-slate-200 bg-white">
+                            <div className="p-3 rounded border border-black/30 bg-white">
                               <span className="text-[10px] text-slate-600 font-semibold uppercase block">
-                                Total Purchases (মোট ক্রয়/চালান)
+                                Total Purchases (মোট চালান)
                               </span>
-                              <span className="text-base font-black text-slate-900 mt-1 block font-mono">
+                              <span className="text-sm font-bold text-black mt-0.5 block font-mono">
                                 {formatCurrency(pdfTotalDebit)}
                               </span>
                             </div>
-                            <div className="p-3.5 rounded-lg border border-slate-200 bg-white">
-                              <span className="text-[10px] text-emerald-700 font-semibold uppercase block">
-                                Total Paid & Returns (মোট জমা/ফেরত)
+                            <div className="p-3 rounded border border-black/30 bg-white">
+                              <span className="text-[10px] text-slate-600 font-semibold uppercase block">
+                                Total Paid & Returns (মোট জমা)
                               </span>
-                              <span className="text-base font-black text-emerald-700 mt-1 block font-mono">
+                              <span className="text-sm font-bold text-black mt-0.5 block font-mono">
                                 {formatCurrency(pdfTotalCredit)}
                               </span>
                             </div>
-                            <div
-                              className={`p-3.5 rounded-lg border ${
-                                getDueAmount(selectedCustomerForPdf) > 0
-                                  ? "border-rose-300 bg-rose-50"
-                                  : "border-emerald-300 bg-emerald-50"
-                              }`}
-                            >
-                              <span className="text-[10px] font-semibold uppercase block text-slate-700">
+                            <div className="p-3 rounded border-2 border-black bg-white">
+                              <span className="text-[10px] font-bold uppercase block text-black">
                                 Outstanding Due (মোট বকেয়া)
                               </span>
-                              <span
-                                className={`text-base font-black mt-1 block font-mono ${
-                                  getDueAmount(selectedCustomerForPdf) > 0
-                                    ? "text-rose-600"
-                                    : "text-emerald-700"
-                                }`}
-                              >
+                              <span className="text-sm font-black mt-0.5 block font-mono text-black">
                                 {formatCurrency(getDueAmount(selectedCustomerForPdf))}
                               </span>
                             </div>
                           </div>
 
                           {/* Full Ledger Statement Breakdown Table (A to Z) */}
-                          <div className="border border-slate-200 rounded-lg overflow-hidden">
-                            <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 flex justify-between items-center text-[11px] font-bold text-slate-800 uppercase">
+                          <div className="border border-black/30 rounded overflow-hidden">
+                            <div className="bg-slate-100 px-4 py-2 border-b border-black/20 flex justify-between items-center text-[11px] font-bold text-black uppercase">
                               <span>Customer Account Statement Ledger (সম্পূর্ণ খতিয়ান বিবরণী)</span>
-                              <span className="font-normal lowercase text-slate-500 font-mono">
+                              <span className="font-normal lowercase text-slate-600 font-mono">
                                 {pdfLedgerEntries.length} transaction entries
                               </span>
                             </div>
                             <table className="w-full text-left text-xs border-collapse">
-                              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
+                              <thead className="bg-slate-100 border-b border-black/30 text-black font-bold uppercase text-[10px]">
                                 <tr>
-                                  <th className="py-2.5 px-3 w-8 text-center">#</th>
-                                  <th className="py-2.5 px-3 w-28">Date & Time</th>
-                                  <th className="py-2.5 px-3 w-20">Type</th>
-                                  <th className="py-2.5 px-3">Description & Particulars / Invoice Ref</th>
-                                  <th className="py-2.5 px-3 text-right w-24">Debit (৳)</th>
-                                  <th className="py-2.5 px-3 text-right w-24">Credit (৳)</th>
-                                  <th className="py-2.5 px-3 text-right w-28">Balance (৳)</th>
+                                  <th className="py-2 px-3 w-8 text-center">#</th>
+                                  <th className="py-2 px-3 w-28">Date & Time</th>
+                                  <th className="py-2 px-3 w-24">Type</th>
+                                  <th className="py-2 px-3">Description & Particulars / Invoice Ref</th>
+                                  <th className="py-2 px-3 text-right w-24">Debit (৳)</th>
+                                  <th className="py-2 px-3 text-right w-24">Credit (৳)</th>
+                                  <th className="py-2 px-3 text-right w-28">Balance (৳)</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100 text-slate-800">
+                              <tbody className="divide-y divide-black/15 text-black">
                                 {pdfLedgerLoading ? (
                                   <tr>
-                                    <td colSpan={7} className="py-10 text-center text-slate-500 font-medium">
+                                    <td colSpan={7} className="py-10 text-center text-slate-600 font-medium">
                                       Loading full transaction history statements...
                                     </td>
                                   </tr>
                                 ) : pdfLedgerEntries.length === 0 ? (
                                   <tr>
-                                    <td colSpan={7} className="py-8 text-center text-slate-500">
-                                      <p className="font-semibold text-slate-700">
+                                    <td colSpan={7} className="py-8 text-center text-slate-600">
+                                      <p className="font-semibold text-black">
                                         Initial Opening Balance: {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
                                       </p>
-                                      <p className="text-[11px] text-slate-400 mt-0.5">
+                                      <p className="text-[11px] text-slate-500 mt-0.5">
                                         No subsequent sales, returns or payment transactions recorded yet.
                                       </p>
                                     </td>
@@ -2314,52 +2503,54 @@ export default function CustomersPage() {
 
                                     return (
                                       <tr key={entry.id || idx} className="hover:bg-slate-50 break-inside-avoid">
-                                        <td className="py-2 px-3 text-center text-slate-500 font-mono text-[10px]">
+                                        <td className="py-2 px-3 text-center text-slate-600 font-mono text-[10px]">
                                           {idx + 1}
                                         </td>
-                                        <td className="py-2 px-3 text-slate-700 font-mono text-[10px] whitespace-nowrap">
+                                        <td className="py-2 px-3 text-black font-mono text-[10px] whitespace-nowrap">
                                           {formatDate(entry.date)}
                                         </td>
                                         <td className="py-2 px-3 whitespace-nowrap">
-                                          <span
-                                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                                              entry.type === "opening"
-                                                ? "bg-sky-100 text-sky-800"
-                                                : entry.type === "sale"
-                                                ? "bg-amber-100 text-amber-800"
-                                                : entry.type === "return"
-                                                ? "bg-emerald-100 text-emerald-800"
-                                                : "bg-purple-100 text-purple-800"
-                                            }`}
-                                          >
-                                            {entry.type}
+                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold border border-black/30 text-black uppercase tracking-wider">
+                                            {entry.type === "opening"
+                                              ? "OPENING"
+                                              : entry.type === "sale"
+                                              ? "INVOICE"
+                                              : entry.type === "payment"
+                                              ? "PAYMENT"
+                                              : entry.type === "return"
+                                              ? "RETURN"
+                                              : entry.type.toUpperCase()}
                                           </span>
                                         </td>
-                                        <td className="py-2 px-3 font-medium text-slate-900">
+                                        <td className="py-2 px-3 font-medium text-black">
                                           <div>{entry.description}</div>
                                           {entry.referenceId && (
-                                            <span className="text-[9px] text-slate-400 font-mono block">
-                                              Ref: {entry.referenceId}
+                                            <span className="text-[9px] text-slate-600 font-mono block mt-0.5">
+                                              {entry.type === "sale"
+                                                ? `INV-${entry.referenceId.slice(-6).toUpperCase()}`
+                                                : entry.type === "payment"
+                                                ? `PAY-${entry.referenceId.slice(-6).toUpperCase()}`
+                                                : `REF: ${entry.referenceId.slice(-6).toUpperCase()}`}
                                             </span>
                                           )}
                                         </td>
-                                        <td className="py-2 px-3 text-right font-mono font-semibold text-rose-600 whitespace-nowrap">
+                                        <td className="py-2 px-3 text-right font-mono font-medium text-black whitespace-nowrap">
                                           {debitVal > 0 ? formatCurrency(debitVal) : "-"}
                                         </td>
-                                        <td className="py-2 px-3 text-right font-mono font-semibold text-emerald-700 whitespace-nowrap">
+                                        <td className="py-2 px-3 text-right font-mono font-medium text-black whitespace-nowrap">
                                           {creditVal > 0 ? formatCurrency(creditVal) : "-"}
                                         </td>
-                                        <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap">
+                                        <td className="py-2 px-3 text-right font-mono font-bold text-black whitespace-nowrap">
                                           {balNum < 0 ? (
-                                            <span className="text-rose-600">
+                                            <span>
                                               {formatCurrency(Math.abs(balNum))} Dr
                                             </span>
                                           ) : balNum > 0 ? (
-                                            <span className="text-emerald-700">
+                                            <span>
                                               {formatCurrency(balNum)} Cr
                                             </span>
                                           ) : (
-                                            <span className="text-slate-600">৳0.00</span>
+                                            <span>৳0.00</span>
                                           )}
                                         </td>
                                       </tr>
@@ -2367,32 +2558,32 @@ export default function CustomersPage() {
                                   })
                                 )}
                               </tbody>
-                              <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-300 text-slate-900">
+                              <tfoot className="bg-slate-100 font-bold border-t-2 border-black/40 text-black">
                                 <tr>
-                                  <td colSpan={4} className="py-2 px-3 text-right uppercase text-[10px] tracking-wider">
+                                  <td colSpan={4} className="py-2 px-3 text-right uppercase text-[10px] tracking-wider text-black">
                                     Subtotal Movements:
                                   </td>
-                                  <td className="py-2 px-3 text-right font-mono text-rose-600 whitespace-nowrap">
+                                  <td className="py-2 px-3 text-right font-mono text-black whitespace-nowrap">
                                     {formatCurrency(pdfTotalDebit)}
                                   </td>
-                                  <td className="py-2 px-3 text-right font-mono text-emerald-700 whitespace-nowrap">
+                                  <td className="py-2 px-3 text-right font-mono text-black whitespace-nowrap">
                                     {formatCurrency(pdfTotalCredit)}
                                   </td>
-                                  <td className="py-2 px-3 text-right font-mono whitespace-nowrap">
+                                  <td className="py-2 px-3 text-right font-mono text-black whitespace-nowrap">
                                     {getDueAmount(selectedCustomerForPdf) > 0 ? (
-                                      <span className="text-rose-600">
+                                      <span>
                                         {formatCurrency(getDueAmount(selectedCustomerForPdf))} Dr
                                       </span>
                                     ) : (
-                                      <span className="text-emerald-700">৳0.00</span>
+                                      <span>৳0.00</span>
                                     )}
                                   </td>
                                 </tr>
-                                <tr className="bg-rose-50/70 border-t border-rose-200">
-                                  <td colSpan={5} className="py-2.5 px-3 text-right font-black uppercase text-[11px] text-rose-900 tracking-wider">
+                                <tr className="border-t-2 border-black bg-white">
+                                  <td colSpan={5} className="py-2.5 px-3 text-right font-black uppercase text-[11px] text-black tracking-wider">
                                     Total Outstanding Due Balance Payable (সর্বমোট পরিশোধযোগ্য বকেয়া):
                                   </td>
-                                  <td colSpan={2} className="py-2.5 px-3 text-right font-black text-sm font-mono text-rose-600 whitespace-nowrap">
+                                  <td colSpan={2} className="py-2.5 px-3 text-right font-black text-sm font-mono text-black whitespace-nowrap">
                                     {formatCurrency(getDueAmount(selectedCustomerForPdf))}
                                   </td>
                                 </tr>
