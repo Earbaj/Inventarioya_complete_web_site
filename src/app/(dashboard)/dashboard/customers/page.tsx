@@ -815,25 +815,25 @@ export default function CustomersPage() {
                             {/* Process Due Payment Button (POST /api/payments) */}
                             <button
                               onClick={() => handleOpenPayment(cust)}
-                              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-slate border border-emerald-500/40 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-slate border border-emerald-500/40 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
                               title={
                                 due > 0
                                   ? txt(`কাস্টমারের বকেয়া টাকা জমা নিন (বকেয়া: ${formatCurrency(due)})`, `Collect Due Payment (Due: ${formatCurrency(due)})`)
                                   : txt("কাস্টমারের পেমেন্ট জমা নিন", "Collect Customer Payment")
                               }
                             >
-                              <Banknote className="w-3.5 h-3.5 text-slate-400" />
-                              {txt("পেমেন্ট জমা", "Payment")}
+                              <Banknote className="w-3.5 h-3.5 text-slate" />
+                              <span className="text-slate">{txt("পেমেন্ট জমা", "Payment")}</span>
                             </button>
 
                             {/* View Ledger Statement Button */}
                             <button
                               onClick={() => handleOpenLedger(cust)}
-                              className="px-2.5 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-slate border border-indigo-500/30 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors"
+                              className="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-slate border border-indigo-500/40 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors"
                               title={txt("কাস্টমার হিসাব খাতা ও লেনদেন দেখুন", "View Customer Ledger Statement")}
                             >
-                              <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                              {txt("খাতা", "Ledger")}
+                              <BookOpen className="w-3.5 h-3.5 text-slate" />
+                              <span className="text-slate">{txt("খাতা", "Ledger")}</span>
                             </button>
 
                             {/* WhatsApp Due Reminder Button */}
@@ -841,8 +841,8 @@ export default function CustomersPage() {
                               onClick={() => handleOpenWhatsAppReminder(cust)}
                               className={`p-1.5 rounded-lg transition-colors border ${
                                 due > 0
-                                  ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40"
-                                  : "bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700"
+                                  ? "bg-emerald-300/30 hover:bg-red-600/40 text-emerald-200 border-emerald-500/50 shadow-sm"
+                                  : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
                               }`}
                               title={
                                 due > 0
@@ -1208,10 +1208,11 @@ export default function CustomersPage() {
 
                 <button
                   onClick={() => handleOpenWhatsAppReminder(activeCustomer)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-400/40 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 shadow-sm"
+                  title={txt("হোয়াটসঅ্যাপে বাকি তাগাদা পাঠান", "Send WhatsApp Due Reminder")}
                 >
-                  <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
-                  {txt("বাকি তাগাদা", "Due Reminder")}
+                  <WhatsAppIcon className="w-3.5 h-3.5 text-white" />
+                  <span className="text-white font-medium">{txt("বাকি তাগাদা", "Due Reminder")}</span>
                 </button>
 
                 {canExportExcel && (
@@ -1420,11 +1421,11 @@ export default function CustomersPage() {
                                         referenceId: entry.referenceId,
                                       })
                                     }
-                                    className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 transition-colors inline-flex items-center gap-1"
+                                    className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/40 shadow-sm transition-colors inline-flex items-center gap-1 shrink-0"
                                     title={txt("পেমেন্ট বিবরণ দেখুন", "View Payment Details")}
                                   >
-                                    <Receipt className="w-2.5 h-2.5" />
-                                    {txt("রসিদ / বিবরণ", "Details")}
+                                    <Receipt className="w-3 h-3 text-white" />
+                                    <span className="text-white">{txt("রসিদ / বিবরণ", "Details")}</span>
                                   </button>
                                 )}
                               </div>
@@ -1894,11 +1895,11 @@ export default function CustomersPage() {
                                   referenceId: item.id,
                                 })
                               }
-                              className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors"
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] inline-flex items-center gap-1.5 transition-colors shadow-sm"
                               title={txt("পেমেন্ট বিবরণ দেখুন", "View Payment Details")}
                             >
-                              <Receipt className="w-3 h-3 text-emerald-400" />
-                              {txt("বিবরণ", "Details")}
+                              <Receipt className="w-3.5 h-3.5 text-white" />
+                              <span className="text-white">{txt("বিবরণ", "Details")}</span>
                             </button>
                           </td>
                         </tr>
@@ -2367,33 +2368,33 @@ export default function CustomersPage() {
                 {selectedCustomerForPdf ? (
                   <div className="space-y-6">
                     {/* Customer Info Card */}
-                    {/* Customer Info Card (Simplified B&W, No Customer ID) */}
-                    <div className="bg-white p-3.5 rounded border border-black/30 grid grid-cols-3 gap-4">
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">
-                          Customer Name
-                        </span>
-                        <span className="text-sm font-bold text-black">
-                          {selectedCustomerForPdf.name}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">
-                          Phone Number
-                        </span>
-                        <span className="text-sm font-medium text-black font-mono">
-                          {selectedCustomerForPdf.phone}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">
-                          Address
-                        </span>
-                        <span className="text-sm font-medium text-black">
-                          {selectedCustomerForPdf.address || "N/A"}
-                        </span>
-                      </div>
-                    </div>
+                    {/* Customer Information - Structured Table (Row & Column) */}
+                    <table className="w-full text-left text-xs border-collapse border border-black">
+                      <tbody>
+                        <tr>
+                          <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
+                            Customer Name:
+                          </td>
+                          <td className="w-2/6 font-bold text-black text-xs px-3 py-2 border border-black">
+                            {selectedCustomerForPdf.name}
+                          </td>
+                          <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
+                            Phone Number:
+                          </td>
+                          <td className="w-2/6 font-mono font-medium text-black px-3 py-2 border border-black">
+                            {selectedCustomerForPdf.phone}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
+                            Address:
+                          </td>
+                          <td colSpan={3} className="text-black px-3 py-2 border border-black">
+                            {selectedCustomerForPdf.address || "N/A"}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
 
                     {/* Financial Summary & Full Ledger Statement A-Z */}
                     {(() => {
@@ -2416,71 +2417,64 @@ export default function CustomersPage() {
 
                       return (
                         <>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="p-3 rounded border border-black/30 bg-white">
-                              <span className="text-[10px] text-slate-600 uppercase font-semibold block">
-                                Opening Balance (প্রারম্ভিক)
-                              </span>
-                              <span className="text-sm font-bold text-black mt-0.5 block font-mono">
-                                {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
-                              </span>
-                            </div>
-                            <div className="p-3 rounded border border-black/30 bg-white">
-                              <span className="text-[10px] text-slate-600 font-semibold uppercase block">
-                                Total Purchases (মোট চালান)
-                              </span>
-                              <span className="text-sm font-bold text-black mt-0.5 block font-mono">
-                                {formatCurrency(pdfTotalDebit)}
-                              </span>
-                            </div>
-                            <div className="p-3 rounded border border-black/30 bg-white">
-                              <span className="text-[10px] text-slate-600 font-semibold uppercase block">
-                                Total Paid & Returns (মোট জমা)
-                              </span>
-                              <span className="text-sm font-bold text-black mt-0.5 block font-mono">
-                                {formatCurrency(pdfTotalCredit)}
-                              </span>
-                            </div>
-                            <div className="p-3 rounded border-2 border-black bg-white">
-                              <span className="text-[10px] font-bold uppercase block text-black">
-                                Outstanding Due (মোট বকেয়া)
-                              </span>
-                              <span className="text-sm font-black mt-0.5 block font-mono text-black">
-                                {formatCurrency(getDueAmount(selectedCustomerForPdf))}
-                              </span>
-                            </div>
-                          </div>
+                          {/* Financial Balances Summary - Structured Table (Row & Column) */}
+                          <table className="w-full text-left text-xs border-collapse border border-black">
+                            <thead className="bg-slate-100 text-black font-bold uppercase text-[10px]">
+                              <tr>
+                                <th className="px-3 py-2 border border-black">Opening Balance (প্রারম্ভিক)</th>
+                                <th className="px-3 py-2 border border-black">Total Purchases (মোট চালান)</th>
+                                <th className="px-3 py-2 border border-black">Total Paid / Returns (মোট জমা)</th>
+                                <th className="px-3 py-2 border border-black bg-slate-200">Outstanding Due (মোট বকেয়া)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td className="px-3 py-2 font-mono font-bold text-black border border-black">
+                                  {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
+                                </td>
+                                <td className="px-3 py-2 font-mono font-bold text-black border border-black">
+                                  {formatCurrency(pdfTotalDebit)}
+                                </td>
+                                <td className="px-3 py-2 font-mono font-bold text-black border border-black">
+                                  {formatCurrency(pdfTotalCredit)}
+                                </td>
+                                <td className="px-3 py-2 font-mono font-black text-black border-2 border-black bg-slate-50 text-sm">
+                                  {formatCurrency(getDueAmount(selectedCustomerForPdf))}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
 
-                          {/* Full Ledger Statement Breakdown Table (A to Z) */}
-                          <div className="border border-black/30 rounded overflow-hidden">
-                            <div className="bg-slate-100 px-4 py-2 border-b border-black/20 flex justify-between items-center text-[11px] font-bold text-black uppercase">
+                          {/* Full Ledger Statement Breakdown Table (A to Z) - Traditional Bordered Grid Format */}
+                          <div className="overflow-hidden">
+                            <div className="bg-slate-100 px-3.5 py-2 border-t border-x border-black flex justify-between items-center text-[11px] font-bold text-black uppercase">
                               <span>Customer Account Statement Ledger (সম্পূর্ণ খতিয়ান বিবরণী)</span>
-                              <span className="font-normal lowercase text-slate-600 font-mono">
+                              <span className="font-normal lowercase text-slate-700 font-mono">
                                 {pdfLedgerEntries.length} transaction entries
                               </span>
                             </div>
-                            <table className="w-full text-left text-xs border-collapse">
-                              <thead className="bg-slate-100 border-b border-black/30 text-black font-bold uppercase text-[10px]">
+                            <table className="w-full text-left text-xs border-collapse border border-black">
+                              <thead className="bg-slate-100 text-black font-bold uppercase text-[10px]">
                                 <tr>
-                                  <th className="py-2 px-3 w-8 text-center">#</th>
-                                  <th className="py-2 px-3 w-28">Date & Time</th>
-                                  <th className="py-2 px-3 w-24">Type</th>
-                                  <th className="py-2 px-3">Description & Particulars / Invoice Ref</th>
-                                  <th className="py-2 px-3 text-right w-24">Debit (৳)</th>
-                                  <th className="py-2 px-3 text-right w-24">Credit (৳)</th>
-                                  <th className="py-2 px-3 text-right w-28">Balance (৳)</th>
+                                  <th className="py-2 px-2.5 w-9 text-center border border-black">#</th>
+                                  <th className="py-2 px-2.5 w-28 border border-black">Date & Time</th>
+                                  <th className="py-2 px-2.5 w-20 text-center border border-black">Type</th>
+                                  <th className="py-2 px-2.5 border border-black">Particulars / Description / Ref</th>
+                                  <th className="py-2 px-2.5 text-right w-24 border border-black">Debit (৳)</th>
+                                  <th className="py-2 px-2.5 text-right w-24 border border-black">Credit (৳)</th>
+                                  <th className="py-2 px-2.5 text-right w-28 border border-black">Balance (৳)</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-black/15 text-black">
+                              <tbody className="text-black">
                                 {pdfLedgerLoading ? (
                                   <tr>
-                                    <td colSpan={7} className="py-10 text-center text-slate-600 font-medium">
+                                    <td colSpan={7} className="py-10 text-center text-slate-600 font-medium border border-black">
                                       Loading full transaction history statements...
                                     </td>
                                   </tr>
                                 ) : pdfLedgerEntries.length === 0 ? (
                                   <tr>
-                                    <td colSpan={7} className="py-8 text-center text-slate-600">
+                                    <td colSpan={7} className="py-8 text-center text-slate-600 border border-black">
                                       <p className="font-semibold text-black">
                                         Initial Opening Balance: {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
                                       </p>
@@ -2503,14 +2497,14 @@ export default function CustomersPage() {
 
                                     return (
                                       <tr key={entry.id || idx} className="hover:bg-slate-50 break-inside-avoid">
-                                        <td className="py-2 px-3 text-center text-slate-600 font-mono text-[10px]">
+                                        <td className="py-2 px-2.5 text-center text-slate-600 font-mono text-[10px] border border-black">
                                           {idx + 1}
                                         </td>
-                                        <td className="py-2 px-3 text-black font-mono text-[10px] whitespace-nowrap">
+                                        <td className="py-2 px-2.5 text-black font-mono text-[10px] whitespace-nowrap border border-black">
                                           {formatDate(entry.date)}
                                         </td>
-                                        <td className="py-2 px-3 whitespace-nowrap">
-                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold border border-black/30 text-black uppercase tracking-wider">
+                                        <td className="py-2 px-2.5 text-center whitespace-nowrap border border-black">
+                                          <span className="font-semibold text-[9px] uppercase tracking-wider text-black">
                                             {entry.type === "opening"
                                               ? "OPENING"
                                               : entry.type === "sale"
@@ -2522,7 +2516,7 @@ export default function CustomersPage() {
                                               : entry.type.toUpperCase()}
                                           </span>
                                         </td>
-                                        <td className="py-2 px-3 font-medium text-black">
+                                        <td className="py-2 px-2.5 font-medium text-black border border-black">
                                           <div>{entry.description}</div>
                                           {entry.referenceId && (
                                             <span className="text-[9px] text-slate-600 font-mono block mt-0.5">
@@ -2534,13 +2528,13 @@ export default function CustomersPage() {
                                             </span>
                                           )}
                                         </td>
-                                        <td className="py-2 px-3 text-right font-mono font-medium text-black whitespace-nowrap">
+                                        <td className="py-2 px-2.5 text-right font-mono font-medium text-black whitespace-nowrap border border-black">
                                           {debitVal > 0 ? formatCurrency(debitVal) : "-"}
                                         </td>
-                                        <td className="py-2 px-3 text-right font-mono font-medium text-black whitespace-nowrap">
+                                        <td className="py-2 px-2.5 text-right font-mono font-medium text-black whitespace-nowrap border border-black">
                                           {creditVal > 0 ? formatCurrency(creditVal) : "-"}
                                         </td>
-                                        <td className="py-2 px-3 text-right font-mono font-bold text-black whitespace-nowrap">
+                                        <td className="py-2 px-2.5 text-right font-mono font-bold text-black whitespace-nowrap border border-black">
                                           {balNum < 0 ? (
                                             <span>
                                               {formatCurrency(Math.abs(balNum))} Dr
@@ -2558,18 +2552,18 @@ export default function CustomersPage() {
                                   })
                                 )}
                               </tbody>
-                              <tfoot className="bg-slate-100 font-bold border-t-2 border-black/40 text-black">
+                              <tfoot className="bg-slate-100 font-bold text-black">
                                 <tr>
-                                  <td colSpan={4} className="py-2 px-3 text-right uppercase text-[10px] tracking-wider text-black">
+                                  <td colSpan={4} className="py-2 px-2.5 text-right uppercase text-[10px] tracking-wider text-black border border-black">
                                     Subtotal Movements:
                                   </td>
-                                  <td className="py-2 px-3 text-right font-mono text-black whitespace-nowrap">
+                                  <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
                                     {formatCurrency(pdfTotalDebit)}
                                   </td>
-                                  <td className="py-2 px-3 text-right font-mono text-black whitespace-nowrap">
+                                  <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
                                     {formatCurrency(pdfTotalCredit)}
                                   </td>
-                                  <td className="py-2 px-3 text-right font-mono text-black whitespace-nowrap">
+                                  <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
                                     {getDueAmount(selectedCustomerForPdf) > 0 ? (
                                       <span>
                                         {formatCurrency(getDueAmount(selectedCustomerForPdf))} Dr
@@ -2580,10 +2574,10 @@ export default function CustomersPage() {
                                   </td>
                                 </tr>
                                 <tr className="border-t-2 border-black bg-white">
-                                  <td colSpan={5} className="py-2.5 px-3 text-right font-black uppercase text-[11px] text-black tracking-wider">
+                                  <td colSpan={5} className="py-2.5 px-2.5 text-right font-black uppercase text-[11px] text-black tracking-wider border border-black">
                                     Total Outstanding Due Balance Payable (সর্বমোট পরিশোধযোগ্য বকেয়া):
                                   </td>
-                                  <td colSpan={2} className="py-2.5 px-3 text-right font-black text-sm font-mono text-black whitespace-nowrap">
+                                  <td colSpan={2} className="py-2.5 px-2.5 text-right font-black text-sm font-mono text-black whitespace-nowrap border border-black">
                                     {formatCurrency(getDueAmount(selectedCustomerForPdf))}
                                   </td>
                                 </tr>
