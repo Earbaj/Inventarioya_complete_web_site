@@ -392,7 +392,8 @@ export default function InventoryPage() {
                 ) : (
                   paginatedProducts.map((p) => {
                     const isLow = p.stockQuantity <= p.minStockAlert;
-                    const displaySku = p.sku || (p as any).code || "-";
+                    const rawSku = (p.sku || (p as any).code || "").trim();
+                    const displaySku = rawSku !== "" ? rawSku : "-";
 
                     return (
                       <tr key={p.id} className="hover:bg-slate-800/40 transition-colors group">
@@ -569,7 +570,9 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">{txt("SKU / আইটেম কোড", "SKU / Item Code")}</label>
+                  <label className="block text-slate-300 font-medium mb-1">
+                    {txt("SKU / আইটেম কোড (ঐচ্ছিক)", "SKU / Item Code (Optional)")}
+                  </label>
                   <input
                     type="text"
                     value={editingProduct.sku || (editingProduct as any).code || ""}
@@ -580,7 +583,7 @@ export default function InventoryPage() {
                         code: e.target.value,
                       })
                     }
-                    placeholder="e.g. SKU-12"
+                    placeholder={txt("ঐচ্ছিক (যেমন: SKU-12)", "Optional (e.g. SKU-12)")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono"
                   />
                 </div>
@@ -834,13 +837,14 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-medium mb-1">{txt("SKU কোড", "SKU Code")}</label>
+                  <label className="block text-slate-300 font-medium mb-1">
+                    {txt("SKU কোড (ঐচ্ছিক)", "SKU Code (Optional)")}
+                  </label>
                   <input
                     type="text"
-                    required
-                    value={newProduct.sku}
+                    value={newProduct.sku || ""}
                     onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
-                    placeholder="PMJ-250"
+                    placeholder={txt("ঐচ্ছিক (যেমন: PMJ-250)", "Optional (e.g. PMJ-250)")}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500 font-mono"
                   />
                 </div>

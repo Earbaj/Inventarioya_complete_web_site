@@ -112,6 +112,7 @@ export const ApiEndpoints = {
   aiCustomerCreditScore: (customerId: string) =>
     `${API_BASE_URL}/api/ai/customer-credit-score/${customerId}`,
   aiBusinessAdvisor: `${API_BASE_URL}/api/ai/business-advisor`,
+  aiQuotaStatus: `${API_BASE_URL}/api/ai/status`,
 
   // ===========================================================================
   // BULK CSV DATA EXPORT ENDPOINTS

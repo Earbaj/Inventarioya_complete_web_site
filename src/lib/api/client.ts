@@ -22,6 +22,7 @@ import {
   AIDemandForecast,
   AICustomerCreditScore,
   AIBusinessAdvice,
+  AIQuotaStatus,
   Shop,
   Customer,
   CustomerLedgerEntry,
@@ -885,10 +886,10 @@ export const InventoryService = {
         const categoryName = raw.category || raw.categoryName || "General";
         const skuCode =
           raw.sku && raw.sku.trim() !== ""
-            ? raw.sku
+            ? raw.sku.trim()
             : raw.code && raw.code.trim() !== ""
-            ? raw.code
-            : "SKU-" + (raw.id ? raw.id.substring(0, 6).toUpperCase() : "ITEM");
+            ? raw.code.trim()
+            : "";
 
         return {
           id: raw.id,
@@ -927,8 +928,8 @@ export const InventoryService = {
 
       const backendPayload = {
         name: payload.name,
-        sku: payload.sku || "",
-        code: payload.sku || "",
+        sku: payload.sku?.trim() || "",
+        code: payload.sku?.trim() || "",
         category: payload.categoryName || (payload as any).category || "General",
         sellPrice,
         buyPrice,
@@ -943,7 +944,7 @@ export const InventoryService = {
       return {
         id: raw.id || "prod_" + Date.now(),
         name: raw.name || payload.name,
-        sku: raw.sku || raw.code || payload.sku || "SKU-NEW",
+        sku: (raw.sku && raw.sku.trim() !== "") ? raw.sku.trim() : (payload.sku?.trim() || ""),
         costPrice: Number(raw.buyPrice ?? raw.costPrice ?? buyPrice),
         sellingPrice: Number(raw.sellPrice ?? raw.sellingPrice ?? sellPrice),
         stockQuantity: Number(raw.stockQuantity ?? stockQuantity),
@@ -1017,7 +1018,7 @@ export const InventoryService = {
       return {
         id: raw.id || id,
         name: raw.name || payload.name || "Unnamed Item",
-        sku: raw.sku || raw.code || payload.sku || "SKU-ITEM",
+        sku: (raw.sku && raw.sku.trim() !== "") ? raw.sku.trim() : (payload.sku?.trim() || ""),
         code: raw.code || raw.sku || payload.code || "",
         costPrice,
         sellingPrice,
@@ -2009,7 +2010,71 @@ export const AIService = {
   async getDemandForecast(): Promise<AIDemandForecast[]> {
     try {
       const res = await apiClient.get(ApiEndpoints.aiPredictDemand);
-      return res.data?.data || res.data;
+      const raw = res.data?.data || res.data;
+
+      if (Array.isArray(raw)) {
+        return raw;
+      }
+
+      if (raw && typeof raw === "object") {
+        const forecastObj = raw.forecast || raw;
+        const trending: AIDemandForecast[] = Array.isArray(forecastObj.topTrendingProducts)
+          ? forecastObj.topTrendingProducts.map((item: any, idx: number) => ({
+              productId: item.productId || item.id || `trend_${idx + 1}`,
+              productName: item.name || item.productName || "Product",
+              currentStock: typeof item.stock === "number" ? item.stock : 12,
+              predictedDemandNext30Days:
+                typeof item.predictedDemandNext30Days === "number"
+                  ? item.predictedDemandNext30Days
+                  : item.forecastedDemand === "HIGH"
+                  ? 50
+                  : 25,
+              riskLevel:
+                (item.riskLevel || (item.forecastedDemand === "HIGH" ? "HIGH_DEFICIT" : "OPTIMAL")) as
+                  | "HIGH_DEFICIT"
+                  | "OPTIMAL"
+                  | "OVERSTOCKED",
+              recommendedOrderQuantity:
+                typeof item.recommendedOrderQuantity === "number"
+                  ? item.recommendedOrderQuantity
+                  : item.forecastedDemand === "HIGH"
+                  ? 35
+                  : 15,
+              reasoning:
+                item.reason ||
+                item.reasoning ||
+                "High demand expected based on recent sales velocity.",
+            }))
+          : [];
+
+        const slow: AIDemandForecast[] = Array.isArray(forecastObj.slowMovingRiskProducts)
+          ? forecastObj.slowMovingRiskProducts.map((item: any, idx: number) => ({
+              productId: item.productId || item.id || `slow_${idx + 1}`,
+              productName: item.name || item.productName || "Product",
+              currentStock: typeof item.stock === "number" ? item.stock : 45,
+              predictedDemandNext30Days:
+                typeof item.predictedDemandNext30Days === "number"
+                  ? item.predictedDemandNext30Days
+                  : 5,
+              riskLevel: "OVERSTOCKED" as const,
+              recommendedOrderQuantity:
+                typeof item.recommendedOrderQuantity === "number"
+                  ? item.recommendedOrderQuantity
+                  : 0,
+              reasoning:
+                item.reason ||
+                item.reasoning ||
+                "Slow moving stock with dead inventory risk.",
+            }))
+          : [];
+
+        const combined = [...trending, ...slow];
+        if (combined.length > 0) {
+          return combined;
+        }
+      }
+
+      return [];
     } catch {
       return [
         {
@@ -2055,7 +2120,22 @@ export const AIService = {
   async getCustomerCreditScore(customerId: string): Promise<AICustomerCreditScore> {
     try {
       const res = await apiClient.get(ApiEndpoints.aiCustomerCreditScore(customerId));
-      return res.data?.data || res.data;
+      const raw = res.data?.data || res.data;
+      if (raw && typeof raw === "object") {
+        if (raw.assessment) {
+          return {
+            customerId: raw.customerId || customerId,
+            customerName: raw.customerName || "Customer",
+            creditScore: raw.assessment.reliabilityScore ?? 80,
+            riskTier: raw.assessment.creditRiskLevel || "LOW_RISK",
+            maxCreditLimit: raw.assessment.maxRecommendedDueLimit ?? 5000,
+            repaymentProbability: `${raw.assessment.reliabilityScore ?? 80}%`,
+            summary: raw.assessment.aiSummary || "",
+          };
+        }
+        return raw;
+      }
+      throw new Error("Invalid credit score response");
     } catch {
       return {
         customerId,
@@ -2072,7 +2152,49 @@ export const AIService = {
   async getBusinessAdvisor(): Promise<AIBusinessAdvice> {
     try {
       const res = await apiClient.get(ApiEndpoints.aiBusinessAdvisor);
-      return res.data?.data || res.data;
+      const raw = res.data?.data || res.data;
+      if (raw && typeof raw === "object") {
+        if (raw.headline && Array.isArray(raw.insights)) {
+          return raw;
+        }
+
+        const adviceObj = raw.advice || raw;
+        if (adviceObj) {
+          const insights: AIBusinessAdvice["insights"] = [];
+          if (Array.isArray(adviceObj.growthOpportunities)) {
+            adviceObj.growthOpportunities.forEach((opp: string, idx: number) => {
+              insights.push({
+                category: (idx % 2 === 0 ? "Revenue" : "Customer Retention") as any,
+                observation: opp,
+                actionableStep: opp,
+                potentialImpact: `+${10 + idx * 5}% Growth Potential`,
+              });
+            });
+          }
+          if (Array.isArray(adviceObj.actionableTips)) {
+            adviceObj.actionableTips.forEach((tip: string, idx: number) => {
+              insights.push({
+                category: (idx % 2 === 0 ? "Inventory" : "Expenses") as any,
+                observation: tip,
+                actionableStep: tip,
+                potentialImpact: idx % 2 === 0 ? "High Efficiency" : "Cost Reduction",
+              });
+            });
+          }
+
+          if (insights.length > 0) {
+            return {
+              headline: `Shop Health Grade: ${adviceObj.healthGrade || "A"} — Gemini AI Strategy Insights`,
+              insights,
+            };
+          }
+        }
+      }
+
+      return {
+        headline: "Weekly AI Intelligence & Profit Optimization Insights",
+        insights: [],
+      };
     } catch {
       return {
         headline: "Weekly AI Intelligence & Profit Optimization Insights",
@@ -2102,6 +2224,22 @@ export const AIService = {
             potentialImpact: "+18% retention of top-tier customers",
           },
         ],
+      };
+    }
+  },
+
+  async getQuotaStatus(): Promise<AIQuotaStatus> {
+    try {
+      const res = await apiClient.get(ApiEndpoints.aiQuotaStatus);
+      return res.data?.data || res.data;
+    } catch {
+      return {
+        shopId: "",
+        monthlyLimit: 1,
+        usedThisMonth: 0,
+        remainingThisMonth: 1,
+        isLimitReached: false,
+        resetsAt: new Date(Date.now() + 30 * 86400000).toISOString(),
       };
     }
   },

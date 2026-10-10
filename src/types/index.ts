@@ -375,6 +375,16 @@ export interface AIBusinessAdvice {
   }[];
 }
 
+export interface AIQuotaStatus {
+  shopId: string;
+  subscriptionTier?: string;
+  monthlyLimit: number;
+  usedThisMonth: number;
+  remainingThisMonth: number;
+  isLimitReached: boolean;
+  resetsAt: string;
+}
+
 export interface Customer {
   id: string;
   name: string;
