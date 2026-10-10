@@ -182,7 +182,7 @@ export function Sidebar() {
       >
         {/* Brand Header */}
         <div
-          className={`h-16 border-b border-slate-800/80 bg-slate-950/30 flex items-center shrink-0 transition-all ${
+          className={`h-16 border-b border-slate-800 flex items-center shrink-0 transition-all ${
             isCollapsed ? "justify-center px-2" : "justify-between px-4"
           }`}
         >
@@ -190,7 +190,7 @@ export function Sidebar() {
             <div className="flex flex-col items-center">
               <Link
                 href="/dashboard"
-                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all"
+                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95 transition-all"
                 title="Inventarioya Dashboard"
               >
                 <Boxes className="w-5 h-5 text-white" />
@@ -203,7 +203,7 @@ export function Sidebar() {
                 onClick={() => setIsMobileOpen(false)}
                 className="flex items-center gap-3 truncate group"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/25 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/30 shrink-0 group-hover:scale-105 transition-transform">
                   <Boxes className="w-5 h-5 text-white" />
                 </div>
                 <div className="truncate">
@@ -211,7 +211,7 @@ export function Sidebar() {
                     {t("common.appName")}
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-indigo-400 font-semibold tracking-wider uppercase">
+                    <span className="text-[11px] text-indigo-300 font-semibold tracking-wide uppercase">
                       {role === "admin"
                         ? locale === "bn"
                           ? "অ্যাডমিন"
@@ -221,10 +221,10 @@ export function Sidebar() {
                         : "Manager"}
                     </span>
                     <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                         isFreeTier
-                          ? "bg-slate-800 text-slate-400 border border-slate-700/50"
-                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                       }`}
                     >
                       {tier === "free"
@@ -283,7 +283,7 @@ export function Sidebar() {
         >
           <div>
             {!isCollapsed && (
-              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/90 block mb-2">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-300 block mb-2">
                 {t("nav.operations")}
               </span>
             )}
@@ -304,12 +304,12 @@ export function Sidebar() {
                           : "justify-between px-3 py-2.5"
                       } ${
                         isLocked
-                          ? "opacity-60 text-slate-400 hover:bg-slate-800/40 hover:opacity-80"
+                          ? "opacity-60 text-slate-400 hover:bg-slate-800/50 hover:opacity-80"
                           : isActive
-                          ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/25"
+                          ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30"
                           : item.highlight
-                          ? "text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
-                          : "text-slate-300 hover:bg-slate-800/70 hover:text-white"
+                          ? "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
+                          : "text-slate-200 hover:bg-slate-800 hover:text-white"
                       }`}
                     >
                       <div
@@ -317,18 +317,18 @@ export function Sidebar() {
                           isCollapsed ? "justify-center" : "truncate"
                         }`}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : ""}`} />
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : item.highlight ? "text-emerald-300" : "text-slate-300 group-hover:text-white"}`} />
                         {!isCollapsed && <span className="truncate">{item.name}</span>}
                       </div>
 
                       {!isCollapsed && (
                         isLocked ? (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                             <Lock className="w-2.5 h-2.5" />
                             PRO
                           </span>
                         ) : item.highlight && !isActive ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                             LIVE
                           </span>
                         ) : null
@@ -337,15 +337,15 @@ export function Sidebar() {
 
                     {/* Floating Tooltip in Collapsed Mode */}
                     {isCollapsed && (
-                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
+                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
                         <span>{item.name}</span>
                         {isLocked && (
-                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
+                          <span className="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
                             PRO
                           </span>
                         )}
                         {item.highlight && !isActive && (
-                          <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/20 px-1 py-0.5 rounded border border-emerald-500/30">
+                          <span className="text-[9px] text-emerald-300 font-bold bg-emerald-500/20 px-1 py-0.5 rounded border border-emerald-500/30">
                             LIVE
                           </span>
                         )}
@@ -359,9 +359,9 @@ export function Sidebar() {
 
           <div>
             {isCollapsed ? (
-              <div className="my-2 border-t border-slate-800/80 mx-2" />
+              <div className="my-2 border-t border-slate-800 mx-2" />
             ) : (
-              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400/90 block mb-2">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-300 block mb-2">
                 {t("nav.intelligence")}
               </span>
             )}
@@ -382,10 +382,10 @@ export function Sidebar() {
                           : "justify-between px-3 py-2.5"
                       } ${
                         isLocked
-                          ? "opacity-60 text-slate-400 hover:bg-slate-800/40 hover:opacity-80"
+                          ? "opacity-60 text-slate-400 hover:bg-slate-800/50 hover:opacity-80"
                           : isActive
-                          ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/25"
-                          : "text-slate-300 hover:bg-slate-800/70 hover:text-white"
+                          ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30"
+                          : "text-slate-200 hover:bg-slate-800 hover:text-white"
                       }`}
                     >
                       <div
@@ -398,8 +398,8 @@ export function Sidebar() {
                             isActive
                               ? "text-white"
                               : item.aiBadge && !isLocked
-                              ? "text-purple-400"
-                              : ""
+                              ? "text-purple-300"
+                              : "text-slate-300 group-hover:text-white"
                           }`}
                         />
                         {!isCollapsed && <span className="truncate">{item.name}</span>}
@@ -407,12 +407,12 @@ export function Sidebar() {
 
                       {!isCollapsed && (
                         isLocked ? (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                             <Lock className="w-2.5 h-2.5" />
                             PRO
                           </span>
                         ) : item.aiBadge ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/25 text-purple-300 border border-purple-500/40">
                             AI
                           </span>
                         ) : null
@@ -421,10 +421,10 @@ export function Sidebar() {
 
                     {/* Floating Tooltip in Collapsed Mode */}
                     {isCollapsed && (
-                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700/80 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
+                      <div className="fixed left-[76px] hidden group-hover:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-medium shadow-2xl z-50 pointer-events-none whitespace-nowrap">
                         <span>{item.name}</span>
                         {isLocked && (
-                          <span className="text-[9px] text-amber-400 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
+                          <span className="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
                             PRO
                           </span>
                         )}
