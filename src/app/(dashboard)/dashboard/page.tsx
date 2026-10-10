@@ -565,29 +565,17 @@ export default function DashboardOverviewPage() {
                   </div>
                 </div>
 
-                {/* Right controls: Legend & Timeframe Switch */}
-                <div className="flex items-center gap-2.5 self-start sm:self-auto">
-                  {/* Legend Indicator */}
-                  <div className="hidden md:flex items-center gap-3 text-[11px] text-slate-400 bg-slate-950/70 px-2.5 py-1 rounded-lg border border-slate-800">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" />
-                      <span className="text-emerald-400/90 font-medium">{txt("বিক্রয় হয়েছে", "Sale > ৳০")}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-slate-500" />
-                      <span>{txt("বিক্রয় হয়নি", "No Sale (৳০)")}</span>
-                    </div>
-                  </div>
-
+                {/* Right controls: Timeframe Switch & Legend below */}
+                <div className="flex flex-col items-start sm:items-end gap-2 self-start sm:self-auto">
                   {/* Toggle Switch */}
                   <div className="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800 shadow-inner">
                     <button
                       type="button"
                       onClick={() => setChartTimeframe("weekly")}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                      className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                         chartTimeframe === "weekly"
-                          ? "bg-indigo-600 text-white shadow-sm"
-                          : "text-slate-400 hover:text-white hover:bg-slate-900"
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                          : "text-slate-300 hover:text-white hover:bg-slate-800 active:bg-slate-800"
                       }`}
                     >
                       {txt("সাপ্তাহিক", "Weekly")}
@@ -595,14 +583,26 @@ export default function DashboardOverviewPage() {
                     <button
                       type="button"
                       onClick={() => setChartTimeframe("monthly")}
-                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                      className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                         chartTimeframe === "monthly"
-                          ? "bg-indigo-600 text-white shadow-sm"
-                          : "text-slate-400 hover:text-white hover:bg-slate-900"
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                          : "text-slate-300 hover:text-white hover:bg-slate-800 active:bg-slate-800"
                       }`}
                     >
                       {txt("মাসিক", "Monthly")}
                     </button>
+                  </div>
+
+                  {/* Legend Indicator - Placed below Weekly / Monthly picker */}
+                  <div className="flex items-center gap-3 text-[11px] text-slate-300 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" />
+                      <span className="text-emerald-400 font-medium">{txt("বিক্রয় হয়েছে", "Sale > ৳০")}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
+                      <span className="text-slate-400">{txt("বিক্রয় হয়নি", "No Sale (৳০)")}</span>
+                    </div>
                   </div>
                 </div>
               </div>
