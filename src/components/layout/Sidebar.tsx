@@ -117,7 +117,7 @@ export function Sidebar() {
   // Nav definitions with localization
   const allOperations = [
     { name: t("nav.overview"), href: "/dashboard", icon: LayoutDashboard },
-    { name: t("nav.pos"), href: "/dashboard/pos", icon: ShoppingCart, highlight: true },
+    { name: t("nav.pos"), href: "/dashboard/pos", icon: ShoppingCart },
     { name: t("nav.sales"), href: "/dashboard/sales", icon: ReceiptText },
     { name: t("nav.inventory"), href: "/dashboard/inventory", icon: Package },
     { name: t("nav.categories"), href: "/dashboard/categories", icon: Layers, proOnly: true },
@@ -305,8 +305,6 @@ export function Sidebar() {
                           ? "opacity-60 text-slate-400 hover:bg-slate-800/50 hover:opacity-80"
                           : isActive
                           ? "bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30"
-                          : item.highlight
-                          ? "text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 hover:text-emerald-200"
                           : "text-slate-200 hover:bg-slate-800 hover:text-white"
                       }`}
                     >
@@ -315,21 +313,15 @@ export function Sidebar() {
                           isCollapsed ? "justify-center" : "truncate"
                         }`}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : item.highlight ? "text-emerald-300" : "text-slate-300 group-hover:text-white"}`} />
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-300 group-hover:text-white"}`} />
                         {!isCollapsed && <span className="truncate">{item.name}</span>}
                       </div>
 
-                      {!isCollapsed && (
-                        isLocked ? (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                            <Lock className="w-2.5 h-2.5" />
-                            PRO
-                          </span>
-                        ) : item.highlight && !isActive ? (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-slate border border-emerald-500/30">
-                            LIVE
-                          </span>
-                        ) : null
+                      {!isCollapsed && isLocked && (
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <Lock className="w-2.5 h-2.5" />
+                          PRO
+                        </span>
                       )}
                     </Link>
 
@@ -340,11 +332,6 @@ export function Sidebar() {
                         {isLocked && (
                           <span className="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30">
                             PRO
-                          </span>
-                        )}
-                        {item.highlight && !isActive && (
-                          <span className="text-[9px] text-emerald-300 font-bold bg-emerald-500/20 px-1 py-0.5 rounded border border-emerald-500/30">
-                            LIVE
                           </span>
                         )}
                       </div>
