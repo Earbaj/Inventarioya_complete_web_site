@@ -310,59 +310,59 @@ export function InvoicePrintModal({
               {/* Bill Financial Calculations & Totals (Full Width matching Items Table) */}
               <div className="w-full">
                 <table className="w-full text-left text-xs border-collapse border border-slate-900">
-                  <tbody>
+                  <tbody className="text-slate-900">
                     {/* Row 1: Subtotal */}
                     <tr className="border-b border-slate-200">
-                      <td className="py-2.5 px-4 font-bold text-slate-700 bg-slate-50 w-1/2">
+                      <td className="py-2 px-3 font-medium text-slate-900 bg-slate-50 w-1/2">
                         {txt("সাবটোটাল:", "Subtotal:")}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900 text-sm">
+                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
                         {formatCurrency(invoice.subtotal)}
                       </td>
                     </tr>
 
                     {/* Row 2: Discount */}
                     <tr className="border-b border-slate-200">
-                      <td className="py-2.5 px-4 font-bold text-emerald-700 bg-white">
+                      <td className="py-2 px-3 font-medium text-slate-900 bg-white">
                         {txt("ছাড় / ডিসকাউন্ট:", "Discount:")}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-700 text-sm">
+                      <td className="py-2 px-3 text-right font-mono font-bold text-emerald-700">
                         {Number(invoice.discount) > 0 ? `-${formatCurrency(invoice.discount)}` : "৳ 0"}
                       </td>
                     </tr>
 
                     {/* Row 3: Net Grand Total */}
-                    <tr className="border-b-2 border-slate-900 bg-slate-100">
-                      <td className="py-2.5 px-4 font-black text-slate-900 uppercase text-[11px] tracking-wide">
+                    <tr className="border-b-2 border-slate-900 bg-slate-100 font-bold">
+                      <td className="py-2 px-3 font-bold text-slate-900 uppercase text-[11px] tracking-wide">
                         {txt("সর্বমোট বিল:", "Net Grand Total:")}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-black text-indigo-700 text-base sm:text-lg">
+                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
                         {formatCurrency(invoice.grandTotal)}
                       </td>
                     </tr>
 
                     {/* Row 4: Paid Amount */}
                     <tr className="border-b border-slate-200">
-                      <td className="py-2.5 px-4 font-bold text-slate-700 bg-white">
+                      <td className="py-2 px-3 font-medium text-slate-900 bg-white">
                         {txt("পরিশোধিত টাকা:", "Paid Amount:")}
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-700 text-sm">
+                      <td className="py-2 px-3 text-right font-mono font-bold text-emerald-700">
                         {formatCurrency(invoice.paidAmount)}
                       </td>
                     </tr>
 
                     {/* Row 5: Due Balance */}
                     <tr className="bg-slate-50">
-                      <td className="py-2.5 px-4 font-bold text-slate-700">
+                      <td className="py-2 px-3 font-medium text-slate-900">
                         {txt("বকেয়া ব্যালেন্স (বাকি):", "Due Balance:")}
                       </td>
-                      <td className="py-2.5 px-4 text-right">
+                      <td className="py-2 px-3 text-right">
                         {Number(invoice.dueAmount) > 0 ? (
-                          <span className="font-mono font-black text-rose-600 text-sm">
+                          <span className="font-mono font-bold text-rose-600">
                             {formatCurrency(invoice.dueAmount)}
                           </span>
                         ) : (
-                          <span className="font-bold text-emerald-700 text-xs bg-emerald-100 px-2.5 py-0.5 rounded inline-block">
+                          <span className="font-bold text-emerald-700 text-xs bg-emerald-100 px-2 py-0.5 rounded inline-block">
                             {txt("বাকি নেই (৳ 0)", "Cleared (৳ 0)")}
                           </span>
                         )}
@@ -372,10 +372,10 @@ export function InvoicePrintModal({
                     {/* Optional: Change Return */}
                     {Number(invoice.paidAmount) > Number(invoice.grandTotal) && (
                       <tr className="bg-blue-50 border-t border-blue-200 text-blue-900">
-                        <td className="py-2 px-4 font-bold text-[11px]">
+                        <td className="py-1.5 px-3 font-medium text-[11px]">
                           {txt("ফেরত দিন (Change):", "Change Return:")}
                         </td>
-                        <td className="py-2 px-4 text-right font-mono font-black text-xs">
+                        <td className="py-1.5 px-3 text-right font-mono font-bold text-xs">
                           {formatCurrency(Number(invoice.paidAmount) - Number(invoice.grandTotal))}
                         </td>
                       </tr>
