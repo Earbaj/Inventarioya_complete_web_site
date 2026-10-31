@@ -27,6 +27,7 @@ import {
   User,
   ShoppingBag,
   Store,
+  MoreVertical,
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -48,8 +49,21 @@ export default function SalesHistoryPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [modalMode, setModalMode] = useState<"a4" | "thermal">("a4");
   const [showSalesReportModal, setShowSalesReportModal] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (!(e.target as HTMLElement).closest(".action-menu-container")) {
+        setActiveMenuId(null);
+      }
+    }
+    if (activeMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [activeMenuId]);
 
   const loadSales = async (page = 1, limit = 50, branch = branchFilter) => {
     setLoading(true);
@@ -429,8 +443,8 @@ export default function SalesHistoryPage() {
 
         {/* Invoices List Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-left text-xs">
+          <div className="overflow-x-auto min-h-[320px]">
+            <table className="w-full min-w-[800px] text-left text-xs">
               <thead className="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3.5 px-4">{txt("ইনভয়েস #", "Invoice #")}</th>
@@ -440,28 +454,28 @@ export default function SalesHistoryPage() {
                   <th className="py-3.5 px-4 text-right">{txt("মোট মূল্য", "Total Amount")}</th>
                   <th className="py-3.5 px-4 text-right">{txt("পরিশোধ", "Paid")}</th>
                   <th className="py-3.5 px-4 text-right">{txt("বাকি", "Due")}</th>
-                  <th className="py-3.5 px-4 text-center">{txt("মাধ্যম", "Method")}</th>
                   <th className="py-3.5 px-4 text-center">{txt("স্ট্যাটাস", "Status")}</th>
-                  <th className="py-3.5 px-4 text-right">{txt("প্রিন্ট / PDF", "Print / PDF")}</th>
+                  <th className="py-3.5 px-4 text-right">{txt("অ্যাকশন / প্রিন্ট", "Action / Print")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {loading ? (
-                  <ShimmerTableRows rows={8} cols={10} />
+                  <ShimmerTableRows rows={8} cols={9} />
                 ) : paginatedInvoices.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-12 text-center text-slate-500">
+                    <td colSpan={9} className="py-12 text-center text-slate-500">
                       {txt("বর্তমান সার্চ বা ফিল্টারে কোনো ইনভয়েস পাওয়া যায়নি।", "No invoices found matching current search or filters.")}
                     </td>
                   </tr>
                 ) : (
-                  paginatedInvoices.map((inv) => {
+                  paginatedInvoices.map((inv, idx) => {
                     const isDue = Number(inv.dueAmount || 0) > 0;
                     const status = inv.status?.toUpperCase() || (isDue ? "DUE" : "PAID");
+                    const invKey = inv.id || inv.invoiceNumber || String(idx);
 
                     return (
                       <tr
-                        key={inv.id}
+                        key={invKey}
                         className="hover:bg-slate-800/40 transition-colors group"
                       >
                         {/* Invoice Number */}
@@ -530,13 +544,6 @@ export default function SalesHistoryPage() {
                           )}
                         </td>
 
-                        {/* Payment Method */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">
-                            {inv.paymentMethod || "CASH"}
-                          </span>
-                        </td>
-
                         {/* Status Badge */}
                         <td className="py-3.5 px-4 text-center">
                           <span
@@ -560,25 +567,44 @@ export default function SalesHistoryPage() {
                           </span>
                         </td>
 
-                        {/* Action Buttons */}
+                        {/* Action Buttons (MoreVertical Dropdown) */}
                         <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="relative inline-block text-left action-menu-container">
                             <button
-                              onClick={() => handleOpenInvoiceModal(inv, "a4")}
-                              className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
-                              title={txt("স্ট্যান্ডার্ড A4 ট্যাক্স ইনভয়েস প্রিন্ট বা PDF সংরক্ষণ", "Print or Save Standard A4 Tax Invoice as PDF")}
+                              type="button"
+                              onClick={() => setActiveMenuId(activeMenuId === invKey ? null : invKey)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                              title={txt("প্রিন্ট ও ইনভয়েস অপশন", "Print & Invoice Options")}
                             >
-                              <FileText className="w-3.5 h-3.5" />
-                              <span>{txt("ইনভয়েস (PDF)", "Invoice (PDF)")}</span>
+                              <MoreVertical className="w-4 h-4" />
                             </button>
 
-                            <button
-                              onClick={() => handleOpenInvoiceModal(inv, "thermal")}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-                              title={txt("৮০ মিমি POS থার্মাল স্লিপ প্রিন্ট", "Print 80mm POS Thermal Slip")}
-                            >
-                              <Receipt className="w-3.5 h-3.5" />
-                            </button>
+                            {activeMenuId === invKey && (
+                              <div className="absolute right-0 top-full mt-1 w-52 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl z-50 py-1 overflow-hidden backdrop-blur-md text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleOpenInvoiceModal(inv, "a4");
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-indigo-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                                  <span>{txt("ইনভয়েস প্রিন্ট / PDF (A4)", "Print A4 Invoice / PDF")}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleOpenInvoiceModal(inv, "thermal");
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-emerald-600/20 hover:text-emerald-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Receipt className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>{txt("থার্মাল স্লিপ প্রিন্ট (POS)", "Print POS Thermal Slip")}</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>
