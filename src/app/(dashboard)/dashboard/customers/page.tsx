@@ -42,6 +42,7 @@ import {
   History,
   Banknote,
   Receipt,
+  MoreVertical,
 } from "lucide-react";
 import { ShimmerTableRows, ShimmerCard } from "@/components/ui/ShimmerSkeleton";
 
@@ -137,6 +138,19 @@ export default function CustomersPage() {
 
   // Selected customer for action
   const [activeCustomer, setActiveCustomer] = useState<Customer | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (!(e.target as HTMLElement).closest(".action-menu-container")) {
+        setActiveMenuId(null);
+      }
+    }
+    if (activeMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [activeMenuId]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -861,7 +875,7 @@ export default function CustomersPage() {
 
         {/* Customers Table */}
         <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-[320px]">
             <table className="w-full min-w-[850px] text-left text-xs">
               <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
@@ -956,77 +970,103 @@ export default function CustomersPage() {
                         </td>
 
                         <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* Process Due Payment Button (POST /api/payments) */}
+                          <div className="relative inline-block text-left action-menu-container">
                             <button
-                              onClick={() => handleOpenPayment(cust)}
-                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-slate border border-emerald-500/40 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
-                              title={
-                                due > 0
-                                  ? txt(`কাস্টমারের বকেয়া টাকা জমা নিন (বকেয়া: ${formatCurrency(due)})`, `Collect Due Payment (Due: ${formatCurrency(due)})`)
-                                  : txt("কাস্টমারের পেমেন্ট জমা নিন", "Collect Customer Payment")
-                              }
+                              type="button"
+                              onClick={() => setActiveMenuId(activeMenuId === cust.id ? null : (cust.id || ""))}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                              title={txt("কাস্টমার অপশন", "Customer Actions")}
                             >
-                              <Banknote className="w-3.5 h-3.5 text-slate" />
-                              <span className="text-slate">{txt("পেমেন্ট জমা", "Payment")}</span>
+                              <MoreVertical className="w-4 h-4" />
                             </button>
 
-                            {/* View Ledger Statement Button */}
-                            <button
-                              onClick={() => handleOpenLedger(cust)}
-                              className="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-slate border border-indigo-500/40 text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors"
-                              title={txt("কাস্টমার হিসাব খাতা ও লেনদেন দেখুন", "View Customer Ledger Statement")}
-                            >
-                              <BookOpen className="w-3.5 h-3.5 text-slate" />
-                              <span className="text-slate">{txt("খাতা", "Ledger")}</span>
-                            </button>
+                            {activeMenuId === cust.id && (
+                              <div className="absolute right-0 top-full mt-1 w-56 rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl z-50 py-1 overflow-hidden backdrop-blur-md text-left">
+                                {/* Process Due Payment */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleOpenPayment(cust);
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Banknote className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>{txt("পেমেন্ট জমা নিন", "Collect Payment")}</span>
+                                </button>
 
-                            {/* WhatsApp Due Reminder Button */}
-                            <button
-                              onClick={() => handleOpenWhatsAppReminder(cust)}
-                              className={`p-1.5 rounded-lg transition-colors border ${
-                                due > 0
-                                  ? "bg-emerald-300/30 hover:bg-red-600/40 text-emerald-200 border-emerald-500/50 shadow-sm"
-                                  : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
-                              }`}
-                              title={
-                                due > 0
-                                  ? txt(`হোয়াটসঅ্যাপে বকেয়া তাগাদা পাঠান (${formatCurrency(due)})`, `Send WhatsApp Due Reminder (${formatCurrency(due)})`)
-                                  : txt("হোয়াটসঅ্যাপে মেসেজ পাঠান", "Open WhatsApp Contact")
-                              }
-                            >
-                              <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
-                            </button>
+                                {/* View Ledger Statement */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleOpenLedger(cust);
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs font-semibold text-indigo-300 hover:bg-indigo-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                                  <span>{txt("হিসাব খাতা দেখুন", "View Ledger")}</span>
+                                </button>
 
-                            {/* Print Single Statement */}
-                            <button
-                              onClick={() => handleOpenCustomerPdf(cust)}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
-                              title={txt("কাস্টমারের পূর্ণাঙ্গ স্টেটমেন্ট প্রিন্ট করুন", "Print Full Customer Ledger Statement (A-Z)")}
-                            >
-                              <Printer className="w-3.5 h-3.5" />
-                            </button>
+                                {/* WhatsApp Due Reminder */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleOpenWhatsAppReminder(cust);
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>{txt("হোয়াটসঅ্যাপ তাগাদা", "WhatsApp Reminder")}</span>
+                                </button>
 
-                            {/* Edit Customer */}
-                            {canEditCustomers && (
-                              <button
-                                onClick={() => handleOpenEdit(cust)}
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
-                                title={txt("কাস্টমারের তথ্য পরিবর্তন করুন", "Edit Customer Information")}
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                                {/* Print Single Statement */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleOpenCustomerPdf(cust);
+                                  }}
+                                  className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                >
+                                  <Printer className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{txt("স্টেটমেন্ট প্রিন্ট / PDF", "Print Statement (PDF)")}</span>
+                                </button>
 
-                            {/* Soft Delete Customer */}
-                            {canEditCustomers && (
-                              <button
-                                onClick={() => handleOpenDelete(cust)}
-                                className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 transition-colors"
-                                title="Move Customer to Recycle Bin"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                                {/* Divider if edit/delete available */}
+                                {canEditCustomers && <div className="border-t border-slate-800 my-1" />}
+
+                                {/* Edit Customer */}
+                                {canEditCustomers && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      handleOpenEdit(cust);
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-slate-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>{txt("কাস্টমার পরিবর্তন", "Edit Customer")}</span>
+                                  </button>
+                                )}
+
+                                {/* Delete Customer */}
+                                {canEditCustomers && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      handleOpenDelete(cust);
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                                    <span>{txt("কাস্টমার মুছুন", "Delete Customer")}</span>
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </div>
                         </td>
