@@ -565,8 +565,8 @@ export default function DashboardOverviewPage() {
                   </div>
                 </div>
 
-                {/* Right controls: Timeframe Switch & Legend below */}
-                <div className="flex flex-col items-start sm:items-end gap-2 self-start sm:self-auto">
+                {/* Right controls: Timeframe Switch */}
+                <div className="flex items-start sm:items-center self-start sm:self-auto">
                   {/* Toggle Switch */}
                   <div className="inline-flex p-1 rounded-xl bg-slate-950 border border-slate-800 shadow-inner">
                     <button
@@ -592,18 +592,6 @@ export default function DashboardOverviewPage() {
                       {txt("মাসিক", "Monthly")}
                     </button>
                   </div>
-
-                  {/* Legend Indicator - Placed below Weekly / Monthly picker */}
-                  <div className="flex items-center gap-3 text-[11px] text-slate-300 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 shadow-sm">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50" />
-                      <span className="text-emerald-400 font-medium">{txt("বিক্রয় হয়েছে", "Sale > ৳০")}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-                      <span className="text-slate-400">{txt("বিক্রয় হয়নি", "No Sale (৳০)")}</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -612,9 +600,9 @@ export default function DashboardOverviewPage() {
             <div className="h-64 sm:h-72 w-full relative mt-2">
               {!hasAnyPeriodSales && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-xs font-medium text-slate-300 shadow-md backdrop-blur-sm">
-                    <span className="w-2 h-2 rounded-full bg-slate-500" />
-                    <span>
+                  <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/95 border border-slate-700 text-xs font-medium text-white keep-dark keep-white shadow-md backdrop-blur-sm">
+                    <span className="w-2 h-2 rounded-full bg-slate-400" />
+                    <span className="text-white keep-white font-medium" style={{ color: "#ffffff" }}>
                       {chartTimeframe === "weekly"
                         ? txt("গত ৭ দিনে কোনো বিক্রয় সম্পন্ন হয়নি (৳০.০০)", "No sales recorded in the last 7 days (৳0.00)")
                         : txt("গত ৩০ দিনে কোনো বিক্রয় সম্পন্ন হয়নি (৳০.০০)", "No sales recorded in the last 30 days (৳0.00)")}
