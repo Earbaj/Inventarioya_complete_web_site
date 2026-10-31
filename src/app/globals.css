@@ -463,6 +463,13 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  #printable-customer-report.is-thermal {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    padding: 3mm !important;
+    margin: 0 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+  }
   #printable-customer-report table,
   #printable-invoice table,
   #printable-sales-report table {

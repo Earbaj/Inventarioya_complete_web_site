@@ -83,7 +83,24 @@ export default function CustomersPage() {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [selectedCustomerForPdf, setSelectedCustomerForPdf] = useState<Customer | null>(null);
   const [pdfLedgerEntries, setPdfLedgerEntries] = useState<CustomerLedgerEntry[]>([]);
+  const [allPdfEntries, setAllPdfEntries] = useState<CustomerLedgerEntry[]>([]);
   const [pdfLedgerLoading, setPdfLedgerLoading] = useState(false);
+  const [pdfStartDate, setPdfStartDate] = useState("");
+  const [pdfEndDate, setPdfEndDate] = useState("");
+  const [statementFormat, setStatementFormat] = useState<"classic" | "modern" | "compact" | "thermal">("classic");
+  const [pdfFinancials, setPdfFinancials] = useState<{
+    openingBalance: number;
+    totalPurchases: number;
+    totalPaid: number;
+    outstandingDue: number;
+    periodLabel: string;
+  }>({
+    openingBalance: 0,
+    totalPurchases: 0,
+    totalPaid: 0,
+    outstandingDue: 0,
+    periodLabel: "All Time",
+  });
 
   // Payment Collection Modal state (POST /api/payments)
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -487,32 +504,157 @@ export default function CustomersPage() {
     );
   };
 
-  // Open Single Customer Full Ledger PDF Statement (A-Z Transactions)
-  const handleOpenCustomerPdf = async (
+  // Compute statement financial summary based on active date range
+  const computeStatementFinancials = (
     cust: Customer,
-    existingEntries?: CustomerLedgerEntry[]
+    allEntries: CustomerLedgerEntry[],
+    startDate: string,
+    endDate: string
   ) => {
-    setSelectedCustomerForPdf(cust);
-    setShowPdfModal(true);
+    let periodEntries = allEntries;
+    let periodOpening = Number(cust.openingBalance || 0);
 
-    if (existingEntries && existingEntries.length > 0) {
-      setPdfLedgerEntries(existingEntries);
-      return;
+    const startTs = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
+    const endTs = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : null;
+
+    if (startTs !== null || endTs !== null) {
+      if (startTs !== null) {
+        const entriesBefore = allEntries.filter((e) => new Date(e.date).getTime() < startTs);
+        if (entriesBefore.length > 0) {
+          const lastBefore = entriesBefore[entriesBefore.length - 1];
+          const lastBal = Number(lastBefore.newBalance ?? 0);
+          periodOpening = lastBal < 0 ? Math.abs(lastBal) : -lastBal;
+        } else {
+          periodOpening = Number(cust.openingBalance || 0);
+        }
+      }
+
+      periodEntries = allEntries.filter((e) => {
+        const t = new Date(e.date).getTime();
+        if (startTs !== null && t < startTs) return false;
+        if (endTs !== null && t > endTs) return false;
+        return true;
+      });
     }
 
+    const totalPurchases = periodEntries.reduce((sum, e) => {
+      const amt = Number(e.amount || 0);
+      if (e.type === "sale" || amt < 0) return sum + Math.abs(amt);
+      return sum;
+    }, 0);
+
+    const totalPaid = periodEntries.reduce((sum, e) => {
+      const amt = Number(e.amount || 0);
+      if (e.type === "return" || e.type === "payment" || (amt > 0 && e.type !== "opening")) {
+        return sum + amt;
+      }
+      return sum;
+    }, 0);
+
+    let outstandingDue = 0;
+    if (startTs !== null || endTs !== null) {
+      if (periodEntries.length > 0) {
+        const lastEntry = periodEntries[periodEntries.length - 1];
+        const bal = Number(lastEntry.newBalance ?? 0);
+        outstandingDue = bal < 0 ? Math.abs(bal) : 0;
+      } else {
+        outstandingDue = periodOpening > 0 ? periodOpening : 0;
+      }
+    } else {
+      outstandingDue = getDueAmount(cust);
+    }
+
+    let periodLabel = "All Time (সম্পূর্ণ বিবরণী)";
+    if (startDate && endDate) {
+      periodLabel = `${formatDate(startDate)} — ${formatDate(endDate)}`;
+    } else if (startDate) {
+      periodLabel = `From ${formatDate(startDate)} (শুরু থেকে)`;
+    } else if (endDate) {
+      periodLabel = `Up to ${formatDate(endDate)} (পর্যন্ত)`;
+    }
+
+    return {
+      periodEntries,
+      financials: {
+        openingBalance: periodOpening,
+        totalPurchases,
+        totalPaid,
+        outstandingDue,
+        periodLabel,
+      },
+    };
+  };
+
+  // Open Single Customer Full Ledger PDF Statement (with optional date range filter)
+  const handleOpenCustomerPdf = async (
+    cust: Customer,
+    initStartDate?: string,
+    initEndDate?: string
+  ) => {
+    setSelectedCustomerForPdf(cust);
+    const sDate = initStartDate || "";
+    const eDate = initEndDate || "";
+    setPdfStartDate(sDate);
+    setPdfEndDate(eDate);
+
+    // Read saved format preference from localStorage (configured in Settings)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("customer_statement_format") as any;
+      if (saved && ["classic", "modern", "compact", "thermal"].includes(saved)) {
+        setStatementFormat(saved);
+      }
+    }
+
+    setShowPdfModal(true);
     setPdfLedgerLoading(true);
+
     try {
       const res = await CustomerService.getCustomerLedger(cust.id, {
-        limit: 200,
+        limit: 1000,
         sortBy: "date",
         sortOrder: "asc",
       });
-      setPdfLedgerEntries(res.data || []);
+      const entries = res.data || [];
+      setAllPdfEntries(entries);
+
+      const { periodEntries, financials } = computeStatementFinancials(cust, entries, sDate, eDate);
+      setPdfLedgerEntries(periodEntries);
+      setPdfFinancials(financials);
     } catch (err) {
       console.error("Failed to load customer ledger for PDF", err);
+      setAllPdfEntries([]);
       setPdfLedgerEntries([]);
+      setPdfFinancials({
+        openingBalance: Number(cust.openingBalance || 0),
+        totalPurchases: 0,
+        totalPaid: 0,
+        outstandingDue: getDueAmount(cust),
+        periodLabel: "All Time",
+      });
     } finally {
       setPdfLedgerLoading(false);
+    }
+  };
+
+  const handleApplyPdfDateFilter = (newStart: string, newEnd: string) => {
+    setPdfStartDate(newStart);
+    setPdfEndDate(newEnd);
+    if (selectedCustomerForPdf) {
+      const { periodEntries, financials } = computeStatementFinancials(
+        selectedCustomerForPdf,
+        allPdfEntries,
+        newStart,
+        newEnd
+      );
+      setPdfLedgerEntries(periodEntries);
+      setPdfFinancials(financials);
+    }
+  };
+
+  const handleSelectPdfFormat = (fmt: "classic" | "modern" | "compact" | "thermal") => {
+    setStatementFormat(fmt);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("customer_statement_format", fmt);
     }
   };
 
@@ -1230,9 +1372,9 @@ export default function CustomersPage() {
                 )}
 
                 <button
-                  onClick={() => handleOpenCustomerPdf(activeCustomer, ledgerEntries)}
+                  onClick={() => handleOpenCustomerPdf(activeCustomer, ledgerStartDate, ledgerEndDate)}
                   className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
-                  title={txt("পূর্ণাঙ্গ কাস্টমার লেজার স্টেটমেন্ট প্রিন্ট করুন", "Print Complete Customer Ledger Statement (A-Z)")}
+                  title={txt("কাস্টমার লেজার স্টেটমেন্ট প্রিন্ট করুন (তারিখ অনুযায়ী ফিল্টারসহ)", "Print Customer Ledger Statement (with date filter)")}
                 >
                   <Printer className="w-3.5 h-3.5" />
                   {txt("স্টেটমেন্ট প্রিন্ট", "Print Statement")}
@@ -2269,326 +2411,912 @@ export default function CustomersPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto print:p-0 print:bg-white">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full">
             {/* Top Action Bar */}
-            <div className="bg-slate-950 border-b border-slate-800 px-5 py-3.5 flex items-center justify-between print:hidden shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                  <Printer className="w-4 h-4" />
+            <div className="bg-slate-950 border-b border-slate-800 p-4 sm:px-6 print:hidden shrink-0 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                    <Printer className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      {selectedCustomerForPdf
+                        ? txt("কাস্টমার অ্যাকাউন্ট স্টেটমেন্ট (PDF / প্রিন্ট)", "Customer Account Statement (PDF / Print)")
+                        : txt("কাস্টমার লেজার ও বাকি রিপোর্ট", "Customer Ledger & Due Report (PDF / Print)")}
+                      {selectedCustomerForPdf && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-normal">
+                          {pdfFinancials.periodLabel}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      {txt("প্রিন্ট ফরম্যাট ও তারিখ ফিল্টার নির্বাচন করুন এবং সহজে প্রিন্ট বা PDF সেভ করুন", "Select format & date range, then click Print to save as PDF")}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    {selectedCustomerForPdf
-                      ? "Customer Account Statement (PDF / Print)"
-                      : "Customer Ledger & Due Report (PDF / Print)"}
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Preview document & click Print to save as PDF or send to printer
-                  </p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow transition-colors"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{txt("প্রিন্ট / PDF সেভ", "Print / Save PDF")}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowPdfModal(false)}
+                    className="p-2 text-slate-400 hover:text-white rounded-lg transition-colors"
+                    title={txt("বন্ধ করুন", "Close preview")}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => window.print()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow transition-colors"
-                >
-                  <Printer className="w-4 h-4" />
-                  Print / Save as PDF
-                </button>
-                <button
-                  onClick={() => setShowPdfModal(false)}
-                  className="p-2 text-slate-400 hover:text-white rounded-lg transition-colors"
-                  title="Close preview"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+
+              {/* Sub-bar: Format Switcher & Date Filters (for single customer statement) */}
+              {selectedCustomerForPdf && (
+                <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  {/* Format Pills */}
+                  <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto">
+                    <span className="text-[11px] font-semibold text-slate-400 px-2 shrink-0">
+                      {txt("ফরম্যাট:", "Format:")}
+                    </span>
+                    {(
+                      [
+                        { id: "classic", label: txt("ট্রেডিশনাল", "Classic") },
+                        { id: "modern", label: txt("মডার্ন", "Modern") },
+                        { id: "compact", label: txt("কমপ্যাক্ট", "Compact") },
+                        { id: "thermal", label: txt("থার্মাল (৮০মিমি)", "Thermal 80mm") },
+                      ] as const
+                    ).map((fmt) => (
+                      <button
+                        key={fmt.id}
+                        type="button"
+                        onClick={() => handleSelectPdfFormat(fmt.id)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                          statementFormat === fmt.id
+                            ? "bg-indigo-600 text-white shadow-sm font-semibold"
+                            : "text-slate-300 hover:text-white hover:bg-slate-800"
+                        }`}
+                      >
+                        {fmt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Date Filter Inputs */}
+                  <div className="flex items-center gap-2 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400">{txt("শুরু:", "From:")}</span>
+                      <input
+                        type="date"
+                        value={pdfStartDate}
+                        onChange={(e) => handleApplyPdfDateFilter(e.target.value, pdfEndDate)}
+                        className="bg-slate-800 border border-slate-700 text-white text-[11px] rounded px-1.5 py-0.5 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400">{txt("শেষ:", "To:")}</span>
+                      <input
+                        type="date"
+                        value={pdfEndDate}
+                        onChange={(e) => handleApplyPdfDateFilter(pdfStartDate, e.target.value)}
+                        className="bg-slate-800 border border-slate-700 text-white text-[11px] rounded px-1.5 py-0.5 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    {(pdfStartDate || pdfEndDate) && (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPdfDateFilter("", "")}
+                        className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-colors flex items-center gap-1"
+                        title={txt("সব তারিখ দেখান", "Reset to all-time statement")}
+                      >
+                        <X className="w-3 h-3" />
+                        {txt("সব লেনদেন", "All Time")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Document Preview Container */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-950/40 print:p-0 print:bg-white print:overflow-visible">
               <div
                 id="printable-customer-report"
-                className="bg-white text-slate-900 p-6 sm:p-8 rounded-xl shadow-lg mx-auto max-w-4xl min-h-[650px] text-xs font-sans space-y-6 print:shadow-none print:rounded-none print:p-4 print:max-w-none"
+                className={`bg-white text-slate-900 shadow-lg mx-auto ${
+                  statementFormat === "thermal"
+                    ? "max-w-[80mm] is-thermal p-3 font-mono text-[11px] leading-tight space-y-2.5 rounded-lg print:shadow-none print:rounded-none print:p-1"
+                    : statementFormat === "compact"
+                    ? "max-w-4xl p-4 sm:p-5 text-[11px] font-sans space-y-4 rounded-xl min-h-[600px] print:shadow-none print:rounded-none print:p-3 print:max-w-none"
+                    : "max-w-4xl p-6 sm:p-8 text-xs font-sans space-y-6 rounded-xl min-h-[650px] print:shadow-none print:rounded-none print:p-4 print:max-w-none"
+                }`}
               >
-                {/* Document Header */}
-                <div className="border-b-2 border-slate-900 pb-5">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex items-start gap-3.5">
-                      {pdfLogoUrl && (
-                        <img
-                          src={pdfLogoUrl}
-                          alt={pdfShopName}
-                          className="w-14 h-14 rounded-lg object-contain border border-slate-200 shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                      )}
-                      <div>
-                        <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">
-                          {pdfShopName}
-                        </h1>
-                        <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
-                          Smart Cloud POS & Customer Ledger System
-                        </p>
-                        <p className="text-[11px] text-slate-600 mt-1">
-                          {pdfShopAddress || "Dhaka, Bangladesh"}
-                        </p>
-                        <p className="text-[11px] text-slate-600">
-                          Phone: {pdfShopPhone || "+880 1700-000000"}
-                        </p>
-                        {pdfShopEmail && (
-                          <p className="text-[10px] text-slate-500">
-                            Email: {pdfShopEmail}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="inline-block bg-slate-900 text-white font-bold px-3 py-1 text-[11px] rounded uppercase tracking-wider mb-1.5">
-                        {selectedCustomerForPdf ? "CUSTOMER STATEMENT" : "LEDGER & DUE SUMMARY"}
-                      </span>
-                      <p className="text-[11px] text-slate-700">
-                        <span className="font-semibold text-slate-900">Statement Date:</span>{" "}
-                        {new Date().toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <p className="text-[11px] text-slate-700 mt-1">
-                        <span className="font-semibold text-slate-900">Generated By:</span>{" "}
-                        <span className="font-medium text-slate-800">{personName}</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Single Customer Statement */}
+                {/* Single Customer Statement vs Bulk Overview */}
                 {selectedCustomerForPdf ? (
-                  <div className="space-y-6">
-                    {/* Customer Info Card */}
-                    {/* Customer Information - Structured Table (Row & Column) */}
-                    <table className="w-full text-left text-xs border-collapse border border-black">
-                      <tbody>
-                        <tr>
-                          <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
-                            Customer Name:
-                          </td>
-                          <td className="w-2/6 font-bold text-black text-xs px-3 py-2 border border-black">
-                            {selectedCustomerForPdf.name}
-                          </td>
-                          <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
-                            Phone Number:
-                          </td>
-                          <td className="w-2/6 font-mono font-medium text-black px-3 py-2 border border-black">
-                            {selectedCustomerForPdf.phone}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
-                            Address:
-                          </td>
-                          <td colSpan={3} className="text-black px-3 py-2 border border-black">
-                            {selectedCustomerForPdf.address || "N/A"}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <>
+                    {/* ========================================================= */}
+                    {/* FORMAT 1: CLASSIC TRADITIONAL ACCOUNTING LEDGER           */}
+                    {/* ========================================================= */}
+                    {statementFormat === "classic" && (
+                      <div className="space-y-6">
+                        {/* Document Header */}
+                        <div className="border-b-2 border-slate-900 pb-5">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex items-start gap-3.5">
+                              {pdfLogoUrl && (
+                                <img
+                                  src={pdfLogoUrl}
+                                  alt={pdfShopName}
+                                  className="w-14 h-14 rounded-lg object-contain border border-slate-200 shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              )}
+                              <div>
+                                <h1 className="text-xl font-black tracking-tight text-slate-900 uppercase">
+                                  {pdfShopName}
+                                </h1>
+                                <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
+                                  Smart Cloud POS & Customer Ledger System
+                                </p>
+                                <p className="text-[11px] text-slate-600 mt-1">
+                                  {pdfShopAddress || "Dhaka, Bangladesh"}
+                                </p>
+                                <p className="text-[11px] text-slate-600">
+                                  Phone: {pdfShopPhone || "+880 1700-000000"}
+                                </p>
+                                {pdfShopEmail && (
+                                  <p className="text-[10px] text-slate-500">
+                                    Email: {pdfShopEmail}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className="inline-block bg-slate-900 text-white font-bold px-3 py-1 text-[11px] rounded uppercase tracking-wider mb-1.5">
+                                CUSTOMER STATEMENT
+                              </span>
+                              <p className="text-[11px] text-slate-700">
+                                <span className="font-semibold text-slate-900">Period:</span>{" "}
+                                <span className="font-medium text-slate-800">{pdfFinancials.periodLabel}</span>
+                              </p>
+                              <p className="text-[11px] text-slate-700 mt-0.5">
+                                <span className="font-semibold text-slate-900">Statement Date:</span>{" "}
+                                {new Date().toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </p>
+                              <p className="text-[11px] text-slate-700 mt-0.5">
+                                <span className="font-semibold text-slate-900">Generated By:</span>{" "}
+                                <span className="font-medium text-slate-800">{personName}</span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
-                    {/* Financial Summary & Full Ledger Statement A-Z */}
-                    {(() => {
-                      const pdfTotalDebit = pdfLedgerEntries.reduce((sum, e) => {
-                        const amt = Number(e.amount || 0);
-                        if (e.type === "sale" || amt < 0) return sum + Math.abs(amt);
-                        return sum;
-                      }, 0);
+                        {/* Customer Information Table */}
+                        <table className="w-full text-left text-xs border-collapse border border-black">
+                          <tbody>
+                            <tr>
+                              <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
+                                Customer Name:
+                              </td>
+                              <td className="w-2/6 font-bold text-black text-xs px-3 py-2 border border-black">
+                                {selectedCustomerForPdf.name}
+                              </td>
+                              <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
+                                Phone Number:
+                              </td>
+                              <td className="w-2/6 font-mono font-medium text-black px-3 py-2 border border-black">
+                                {selectedCustomerForPdf.phone}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="bg-slate-100 font-bold uppercase text-[10px] text-black px-3 py-2 border border-black">
+                                Address:
+                              </td>
+                              <td colSpan={3} className="text-black px-3 py-2 border border-black">
+                                {selectedCustomerForPdf.address || "N/A"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
 
-                      const pdfTotalCredit = pdfLedgerEntries.reduce((sum, e) => {
-                        const amt = Number(e.amount || 0);
-                        if (
-                          e.type === "return" ||
-                          e.type === "payment" ||
-                          (amt > 0 && e.type !== "opening")
-                        )
-                          return sum + amt;
-                        return sum;
-                      }, 0);
+                        {/* Financial Balances Summary - Structured Table */}
+                        <table className="w-full text-left text-xs border-collapse border border-black">
+                          <thead className="bg-slate-100 text-black font-bold uppercase text-[10px]">
+                            <tr>
+                              <th className="px-3 py-2 border border-black">Opening Balance (প্রারম্ভিক)</th>
+                              <th className="px-3 py-2 border border-black">Total Purchases (মোট চালান)</th>
+                              <th className="px-3 py-2 border border-black">Total Paid / Returns (মোট জমা)</th>
+                              <th className="px-3 py-2 border border-black bg-slate-200">Outstanding Due (মোট বকেয়া)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="px-3 py-2 font-mono font-bold text-black border border-black">
+                                {formatCurrency(pdfFinancials.openingBalance)}
+                              </td>
+                              <td className="px-3 py-2 font-mono font-bold text-black border border-black">
+                                {formatCurrency(pdfFinancials.totalPurchases)}
+                              </td>
+                              <td className="px-3 py-2 font-mono font-bold text-black border border-black">
+                                {formatCurrency(pdfFinancials.totalPaid)}
+                              </td>
+                              <td className="px-3 py-2 font-mono font-black text-black border-2 border-black bg-slate-50 text-sm">
+                                {formatCurrency(pdfFinancials.outstandingDue)}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
 
-                      return (
-                        <>
-                          {/* Financial Balances Summary - Structured Table (Row & Column) */}
+                        {/* Full Ledger Statement Breakdown Table */}
+                        <div className="overflow-hidden">
+                          <div className="bg-slate-100 px-3.5 py-2 border-t border-x border-black flex justify-between items-center text-[11px] font-bold text-black uppercase">
+                            <span>Customer Account Statement Ledger ({pdfFinancials.periodLabel})</span>
+                            <span className="font-normal lowercase text-slate-700 font-mono">
+                              {pdfLedgerEntries.length} transaction entries
+                            </span>
+                          </div>
                           <table className="w-full text-left text-xs border-collapse border border-black">
                             <thead className="bg-slate-100 text-black font-bold uppercase text-[10px]">
                               <tr>
-                                <th className="px-3 py-2 border border-black">Opening Balance (প্রারম্ভিক)</th>
-                                <th className="px-3 py-2 border border-black">Total Purchases (মোট চালান)</th>
-                                <th className="px-3 py-2 border border-black">Total Paid / Returns (মোট জমা)</th>
-                                <th className="px-3 py-2 border border-black bg-slate-200">Outstanding Due (মোট বকেয়া)</th>
+                                <th className="py-2 px-2.5 w-9 text-center border border-black">#</th>
+                                <th className="py-2 px-2.5 w-28 border border-black">Date & Time</th>
+                                <th className="py-2 px-2.5 w-20 text-center border border-black">Type</th>
+                                <th className="py-2 px-2.5 border border-black">Particulars / Description / Ref</th>
+                                <th className="py-2 px-2.5 text-right w-24 border border-black">Debit (৳)</th>
+                                <th className="py-2 px-2.5 text-right w-24 border border-black">Credit (৳)</th>
+                                <th className="py-2 px-2.5 text-right w-28 border border-black">Balance (৳)</th>
                               </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="text-black">
+                              {pdfLedgerLoading ? (
+                                <tr>
+                                  <td colSpan={7} className="py-10 text-center text-slate-600 font-medium border border-black">
+                                    Loading transaction history statements...
+                                  </td>
+                                </tr>
+                              ) : pdfLedgerEntries.length === 0 ? (
+                                <tr>
+                                  <td colSpan={7} className="py-8 text-center text-slate-600 border border-black">
+                                    <p className="font-semibold text-black">
+                                      Opening Balance: {formatCurrency(pdfFinancials.openingBalance)}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                      No sales, returns or payment transactions recorded in this period ({pdfFinancials.periodLabel}).
+                                    </p>
+                                  </td>
+                                </tr>
+                              ) : (
+                                pdfLedgerEntries.map((entry, idx) => {
+                                  const amtNum = Number(entry.amount || 0);
+                                  const isDebit = entry.type === "sale" || amtNum < 0;
+                                  const isCredit =
+                                    entry.type === "return" ||
+                                    entry.type === "payment" ||
+                                    (amtNum > 0 && entry.type !== "opening");
+                                  const debitVal = isDebit ? Math.abs(amtNum) : 0;
+                                  const creditVal = isCredit ? amtNum : 0;
+                                  const balNum = Number(entry.newBalance || 0);
+
+                                  return (
+                                    <tr key={entry.id || idx} className="hover:bg-slate-50 break-inside-avoid">
+                                      <td className="py-2 px-2.5 text-center text-slate-600 font-mono text-[10px] border border-black">
+                                        {idx + 1}
+                                      </td>
+                                      <td className="py-2 px-2.5 text-black font-mono text-[10px] whitespace-nowrap border border-black">
+                                        {formatDate(entry.date)}
+                                      </td>
+                                      <td className="py-2 px-2.5 text-center whitespace-nowrap border border-black">
+                                        <span className="font-semibold text-[9px] uppercase tracking-wider text-black">
+                                          {entry.type === "opening"
+                                            ? "OPENING"
+                                            : entry.type === "sale"
+                                            ? "INVOICE"
+                                            : entry.type === "payment"
+                                            ? "PAYMENT"
+                                            : entry.type === "return"
+                                            ? "RETURN"
+                                            : entry.type.toUpperCase()}
+                                        </span>
+                                      </td>
+                                      <td className="py-2 px-2.5 font-medium text-black border border-black">
+                                        <div>{entry.description}</div>
+                                        {entry.referenceId && (
+                                          <span className="text-[9px] text-slate-600 font-mono block mt-0.5">
+                                            {entry.type === "sale"
+                                              ? `INV-${entry.referenceId.slice(-6).toUpperCase()}`
+                                              : entry.type === "payment"
+                                              ? `PAY-${entry.referenceId.slice(-6).toUpperCase()}`
+                                              : `REF: ${entry.referenceId.slice(-6).toUpperCase()}`}
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="py-2 px-2.5 text-right font-mono font-medium text-black whitespace-nowrap border border-black">
+                                        {debitVal > 0 ? formatCurrency(debitVal) : "-"}
+                                      </td>
+                                      <td className="py-2 px-2.5 text-right font-mono font-medium text-black whitespace-nowrap border border-black">
+                                        {creditVal > 0 ? formatCurrency(creditVal) : "-"}
+                                      </td>
+                                      <td className="py-2 px-2.5 text-right font-mono font-bold text-black whitespace-nowrap border border-black">
+                                        {balNum < 0 ? (
+                                          <span>{formatCurrency(Math.abs(balNum))} Dr</span>
+                                        ) : balNum > 0 ? (
+                                          <span>{formatCurrency(balNum)} Cr</span>
+                                        ) : (
+                                          <span>৳0.00</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                            <tfoot className="bg-slate-100 font-bold text-black">
                               <tr>
-                                <td className="px-3 py-2 font-mono font-bold text-black border border-black">
-                                  {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
+                                <td colSpan={4} className="py-2 px-2.5 text-right uppercase text-[10px] tracking-wider text-black border border-black">
+                                  Period Movements Total:
                                 </td>
-                                <td className="px-3 py-2 font-mono font-bold text-black border border-black">
-                                  {formatCurrency(pdfTotalDebit)}
+                                <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
+                                  {formatCurrency(pdfFinancials.totalPurchases)}
                                 </td>
-                                <td className="px-3 py-2 font-mono font-bold text-black border border-black">
-                                  {formatCurrency(pdfTotalCredit)}
+                                <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
+                                  {formatCurrency(pdfFinancials.totalPaid)}
                                 </td>
-                                <td className="px-3 py-2 font-mono font-black text-black border-2 border-black bg-slate-50 text-sm">
-                                  {formatCurrency(getDueAmount(selectedCustomerForPdf))}
+                                <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
+                                  {pdfFinancials.outstandingDue > 0 ? (
+                                    <span>{formatCurrency(pdfFinancials.outstandingDue)} Dr</span>
+                                  ) : (
+                                    <span>৳0.00</span>
+                                  )}
                                 </td>
                               </tr>
-                            </tbody>
+                              <tr className="border-t-2 border-black bg-white">
+                                <td colSpan={5} className="py-2.5 px-2.5 text-right font-black uppercase text-[11px] text-black tracking-wider border border-black">
+                                  Total Outstanding Due Balance Payable (সর্বমোট পরিশোধযোগ্য বকেয়া):
+                                </td>
+                                <td colSpan={2} className="py-2.5 px-2.5 text-right font-black text-sm font-mono text-black whitespace-nowrap border border-black">
+                                  {formatCurrency(pdfFinancials.outstandingDue)}
+                                </td>
+                              </tr>
+                            </tfoot>
                           </table>
+                        </div>
 
-                          {/* Full Ledger Statement Breakdown Table (A to Z) - Traditional Bordered Grid Format */}
-                          <div className="overflow-hidden">
-                            <div className="bg-slate-100 px-3.5 py-2 border-t border-x border-black flex justify-between items-center text-[11px] font-bold text-black uppercase">
-                              <span>Customer Account Statement Ledger (সম্পূর্ণ খতিয়ান বিবরণী)</span>
-                              <span className="font-normal lowercase text-slate-700 font-mono">
-                                {pdfLedgerEntries.length} transaction entries
-                              </span>
+                        {/* Signatures */}
+                        <div className="pt-6 border-t border-slate-300 mt-6 space-y-6">
+                          <div className="flex justify-between items-end pt-6">
+                            <div className="text-center">
+                              <div className="w-36 border-b border-slate-400 mb-1"></div>
+                              <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
+                                Prepared By (Accounts)
+                              </p>
                             </div>
-                            <table className="w-full text-left text-xs border-collapse border border-black">
-                              <thead className="bg-slate-100 text-black font-bold uppercase text-[10px]">
-                                <tr>
-                                  <th className="py-2 px-2.5 w-9 text-center border border-black">#</th>
-                                  <th className="py-2 px-2.5 w-28 border border-black">Date & Time</th>
-                                  <th className="py-2 px-2.5 w-20 text-center border border-black">Type</th>
-                                  <th className="py-2 px-2.5 border border-black">Particulars / Description / Ref</th>
-                                  <th className="py-2 px-2.5 text-right w-24 border border-black">Debit (৳)</th>
-                                  <th className="py-2 px-2.5 text-right w-24 border border-black">Credit (৳)</th>
-                                  <th className="py-2 px-2.5 text-right w-28 border border-black">Balance (৳)</th>
-                                </tr>
-                              </thead>
-                              <tbody className="text-black">
-                                {pdfLedgerLoading ? (
-                                  <tr>
-                                    <td colSpan={7} className="py-10 text-center text-slate-600 font-medium border border-black">
-                                      Loading full transaction history statements...
-                                    </td>
-                                  </tr>
-                                ) : pdfLedgerEntries.length === 0 ? (
-                                  <tr>
-                                    <td colSpan={7} className="py-8 text-center text-slate-600 border border-black">
-                                      <p className="font-semibold text-black">
-                                        Initial Opening Balance: {formatCurrency(selectedCustomerForPdf.openingBalance || 0)}
-                                      </p>
-                                      <p className="text-[11px] text-slate-500 mt-0.5">
-                                        No subsequent sales, returns or payment transactions recorded yet.
-                                      </p>
-                                    </td>
-                                  </tr>
-                                ) : (
-                                  pdfLedgerEntries.map((entry, idx) => {
-                                    const amtNum = Number(entry.amount || 0);
-                                    const isDebit = entry.type === "sale" || amtNum < 0;
-                                    const isCredit =
-                                      entry.type === "return" ||
-                                      entry.type === "payment" ||
-                                      (amtNum > 0 && entry.type !== "opening");
-                                    const debitVal = isDebit ? Math.abs(amtNum) : 0;
-                                    const creditVal = isCredit ? amtNum : 0;
-                                    const balNum = Number(entry.newBalance || 0);
-
-                                    return (
-                                      <tr key={entry.id || idx} className="hover:bg-slate-50 break-inside-avoid">
-                                        <td className="py-2 px-2.5 text-center text-slate-600 font-mono text-[10px] border border-black">
-                                          {idx + 1}
-                                        </td>
-                                        <td className="py-2 px-2.5 text-black font-mono text-[10px] whitespace-nowrap border border-black">
-                                          {formatDate(entry.date)}
-                                        </td>
-                                        <td className="py-2 px-2.5 text-center whitespace-nowrap border border-black">
-                                          <span className="font-semibold text-[9px] uppercase tracking-wider text-black">
-                                            {entry.type === "opening"
-                                              ? "OPENING"
-                                              : entry.type === "sale"
-                                              ? "INVOICE"
-                                              : entry.type === "payment"
-                                              ? "PAYMENT"
-                                              : entry.type === "return"
-                                              ? "RETURN"
-                                              : entry.type.toUpperCase()}
-                                          </span>
-                                        </td>
-                                        <td className="py-2 px-2.5 font-medium text-black border border-black">
-                                          <div>{entry.description}</div>
-                                          {entry.referenceId && (
-                                            <span className="text-[9px] text-slate-600 font-mono block mt-0.5">
-                                              {entry.type === "sale"
-                                                ? `INV-${entry.referenceId.slice(-6).toUpperCase()}`
-                                                : entry.type === "payment"
-                                                ? `PAY-${entry.referenceId.slice(-6).toUpperCase()}`
-                                                : `REF: ${entry.referenceId.slice(-6).toUpperCase()}`}
-                                            </span>
-                                          )}
-                                        </td>
-                                        <td className="py-2 px-2.5 text-right font-mono font-medium text-black whitespace-nowrap border border-black">
-                                          {debitVal > 0 ? formatCurrency(debitVal) : "-"}
-                                        </td>
-                                        <td className="py-2 px-2.5 text-right font-mono font-medium text-black whitespace-nowrap border border-black">
-                                          {creditVal > 0 ? formatCurrency(creditVal) : "-"}
-                                        </td>
-                                        <td className="py-2 px-2.5 text-right font-mono font-bold text-black whitespace-nowrap border border-black">
-                                          {balNum < 0 ? (
-                                            <span>
-                                              {formatCurrency(Math.abs(balNum))} Dr
-                                            </span>
-                                          ) : balNum > 0 ? (
-                                            <span>
-                                              {formatCurrency(balNum)} Cr
-                                            </span>
-                                          ) : (
-                                            <span>৳0.00</span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })
-                                )}
-                              </tbody>
-                              <tfoot className="bg-slate-100 font-bold text-black">
-                                <tr>
-                                  <td colSpan={4} className="py-2 px-2.5 text-right uppercase text-[10px] tracking-wider text-black border border-black">
-                                    Subtotal Movements:
-                                  </td>
-                                  <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
-                                    {formatCurrency(pdfTotalDebit)}
-                                  </td>
-                                  <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
-                                    {formatCurrency(pdfTotalCredit)}
-                                  </td>
-                                  <td className="py-2 px-2.5 text-right font-mono text-black whitespace-nowrap border border-black">
-                                    {getDueAmount(selectedCustomerForPdf) > 0 ? (
-                                      <span>
-                                        {formatCurrency(getDueAmount(selectedCustomerForPdf))} Dr
-                                      </span>
-                                    ) : (
-                                      <span>৳0.00</span>
-                                    )}
-                                  </td>
-                                </tr>
-                                <tr className="border-t-2 border-black bg-white">
-                                  <td colSpan={5} className="py-2.5 px-2.5 text-right font-black uppercase text-[11px] text-black tracking-wider border border-black">
-                                    Total Outstanding Due Balance Payable (সর্বমোট পরিশোধযোগ্য বকেয়া):
-                                  </td>
-                                  <td colSpan={2} className="py-2.5 px-2.5 text-right font-black text-sm font-mono text-black whitespace-nowrap border border-black">
-                                    {formatCurrency(getDueAmount(selectedCustomerForPdf))}
-                                  </td>
-                                </tr>
-                              </tfoot>
-                            </table>
+                            <div className="text-center">
+                              <div className="w-36 border-b border-slate-400 mb-1"></div>
+                              <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
+                                Customer Signature
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <div className="w-36 border-b border-slate-400 mb-1"></div>
+                              <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
+                                Authorized Signatory & Seal
+                              </p>
+                            </div>
                           </div>
-                        </>
-                      );
-                    })()}
-                  </div>
+                          <div className="text-center border-t border-dashed border-slate-200 pt-3">
+                            <p className="text-[9px] text-slate-400">
+                              System-generated customer ledger & statement from {pdfShopName} • Powered by Inventarioya Cloud.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* FORMAT 2: MODERN CORPORATE EXECUTIVE STATEMENT            */}
+                    {/* ========================================================= */}
+                    {statementFormat === "modern" && (
+                      <div className="space-y-6">
+                        {/* Modern Corporate Header */}
+                        <div className="flex justify-between items-start border-b border-slate-200 pb-5">
+                          <div className="flex items-start gap-4">
+                            {pdfLogoUrl ? (
+                              <img
+                                src={pdfLogoUrl}
+                                alt={pdfShopName}
+                                className="w-14 h-14 rounded-xl object-contain border border-slate-200 shadow-sm"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center text-xl shadow-sm">
+                                {pdfShopName.slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                                {pdfShopName}
+                              </h1>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {pdfShopAddress || "Dhaka, Bangladesh"}
+                              </p>
+                              <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                                <span>Tel: {pdfShopPhone || "+880 1700-000000"}</span>
+                                {pdfShopEmail && <span>• {pdfShopEmail}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-full border border-indigo-200 uppercase tracking-wide">
+                              Account Statement
+                            </span>
+                            <p className="text-xs text-slate-500 mt-2">
+                              Date:{" "}
+                              <span className="font-semibold text-slate-800">
+                                {new Date().toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Period: <span className="text-slate-700 font-medium">{pdfFinancials.periodLabel}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Customer Info Card */}
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                              Statement For
+                            </span>
+                            <h2 className="text-base font-bold text-slate-900">{selectedCustomerForPdf.name}</h2>
+                            <p className="text-xs text-slate-600 flex items-center gap-2">
+                              <span>Phone: {selectedCustomerForPdf.phone}</span>
+                              {selectedCustomerForPdf.address && <span>• {selectedCustomerForPdf.address}</span>}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                              Account Status
+                            </span>
+                            <span
+                              className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
+                                pdfFinancials.outstandingDue > 0
+                                  ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                  : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              }`}
+                            >
+                              {pdfFinancials.outstandingDue > 0 ? "Outstanding Due" : "Settled / No Due"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 4 Modern KPI Summary Cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
+                              Opening Balance
+                            </span>
+                            <span className="text-base font-bold text-slate-800 mt-1 block">
+                              {formatCurrency(pdfFinancials.openingBalance)}
+                            </span>
+                            <span className="text-[10px] text-slate-400">Period start balance</span>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-700 block">
+                              Total Purchases
+                            </span>
+                            <span className="text-base font-bold text-indigo-900 mt-1 block">
+                              +{formatCurrency(pdfFinancials.totalPurchases)}
+                            </span>
+                            <span className="text-[10px] text-indigo-500">Invoice debits</span>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-100">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 block">
+                              Total Paid / Return
+                            </span>
+                            <span className="text-base font-bold text-emerald-900 mt-1 block">
+                              -{formatCurrency(pdfFinancials.totalPaid)}
+                            </span>
+                            <span className="text-[10px] text-emerald-600">Payments & credits</span>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-rose-50/60 border border-rose-200">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 block">
+                              Outstanding Due
+                            </span>
+                            <span className="text-lg font-black text-rose-600 mt-0.5 block">
+                              {formatCurrency(pdfFinancials.outstandingDue)}
+                            </span>
+                            <span className="text-[10px] text-rose-500 font-medium">Net payable amount</span>
+                          </div>
+                        </div>
+
+                        {/* Modern Ledger Table */}
+                        <div className="border border-slate-200 rounded-xl overflow-hidden">
+                          <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex justify-between items-center text-xs">
+                            <span className="font-bold text-slate-800">
+                              Transaction Breakdown ({pdfFinancials.periodLabel})
+                            </span>
+                            <span className="text-slate-500 text-[11px]">
+                              {pdfLedgerEntries.length} Records
+                            </span>
+                          </div>
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead className="bg-slate-100/70 text-slate-700 font-semibold text-[10px] uppercase border-b border-slate-200">
+                              <tr>
+                                <th className="py-2.5 px-3 w-10 text-center">#</th>
+                                <th className="py-2.5 px-3">Date</th>
+                                <th className="py-2.5 px-3">Type</th>
+                                <th className="py-2.5 px-3">Description & Ref</th>
+                                <th className="py-2.5 px-3 text-right">Debit (৳)</th>
+                                <th className="py-2.5 px-3 text-right">Credit (৳)</th>
+                                <th className="py-2.5 px-3 text-right">Balance (৳)</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-800">
+                              {pdfLedgerEntries.length === 0 ? (
+                                <tr>
+                                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                                    No transactions recorded in this period.
+                                  </td>
+                                </tr>
+                              ) : (
+                                pdfLedgerEntries.map((entry, idx) => {
+                                  const amtNum = Number(entry.amount || 0);
+                                  const isDebit = entry.type === "sale" || amtNum < 0;
+                                  const isCredit =
+                                    entry.type === "return" ||
+                                    entry.type === "payment" ||
+                                    (amtNum > 0 && entry.type !== "opening");
+                                  const debitVal = isDebit ? Math.abs(amtNum) : 0;
+                                  const creditVal = isCredit ? amtNum : 0;
+                                  const balNum = Number(entry.newBalance || 0);
+
+                                  return (
+                                    <tr key={entry.id || idx} className="hover:bg-slate-50/70">
+                                      <td className="py-2 px-3 text-center text-slate-400 font-mono text-[10px]">
+                                        {idx + 1}
+                                      </td>
+                                      <td className="py-2 px-3 font-mono text-slate-600 text-[11px] whitespace-nowrap">
+                                        {formatDate(entry.date)}
+                                      </td>
+                                      <td className="py-2 px-3 whitespace-nowrap">
+                                        <span
+                                          className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                            entry.type === "sale"
+                                              ? "bg-blue-100 text-blue-800"
+                                              : entry.type === "payment"
+                                              ? "bg-emerald-100 text-emerald-800"
+                                              : entry.type === "return"
+                                              ? "bg-amber-100 text-amber-800"
+                                              : "bg-slate-100 text-slate-700"
+                                          }`}
+                                        >
+                                          {entry.type}
+                                        </span>
+                                      </td>
+                                      <td className="py-2 px-3">
+                                        <div className="font-medium text-slate-800">{entry.description}</div>
+                                        {entry.referenceId && (
+                                          <span className="text-[10px] text-slate-400 font-mono block">
+                                            Ref: {entry.referenceId}
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono font-medium text-slate-900 whitespace-nowrap">
+                                        {debitVal > 0 ? formatCurrency(debitVal) : "-"}
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono font-medium text-emerald-700 whitespace-nowrap">
+                                        {creditVal > 0 ? formatCurrency(creditVal) : "-"}
+                                      </td>
+                                      <td className="py-2 px-3 text-right font-mono font-bold whitespace-nowrap">
+                                        {balNum < 0 ? (
+                                          <span className="text-rose-600">{formatCurrency(Math.abs(balNum))} Dr</span>
+                                        ) : balNum > 0 ? (
+                                          <span className="text-emerald-600">{formatCurrency(balNum)} Cr</span>
+                                        ) : (
+                                          <span className="text-slate-400">৳0.00</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                            <tfoot className="bg-slate-50 border-t-2 border-slate-200 font-bold text-slate-800 text-xs">
+                              <tr>
+                                <td colSpan={4} className="py-2.5 px-3 text-right uppercase text-[10px] text-slate-500">
+                                  Period Movements Total:
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-slate-900">
+                                  {formatCurrency(pdfFinancials.totalPurchases)}
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-emerald-700">
+                                  {formatCurrency(pdfFinancials.totalPaid)}
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono text-rose-600 font-black">
+                                  {formatCurrency(pdfFinancials.outstandingDue)}
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+
+                        {/* Modern Footer & Signatures */}
+                        <div className="pt-6 border-t border-slate-200 mt-6 flex justify-between items-end text-xs">
+                          <div className="space-y-1">
+                            <p className="text-[10px] text-slate-400">
+                              Generated by {personName} • {new Date().toLocaleString()}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              Official Statement • Inventarioya Cloud POS
+                            </p>
+                          </div>
+                          <div className="flex gap-12 text-center">
+                            <div>
+                              <div className="w-32 border-b border-slate-300 mb-1"></div>
+                              <span className="text-[10px] text-slate-500 uppercase font-semibold">Customer Signature</span>
+                            </div>
+                            <div>
+                              <div className="w-32 border-b border-slate-300 mb-1"></div>
+                              <span className="text-[10px] text-slate-500 uppercase font-semibold">Authorized Signatory</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* FORMAT 3: COMPACT PAPER SAVER STATEMENT                   */}
+                    {/* ========================================================= */}
+                    {statementFormat === "compact" && (
+                      <div className="space-y-3">
+                        {/* Compact 1-line Shop Header */}
+                        <div className="flex justify-between items-center border-b border-slate-900 pb-2">
+                          <div>
+                            <span className="text-base font-black text-slate-900 uppercase tracking-tight">
+                              {pdfShopName}
+                            </span>
+                            <span className="text-[10px] text-slate-600 ml-2">
+                              {pdfShopAddress} • Tel: {pdfShopPhone}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-[10px] uppercase bg-slate-900 text-white px-2 py-0.5 rounded">
+                              LEDGER STATEMENT
+                            </span>
+                            <span className="text-[10px] text-slate-500 ml-2">
+                              {new Date().toLocaleDateString("en-GB")}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Compact Customer & Period Strip */}
+                        <div className="bg-slate-100 px-3 py-1.5 rounded flex justify-between items-center text-[10px] font-medium text-slate-800">
+                          <div>
+                            <span className="font-bold text-slate-900">Customer:</span> {selectedCustomerForPdf.name} ({selectedCustomerForPdf.phone})
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900">Period:</span> {pdfFinancials.periodLabel}
+                          </div>
+                        </div>
+
+                        {/* Compact 4-cell Financial Ribbon */}
+                        <div className="grid grid-cols-4 gap-1.5 text-center text-[10px]">
+                          <div className="bg-slate-50 border border-slate-300 py-1 px-2 rounded">
+                            <span className="text-slate-500 block text-[9px] uppercase">Opening Bal</span>
+                            <span className="font-bold font-mono">{formatCurrency(pdfFinancials.openingBalance)}</span>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-300 py-1 px-2 rounded">
+                            <span className="text-slate-500 block text-[9px] uppercase">Purchases</span>
+                            <span className="font-bold font-mono">+{formatCurrency(pdfFinancials.totalPurchases)}</span>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-300 py-1 px-2 rounded">
+                            <span className="text-slate-500 block text-[9px] uppercase">Total Paid</span>
+                            <span className="font-bold font-mono">-{formatCurrency(pdfFinancials.totalPaid)}</span>
+                          </div>
+                          <div className="bg-rose-50 border border-rose-300 py-1 px-2 rounded">
+                            <span className="text-rose-700 block text-[9px] font-bold uppercase">Closing Due</span>
+                            <span className="font-black font-mono text-rose-700">{formatCurrency(pdfFinancials.outstandingDue)}</span>
+                          </div>
+                        </div>
+
+                        {/* High-density Table (fits 40+ rows per page) */}
+                        <table className="w-full text-left text-[10px] border-collapse border border-black">
+                          <thead className="bg-slate-100 font-bold text-black uppercase text-[9px]">
+                            <tr>
+                              <th className="py-1 px-1.5 w-6 text-center border border-black">#</th>
+                              <th className="py-1 px-1.5 w-20 border border-black">Date</th>
+                              <th className="py-1 px-1.5 w-16 text-center border border-black">Type</th>
+                              <th className="py-1 px-1.5 border border-black">Particulars / Ref</th>
+                              <th className="py-1 px-1.5 text-right w-18 border border-black">Debit (৳)</th>
+                              <th className="py-1 px-1.5 text-right w-18 border border-black">Credit (৳)</th>
+                              <th className="py-1 px-1.5 text-right w-20 border border-black">Balance (৳)</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-black">
+                            {pdfLedgerEntries.length === 0 ? (
+                              <tr>
+                                <td colSpan={7} className="py-4 text-center text-slate-500 border border-black">
+                                  No transactions in this period.
+                                </td>
+                              </tr>
+                            ) : (
+                              pdfLedgerEntries.map((entry, idx) => {
+                                const amtNum = Number(entry.amount || 0);
+                                const isDebit = entry.type === "sale" || amtNum < 0;
+                                const isCredit =
+                                  entry.type === "return" ||
+                                  entry.type === "payment" ||
+                                  (amtNum > 0 && entry.type !== "opening");
+                                const debitVal = isDebit ? Math.abs(amtNum) : 0;
+                                const creditVal = isCredit ? amtNum : 0;
+                                const balNum = Number(entry.newBalance || 0);
+
+                                return (
+                                  <tr key={entry.id || idx} className="border border-black">
+                                    <td className="py-0.5 px-1.5 text-center font-mono text-[9px] border border-black">
+                                      {idx + 1}
+                                    </td>
+                                    <td className="py-0.5 px-1.5 font-mono text-[9px] whitespace-nowrap border border-black">
+                                      {formatDate(entry.date)}
+                                    </td>
+                                    <td className="py-0.5 px-1.5 text-center uppercase text-[8px] font-bold border border-black">
+                                      {entry.type}
+                                    </td>
+                                    <td className="py-0.5 px-1.5 border border-black truncate max-w-[200px]">
+                                      {entry.description} {entry.referenceId && `(${entry.referenceId.slice(-6)})`}
+                                    </td>
+                                    <td className="py-0.5 px-1.5 text-right font-mono border border-black">
+                                      {debitVal > 0 ? formatCurrency(debitVal) : "-"}
+                                    </td>
+                                    <td className="py-0.5 px-1.5 text-right font-mono border border-black">
+                                      {creditVal > 0 ? formatCurrency(creditVal) : "-"}
+                                    </td>
+                                    <td className="py-0.5 px-1.5 text-right font-mono font-bold border border-black whitespace-nowrap">
+                                      {balNum < 0 ? `${formatCurrency(Math.abs(balNum))} Dr` : `${formatCurrency(balNum)} Cr`}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                          <tfoot className="bg-slate-100 font-bold text-black text-[9px]">
+                            <tr>
+                              <td colSpan={4} className="py-1 px-1.5 text-right uppercase border border-black">
+                                Total:
+                              </td>
+                              <td className="py-1 px-1.5 text-right font-mono border border-black">
+                                {formatCurrency(pdfFinancials.totalPurchases)}
+                              </td>
+                              <td className="py-1 px-1.5 text-right font-mono border border-black">
+                                {formatCurrency(pdfFinancials.totalPaid)}
+                              </td>
+                              <td className="py-1 px-1.5 text-right font-mono font-black border border-black text-rose-700">
+                                {formatCurrency(pdfFinancials.outstandingDue)} Dr
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+
+                        {/* Minimal Signature Footer */}
+                        <div className="pt-3 flex justify-between items-end text-[9px] text-slate-600">
+                          <span>Inventarioya Cloud POS Statement</span>
+                          <div className="flex gap-8 text-center">
+                            <div>
+                              <div className="w-24 border-b border-slate-400 mb-0.5"></div>
+                              <span>Customer</span>
+                            </div>
+                            <div>
+                              <div className="w-24 border-b border-slate-400 mb-0.5"></div>
+                              <span>Authorized Seal</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* FORMAT 4: THERMAL 80MM POS ROLL SLIP                      */}
+                    {/* ========================================================= */}
+                    {statementFormat === "thermal" && (
+                      <div className="space-y-2 text-black">
+                        {/* Thermal Shop Header */}
+                        <div className="text-center space-y-0.5">
+                          <h1 className="text-sm font-black uppercase tracking-wider">{pdfShopName}</h1>
+                          <p className="text-[10px]">{pdfShopAddress || "Dhaka, Bangladesh"}</p>
+                          <p className="text-[10px]">Tel: {pdfShopPhone || "+880 1700-000000"}</p>
+                        </div>
+
+                        <div className="border-t border-dashed border-black my-1"></div>
+
+                        {/* Thermal Customer & Statement Info */}
+                        <div className="text-center font-bold text-xs uppercase">
+                          CUSTOMER STATEMENT
+                        </div>
+                        <div className="text-[10px] space-y-0.5">
+                          <div><span className="font-bold">Cust:</span> {selectedCustomerForPdf.name}</div>
+                          <div><span className="font-bold">Phone:</span> {selectedCustomerForPdf.phone}</div>
+                          <div><span className="font-bold">Period:</span> {pdfFinancials.periodLabel}</div>
+                          <div><span className="font-bold">Date:</span> {new Date().toLocaleDateString("en-GB")}</div>
+                        </div>
+
+                        <div className="border-t border-dashed border-black my-1"></div>
+
+                        {/* Financial Summary */}
+                        <div className="space-y-0.5 text-[10px]">
+                          <div className="flex justify-between">
+                            <span>Opening Balance:</span>
+                            <span className="font-bold">{formatCurrency(pdfFinancials.openingBalance)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Total Purchases:</span>
+                            <span className="font-bold">+{formatCurrency(pdfFinancials.totalPurchases)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Total Payments:</span>
+                            <span className="font-bold">-{formatCurrency(pdfFinancials.totalPaid)}</span>
+                          </div>
+                          <div className="border-t border-dashed border-black my-1"></div>
+                          <div className="flex justify-between text-xs font-black">
+                            <span>NET DUE PAYABLE:</span>
+                            <span>{formatCurrency(pdfFinancials.outstandingDue)}</span>
+                          </div>
+                          <div className="border-t-2 border-black my-1"></div>
+                        </div>
+
+                        {/* Itemized Transactions */}
+                        <div className="text-[10px] space-y-1">
+                          <div className="font-bold uppercase text-[9px] border-b border-black pb-0.5 flex justify-between">
+                            <span>DATE / PARTICULAR</span>
+                            <span>AMOUNT</span>
+                          </div>
+                          {pdfLedgerEntries.length === 0 ? (
+                            <p className="text-center py-2 text-[10px]">No transactions in period.</p>
+                          ) : (
+                            pdfLedgerEntries.map((e, idx) => {
+                              const amt = Number(e.amount || 0);
+                              const isDebit = e.type === "sale" || amt < 0;
+                              const val = isDebit ? Math.abs(amt) : amt;
+                              return (
+                                <div key={e.id || idx} className="border-b border-dotted border-slate-400 pb-1">
+                                  <div className="flex justify-between items-start">
+                                    <span className="font-mono text-[9px]">{formatDate(e.date)}</span>
+                                    <span className="font-bold">
+                                      {formatCurrency(val)} {isDebit ? "Dr" : "Cr"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between text-[9px] text-slate-700">
+                                    <span className="truncate max-w-[140px] uppercase font-semibold">
+                                      {e.type}: {e.description}
+                                    </span>
+                                    <span>Bal: {formatCurrency(Math.abs(Number(e.newBalance || 0)))}</span>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+
+                        <div className="border-t border-dashed border-black pt-2 text-center text-[10px] space-y-1">
+                          <p className="font-bold">*** THANK YOU ***</p>
+                          <p className="text-[9px] text-slate-600">Powered by Inventarioya Cloud POS</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  /* Bulk Customer Overview Report */
+                  /* Bulk Customer Overview Report (Unchanged) */
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
@@ -2689,35 +3417,6 @@ export default function CustomersPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Footer Signatures */}
-                <div className="pt-8 border-t border-slate-200 mt-8 space-y-6">
-                  <div className="flex justify-between items-end pt-6">
-                    <div className="text-center">
-                      <div className="w-36 border-b border-slate-400 mb-1"></div>
-                      <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
-                        Prepared By (Accounts)
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-36 border-b border-slate-400 mb-1"></div>
-                      <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
-                        Customer Signature
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-36 border-b border-slate-400 mb-1"></div>
-                      <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
-                        Authorized Signatory & Seal
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-center border-t border-dashed border-slate-200 pt-3">
-                    <p className="text-[9px] text-slate-400">
-                      System-generated customer ledger & statement from {pdfShopName} • Powered by Inventarioya Cloud.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

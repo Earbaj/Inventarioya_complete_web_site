@@ -23,6 +23,10 @@ import {
   Moon,
   Laptop,
   Globe,
+  Printer,
+  FileText,
+  Receipt,
+  LayoutTemplate,
 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/context/ThemeContext";
@@ -51,6 +55,25 @@ export default function SettingsPage() {
 
   // Image load error fallback state
   const [logoError, setLogoError] = useState(false);
+
+  // Customer Statement PDF format state
+  const [statementFormat, setStatementFormatState] = useState<"classic" | "modern" | "compact" | "thermal">("classic");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("customer_statement_format") as any;
+      if (saved && ["classic", "modern", "compact", "thermal"].includes(saved)) {
+        setStatementFormatState(saved);
+      }
+    }
+  }, []);
+
+  const handleSelectStatementFormat = (fmt: "classic" | "modern" | "compact" | "thermal") => {
+    setStatementFormatState(fmt);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("customer_statement_format", fmt);
+    }
+  };
 
   useEffect(() => {
     async function loadMe() {
@@ -607,6 +630,161 @@ export default function SettingsPage() {
                   {txt(
                     "আন্তর্জাতিক মানসম্পন্ন ইংরেজিতে বিলিং, কাস্টমার খাতা ও ইনভেন্টরি পরিচালনা করুন।",
                     "Manage POS billing, customer ledgers, and inventory in international English."
+                  )}
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Customer Statement PDF & Print Formats Section */}
+        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-lg transition-colors">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-5">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Printer className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                {txt("কাস্টমার স্টেটমেন্ট ও লেজার প্রিন্ট ফরম্যাট", "Customer Statement & Ledger PDF Formats")}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {txt(
+                  "কাস্টমার খাতার স্টেটমেন্ট বা পিডিএফ প্রিন্ট করার জন্য আপনার পছন্দের ডিজাইন ফরম্যাট নির্ধারণ করুন।",
+                  "Select your default design layout for customer account statements and printable PDF ledgers."
+                )}
+              </p>
+            </div>
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-semibold border border-slate-200 dark:border-slate-700 uppercase">
+              {txt("ডিফল্ট:", "Default:")} {statementFormat}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* Format 1: Classic Formal */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatementFormat("classic")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group cursor-pointer ${
+                statementFormat === "classic"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-xs group-hover:scale-105 transition-transform">
+                  <FileText className="w-4 h-4" />
+                </div>
+                {statementFormat === "classic" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> {txt("নির্বাচিত", "Active")}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
+                  {txt("ঐতিহ্যবাহী অ্যাকাউন্টিং ছক", "Classic Accounting Grid")}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  {txt(
+                    "প্রথাগত কাস্টমার খতিয়ান। স্পষ্ট টেবিল বর্ডার, ডেবিট/ক্রেডিট কলাম ও ভেরিফিকেশন সিল বক্সসহ আনুষ্ঠানিক স্টেটমেন্ট।",
+                    "Traditional formal ledger with structured borders, Debit/Credit columns, running balance, and signature boxes."
+                  )}
+                </p>
+              </div>
+            </button>
+
+            {/* Format 2: Modern Corporate */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatementFormat("modern")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group cursor-pointer ${
+                statementFormat === "modern"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-xs group-hover:scale-105 transition-transform">
+                  <LayoutTemplate className="w-4 h-4" />
+                </div>
+                {statementFormat === "modern" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> {txt("নির্বাচিত", "Active")}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
+                  {txt("মডার্ন কর্পোরেট", "Modern Corporate")}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  {txt(
+                    "আন্তর্জাতিক ব্র্যান্ডিং লুক। রাউন্ডেড মেট্রিক্স কার্ড, ক্লিন বর্ডারলেস রো, ট্রানজ্যাকশন টাইপ ব্যাজ ও আধুনিক ফন্ট।",
+                    "Executive styling with rounded KPI summary cards, clean status pills, modern typography, and branded header."
+                  )}
+                </p>
+              </div>
+            </button>
+
+            {/* Format 3: Compact Paper-Saver */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatementFormat("compact")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group cursor-pointer ${
+                statementFormat === "compact"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs group-hover:scale-105 transition-transform">
+                  <Printer className="w-4 h-4" />
+                </div>
+                {statementFormat === "compact" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> {txt("নির্বাচিত", "Active")}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
+                  {txt("কমপ্যাক্ট পেপার-সেভার", "Compact Paper-Saver")}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  {txt(
+                    "কাগজ ও কালি সাশ্রয়ী ঘন ছক। এক পৃষ্ঠায় বেশি লেনদেন প্রিন্ট করার জন্য অপ্টিমাইজড স্লিম লেআউট।",
+                    "Dense, space-optimized layout designed to fit 40+ transactions per page, saving paper and toner."
+                  )}
+                </p>
+              </div>
+            </button>
+
+            {/* Format 4: POS Thermal Slip */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatementFormat("thermal")}
+              className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between relative overflow-hidden group cursor-pointer ${
+                statementFormat === "thermal"
+                  ? "bg-indigo-600/10 border-indigo-500 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500"
+                  : "bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold text-xs group-hover:scale-105 transition-transform">
+                  <Receipt className="w-4 h-4" />
+                </div>
+                {statementFormat === "thermal" && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> {txt("নির্বাচিত", "Active")}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
+                  {txt("পিওএস থার্মাল স্লিপ (80mm)", "POS Thermal Slip (80mm)")}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  {txt(
+                    "৮০ মিমি থার্মাল রোল প্রিন্টার উপযোগী সংক্ষিপ্ত মেমো স্লিপ। চটজলদি গ্রাহককে প্রিন্ট করে দেওয়ার উপযোগী।",
+                    "80mm narrow thermal slip format for roll printers to quickly hand a printed statement slip to a customer."
                   )}
                 </p>
               </div>
