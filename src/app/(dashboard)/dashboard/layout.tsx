@@ -48,9 +48,9 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex relative transition-colors duration-200">
+      <div className="h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex relative transition-colors duration-200">
         <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+        <div className="flex-1 flex flex-col h-screen min-w-0 overflow-y-auto overflow-x-hidden">
           {mounted && isFreeTier && isRestrictedRoute ? (
             <div className="flex-1 p-6 flex flex-col items-center justify-center min-h-[75vh] text-center max-w-xl mx-auto">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-5 shadow-lg shadow-amber-500/5">

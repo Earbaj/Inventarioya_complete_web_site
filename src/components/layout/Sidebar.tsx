@@ -166,7 +166,7 @@ export function Sidebar() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-slate-900/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col h-screen max-h-screen overscroll-contain transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 bg-slate-900/95 backdrop-blur-md border-r border-slate-800/80 flex flex-col h-[100dvh] max-h-[100dvh] overscroll-contain transition-all duration-300 ease-in-out lg:static lg:h-screen lg:shrink-0 lg:translate-x-0 ${
           // Mobile open/close
           isMobileOpen
             ? "translate-x-0 shadow-2xl w-64"
@@ -275,7 +275,7 @@ export function Sidebar() {
         {/* Nav List */}
         <div
           ref={navScrollRef}
-          className={`flex-1 overflow-y-auto overscroll-contain space-y-5 py-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent ${
+          className={`flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 py-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent ${
             isCollapsed ? "px-2" : "px-3"
           }`}
         >
@@ -429,8 +429,8 @@ export function Sidebar() {
 
         {/* Footer User Info, Theme Toggle & Logout */}
         <div
-          className={`border-t border-slate-800/80 bg-slate-950/60 shrink-0 transition-all ${
-            isCollapsed ? "p-2.5" : "p-3"
+          className={`border-t border-slate-800/80 bg-slate-950 shrink-0 transition-all ${
+            isCollapsed ? "p-2.5 pb-6 sm:pb-2.5" : "p-3 pb-8 sm:pb-3"
           }`}
         >
           {isCollapsed ? (
@@ -483,12 +483,12 @@ export function Sidebar() {
                 aria-label="Sign Out"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4 text-rose-400" />
               </button>
             </div>
           ) : (
             <div className="flex items-center justify-between px-1 py-0.5">
-              <div className="truncate pr-2">
+              <div className="truncate pr-1.5">
                 <p className="text-xs font-semibold text-slate-200 truncate leading-snug">
                   {user?.name || "Earbaj"}
                 </p>
@@ -520,9 +520,11 @@ export function Sidebar() {
                 <button
                   onClick={() => AuthService.logout()}
                   title={t("common.signOut")}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
+                  aria-label="Sign Out"
+                  className="px-2 py-1 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer flex items-center gap-1 border border-slate-700/60"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                  <span className="text-[11px] font-semibold text-rose-400">{locale === "bn" ? "লগআউট" : "Exit"}</span>
                 </button>
               </div>
             </div>

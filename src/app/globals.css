@@ -56,6 +56,15 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.7);
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera, and Firefox / IE */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ==========================================================================
    LIGHT MODE SURFACE & CONTRAST ADAPTATIONS
    ========================================================================== */

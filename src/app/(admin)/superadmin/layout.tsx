@@ -44,7 +44,7 @@ export default function SuperAdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100 relative">
+    <div className="h-screen w-full overflow-hidden bg-slate-950 flex text-slate-100 relative">
       {/* Mobile Drawer Backdrop */}
       {isMobileOpen && (
         <div
@@ -56,11 +56,11 @@ export default function SuperAdminLayout({
 
       {/* SuperAdmin Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-amber-500/20 flex flex-col h-screen transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-amber-500/20 flex flex-col h-[100dvh] max-h-[100dvh] shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
           isMobileOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
-        <div className="h-16 px-5 border-b border-amber-500/20 flex items-center justify-between">
+        <div className="h-16 shrink-0 px-5 border-b border-amber-500/20 flex items-center justify-between">
           <Link
             href="/superadmin"
             onClick={() => setIsMobileOpen(false)}
@@ -87,7 +87,7 @@ export default function SuperAdminLayout({
           </button>
         </div>
 
-        <div className="flex-1 px-3 py-4 space-y-1">
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -110,9 +110,9 @@ export default function SuperAdminLayout({
         </div>
 
         {/* Sidebar Footer with Logout & Lang Switcher */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950/40">
+        <div className="shrink-0 p-3 pb-8 sm:pb-3 border-t border-slate-800 bg-slate-950/80">
           <div className="flex items-center justify-between px-2 py-1">
-            <div className="truncate">
+            <div className="truncate pr-1">
               <p className="text-xs font-bold text-white truncate">
                 {user?.name || "SuperAdmin"}
               </p>
@@ -120,7 +120,7 @@ export default function SuperAdminLayout({
                 {user?.email || "Platform Root"}
               </p>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={toggleLocale}
                 title={locale === "bn" ? "Switch to English" : "বাংলায় পরিবর্তন করুন"}
@@ -131,9 +131,10 @@ export default function SuperAdminLayout({
               <button
                 onClick={() => AuthService.logout()}
                 title={txt("লগআউট", "Sign Out")}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="px-2 py-1 rounded-lg text-slate-300 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700/60 transition-colors cursor-pointer flex items-center gap-1"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span className="text-[11px] font-semibold text-rose-400 sm:hidden">{locale === "bn" ? "লগআউট" : "Exit"}</span>
               </button>
             </div>
           </div>
@@ -141,10 +142,10 @@ export default function SuperAdminLayout({
       </aside>
 
       {/* Main Content Area with Header Bar */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+      <div className="flex-1 flex flex-col h-screen min-w-0 overflow-y-auto overflow-x-hidden">
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-slate-800 bg-slate-900/50 backdrop-blur px-4 sm:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 h-14 shrink-0 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-3 sm:px-8 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Mobile Hamburger */}
             <button
               onClick={() => setIsMobileOpen(true)}
@@ -155,34 +156,34 @@ export default function SuperAdminLayout({
             </button>
 
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-semibold text-slate-300 truncate">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-xs font-semibold text-slate-300 truncate max-w-[120px] xs:max-w-none">
                 {txt("প্ল্যাটফর্ম ব্যাকএন্ড সচল", "Platform Backend Online")}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-1 shrink min-w-0 pr-1">
             <button
               onClick={toggleLocale}
               title={locale === "bn" ? "Switch to English" : "বাংলায় পরিবর্তন করুন"}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-700 transition-all flex items-center gap-1 text-xs font-bold shrink-0 shadow-sm cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-amber-400 border border-slate-700 transition-all flex items-center gap-1 text-xs font-bold shrink-0 shadow-sm cursor-pointer whitespace-nowrap"
             >
               <Globe className="w-3.5 h-3.5 text-amber-500" />
               <span>{locale === "bn" ? "EN" : "বাং"}</span>
             </button>
 
-            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 shrink-0 bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/60 whitespace-nowrap">
               <span className="font-medium text-slate-200">{user?.name || "SuperAdmin"}</span>
-              <span>·</span>
-              <span className="text-amber-400 font-mono text-[11px]">
+              <span className="text-slate-600 hidden xs:inline">•</span>
+              <span className="text-amber-400 font-mono text-[11px] hidden xs:inline">
                 {user?.email || "Platform Root"}
               </span>
             </div>
 
             <button
               onClick={() => AuthService.logout()}
-              className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 whitespace-nowrap"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>{txt("লগআউট", "Sign Out")}</span>
