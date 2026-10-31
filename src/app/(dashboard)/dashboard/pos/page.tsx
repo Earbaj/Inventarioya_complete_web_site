@@ -327,6 +327,11 @@ export default function PosTerminalPage() {
     );
   };
 
+  // Remove a single specific item from Cart
+  const removeFromCart = (productId: string) => {
+    setCart((prev) => prev.filter((item) => item.id !== productId));
+  };
+
   // Handle Complete Checkout
   const handleCheckout = async () => {
     if (cart.length === 0) return;
@@ -596,96 +601,94 @@ export default function PosTerminalPage() {
 
         {/* Right Side: Active Cart & Checkout Panel */}
         <div
-          className={`fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-slate-900 flex flex-col h-full border-l border-slate-800 shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 right-0 z-50 w-full sm:w-[390px] lg:w-[410px] xl:w-[430px] bg-slate-900 flex flex-col h-full border-l border-slate-800 shadow-2xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
             isMobileCartOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
           }`}
         >
           {/* Cart Header */}
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="px-3.5 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/70">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsMobileCartOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden transition-colors"
                 aria-label="Close cart"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
               <ShoppingCart className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-                {txt(`বিলিং কার্ট (${cart.reduce((s, i) => s + i.cartQuantity, 0)})`, `Active Register Cart (${cart.reduce((s, i) => s + i.cartQuantity, 0)})`)}
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <span>{txt("বিলিং কার্ট", "Register Cart")}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  {cart.reduce((s, i) => s + i.cartQuantity, 0)} {txt("পণ্য", "items")}
+                </span>
               </h3>
             </div>
             {cart.length > 0 && (
               <button
-                onClick={() => setCart([])}
-                className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors"
+                type="button"
+                onClick={() => {
+                  if (window.confirm(txt("আপনি কি কার্টের সকল পণ্য মুছে ফেলতে চান?", "Are you sure you want to clear all items in the cart?"))) {
+                    setCart([]);
+                  }
+                }}
+                className="text-[10px] font-semibold text-rose-400 hover:text-rose-300 px-2 py-1 rounded hover:bg-rose-500/10 transition-colors flex items-center gap-1"
+                title={txt("পুরো কার্টের সব পণ্য খালি করুন", "Clear all items in cart")}
               >
-                {txt("কার্ট খালি করুন", "Clear Cart")}
+                <Trash2 className="w-3 h-3" />
+                <span>{txt("সব মুছুন", "Clear All")}</span>
               </button>
             )}
           </div>
 
           {/* Customer Selection & Searchable Combobox */}
-          <div className="p-3 border-b border-slate-800 bg-slate-950/40 relative">
-            <div className="flex items-center justify-between gap-1 mb-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <User className="w-3 h-3 text-indigo-400" />
-                {txt("কাস্টমার / বাকি খাতা", "Customer / Ledger")}
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowAddCustomerModal(true)}
-                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors"
+          <div className="px-3 py-1.5 border-b border-slate-800 bg-slate-950/40 shrink-0 relative">
+            <div className="flex items-center justify-between gap-1.5 text-[11px]">
+              {/* Selected Customer Trigger Box */}
+              <div
+                onClick={() => setIsCustomerDropdownOpen((prev) => !prev)}
+                className="flex-1 min-w-0 bg-slate-900/90 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-lg px-2.5 py-1 cursor-pointer transition-all flex items-center justify-between gap-2"
               >
-                <Plus className="w-3 h-3" />
-                {txt("নতুন কাস্টমার", "New Customer")}
-              </button>
-            </div>
-
-            {/* Selected Customer Trigger Box */}
-            <div
-              onClick={() => setIsCustomerDropdownOpen((prev) => !prev)}
-              className="w-full bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 cursor-pointer transition-all flex items-center justify-between gap-2"
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-semibold text-white truncate">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <User className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <div className="truncate flex items-center gap-1.5">
+                    <span className="font-semibold text-white text-xs truncate">
                       {selectedCustomer ? selectedCustomer.name : customerName || txt("সাধারণ ক্রেতা (Walk-in)", "Walk-in Customer")}
-                    </p>
+                    </span>
                     {selectedCustomer && Number(selectedCustomer.closingBalance || 0) < 0 && (
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
+                      <span className="px-1 py-0.2 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0">
                         {txt("বাকি:", "Due:")} {formatCurrency(Math.abs(Number(selectedCustomer.closingBalance)))}
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-400 truncate">
-                    {selectedCustomer
-                      ? selectedCustomer.phone || txt("ফোন নেই", "No phone")
-                      : customerPhone ? `${customerPhone} (Custom)` : txt("সাধারণ ক্যাশ খরিদ্দার (খাতা ছাড়া)", "General Customer (No ledger)")}
-                  </p>
+                </div>
+                <div className="flex items-center gap-1 text-slate-400 shrink-0">
+                  {selectedCustomer && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectCustomer(null);
+                      }}
+                      className="p-0.5 hover:text-white rounded hover:bg-slate-800 transition-colors"
+                      title={txt("সাধারণ কাস্টমারে রিসেট করুন", "Reset to Walk-in Customer")}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${isCustomerDropdownOpen ? "rotate-180" : ""}`} />
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-slate-400 shrink-0">
-                {selectedCustomer && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectCustomer(null);
-                    }}
-                    className="p-1 hover:text-white rounded hover:bg-slate-800 transition-colors"
-                    title={txt("সাধারণ কাস্টমারে রিসেট করুন", "Reset to Walk-in Customer")}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isCustomerDropdownOpen ? "rotate-180" : ""}`} />
-              </div>
+              {/* Quick Add Button */}
+              <button
+                type="button"
+                onClick={() => setShowAddCustomerModal(true)}
+                className="p-1 px-2 text-[10px] bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 hover:text-indigo-300 font-semibold rounded-lg flex items-center gap-1 transition-colors shrink-0"
+                title={txt("নতুন কাস্টমার নিবন্ধন করুন", "Register new customer")}
+              >
+                <Plus className="w-3 h-3" />
+                <span className="hidden sm:inline">{txt("নতুন", "New")}</span>
+              </button>
             </div>
 
             {/* Searchable Dropdown with Infinite/Paginated Scroll */}
@@ -803,47 +806,54 @@ export default function PosTerminalPage() {
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
                   >
-                    <Plus className="w-3 h-3" /> {txt("দ্রুত যোগ", "Quick Add")}
+                    <Plus className="w-3 h-3" /> {txt("নতুন", "New")}
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {/* Cart Items List - Streamlined, High-density Layout */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1.5">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500">
-                <ShoppingCart className="w-10 h-10 text-slate-700 mb-2" />
-                <p className="text-xs font-medium">{txt("বিলিং কার্ট সম্পূর্ণ খালি", "Register Cart is Empty")}</p>
-                <p className="text-[11px] text-slate-600 mt-1">
-                  {txt("পণ্য সিলেক্ট করুন বা বারকোড স্ক্যান করে কার্টে যোগ করুন", "Click any product or scan barcode to add to billing bill")}
+                <ShoppingCart className="w-9 h-9 text-slate-700 mb-2" />
+                <p className="text-xs font-medium">{txt("বিলিং কার্ট খালি", "Register Cart is Empty")}</p>
+                <p className="text-[10px] text-slate-600 mt-1 max-w-[200px]">
+                  {txt("পণ্য সিলেক্ট করুন বা বারকোড স্ক্যান করে কার্টে যোগ করুন", "Click product or scan barcode to add to cart")}
                 </p>
               </div>
             ) : (
               cart.map((item) => (
                 <div
                   key={item.id}
-                  className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between gap-2"
+                  className="py-1.5 px-2.5 rounded-lg bg-slate-950/80 hover:bg-slate-950 border border-slate-800/80 hover:border-slate-700/80 transition-all flex items-center justify-between gap-2 text-xs group"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">{item.name}</p>
-                    <p className="text-[10px] text-slate-400">
-                      {formatCurrency(item.sellingPrice)} × {item.cartQuantity}
-                      {item.cartQuantity >= item.stockQuantity && (
-                        <span className="ml-1 text-[9px] text-amber-400 font-semibold">({txt("সর্বোচ্চ স্টক", "Max Stock")})</span>
-                      )}
+                  {/* Item Title and Unit Price */}
+                  <div className="flex-1 min-w-0 pr-1">
+                    <p className="font-semibold text-white truncate text-[11px] leading-tight">
+                      {item.name}
                     </p>
+                    <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono mt-0.5">
+                      <span>{formatCurrency(item.sellingPrice)}</span>
+                      <span>×</span>
+                      <span className="font-bold text-slate-200">{item.cartQuantity}</span>
+                      {item.unit && <span className="text-slate-500">({item.unit})</span>}
+                      {item.cartQuantity >= item.stockQuantity && (
+                        <span className="text-[9px] text-amber-400 font-semibold">({txt("সর্বোচ্চ", "Max")})</span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+                  {/* Quantity Controls Stepper */}
+                  <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, -1)}
-                      className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                      className="w-5 h-5 rounded bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                       title={txt("পরিমাণ ১ কমান", "Decrease quantity by 1")}
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-2.5 h-2.5" />
                     </button>
                     <input
                       type="number"
@@ -852,42 +862,49 @@ export default function PosTerminalPage() {
                       value={item.cartQuantity}
                       onChange={(e) => {
                         const val = parseInt(e.target.value, 10);
-                        if (!isNaN(val)) {
-                          setExactQuantity(item.id, val);
-                        }
+                        if (!isNaN(val)) setExactQuantity(item.id, val);
                       }}
                       onBlur={(e) => {
                         const val = parseInt(e.target.value, 10);
-                        if (isNaN(val) || val <= 0) {
-                          setExactQuantity(item.id, 1);
-                        }
+                        if (isNaN(val) || val <= 0) setExactQuantity(item.id, 1);
                       }}
-                      className="w-11 h-6 bg-transparent text-center text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      title={txt("সরাসরি পরিমাণ লিখুন", "Type exact quantity directly")}
+                      className="w-8 h-5 bg-transparent text-center text-[11px] font-bold text-white focus:outline-none font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      title={txt("সরাসরি পরিমাণ লিখুন", "Type exact quantity")}
                     />
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, 1)}
                       disabled={item.cartQuantity >= item.stockQuantity}
-                      className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                      title={item.cartQuantity >= item.stockQuantity ? txt("সর্বোচ্চ মজুত পৌঁছে গেছে", "Maximum available stock reached") : txt("পরিমাণ ১ বৃদ্ধি করুন", "Increase quantity by 1")}
+                      className="w-5 h-5 rounded bg-slate-800/80 hover:bg-slate-700 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                      title={item.cartQuantity >= item.stockQuantity ? txt("সর্বোচ্চ মজুত পৌঁছে গেছে", "Max stock reached") : txt("পরিমাণ ১ বৃদ্ধি করুন", "Increase quantity")}
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-2.5 h-2.5" />
                     </button>
                   </div>
 
-                  <div className="text-right min-w-[60px]">
-                    <p className="text-xs font-bold text-white">{formatCurrency(item.lineTotal)}</p>
+                  {/* Line Total & Single Item Delete Trash Button */}
+                  <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                    <span className="font-mono font-bold text-white text-xs min-w-[55px] text-right">
+                      {formatCurrency(item.lineTotal)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.id)}
+                      className="w-6 h-6 rounded-md text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 active:scale-90 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                      title={txt(`"${item.name}" কার্ট থেকে বাদ দিন`, `Remove "${item.name}" from cart`)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))
             )}
           </div>
 
-          {/* Calculation & Payment Tender */}
-          <div className="p-4 border-t border-slate-800 bg-slate-950/60 space-y-3">
-            {/* Payment Method Pills - Plain no bg, color only when selected, no shadows */}
-            <div className="grid grid-cols-5 gap-1.5">
+          {/* Calculation & Payment Tender - Ultra Compact, Space-Optimized */}
+          <div className="p-3 border-t border-slate-800 bg-slate-950/90 space-y-2 shrink-0">
+            {/* Payment Method Pills - Compact Row */}
+            <div className="grid grid-cols-5 gap-1">
               {(
                 [
                   { id: "CASH", label: "CASH", bn: "নগদ", active: "border-emerald-500 text-emerald-400 bg-emerald-500/10" },
@@ -910,10 +927,10 @@ export default function PosTerminalPage() {
                         setPaidAmount(grandTotal);
                       }
                     }}
-                    className={`py-1.5 px-1 rounded-lg text-[10px] font-bold border transition-all ${
+                    className={`py-1 rounded-md text-[10px] font-bold border transition-all text-center ${
                       isSelected
                         ? `${item.active} font-extrabold`
-                        : "bg-transparent text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white"
+                        : "bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-white"
                     }`}
                   >
                     {item.id === "DUE" ? txt("DUE (বাকি)", "DUE") : item.id === "CASH" ? txt("CASH (নগদ)", "CASH") : item.label}
@@ -922,55 +939,54 @@ export default function PosTerminalPage() {
               })}
             </div>
 
-            {/* Discount & Subtotals */}
-            <div className="space-y-1.5 text-xs text-slate-400 pt-1">
-              <div className="flex justify-between">
-                <span>{txt("সাবটোটাল:", "Subtotal:")}</span>
-                <span className="font-semibold text-white">{formatCurrency(subtotal)}</span>
+            {/* Compact Subtotal, Discount & Grand Total Ribbon */}
+            <div className="bg-slate-900/90 rounded-xl p-2 border border-slate-800/80 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <span>{txt("সাবটোটাল:", "Subtotal:")} <strong className="text-white font-mono">{formatCurrency(subtotal)}</strong></span>
+                <div className="flex items-center gap-1.5">
+                  <span>{txt("ছাড়:", "Disc:")}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                    className="w-16 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-emerald-400 font-mono font-semibold focus:outline-none focus:border-indigo-500"
+                    placeholder="0"
+                  />
+                </div>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <span>{txt("ছাড় / ডিসকাউন্ট (৳):", "Discount (৳):")}</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={discountAmount}
-                  onChange={(e) => setDiscountAmount(Number(e.target.value))}
-                  className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-right text-xs text-emerald-400 font-semibold focus:outline-none"
-                />
-              </div>
-              <div className="flex justify-between text-sm font-extrabold text-white pt-1.5 border-t border-slate-800">
-                <span>{txt("সর্বমোট বিল:", "Grand Total:")}</span>
-                <span className="text-emerald-400">{formatCurrency(grandTotal)}</span>
+
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                <span className="text-xs font-bold text-white">{txt("সর্বমোট বিল:", "Grand Total:")}</span>
+                <span className="text-base font-black text-emerald-400 font-mono">{formatCurrency(grandTotal)}</span>
               </div>
             </div>
 
-            {/* Paid & Due Inputs */}
-            <div className="space-y-2 pt-1 border-t border-slate-800/60">
+            {/* Tender & Due Bar */}
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex flex-col">
-                  <span className="text-xs text-slate-300 font-medium">{txt("নগদ / পরিশোধ (৳):", "Cash / Paid (৳):")}</span>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaidAmount(grandTotal);
-                        if (paymentMethod === "DUE") setPaymentMethod("CASH");
-                      }}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-                    >
-                      {txt("পুরো পরিশোধ", "Full Paid")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPaidAmount(0);
-                        setPaymentMethod("DUE");
-                      }}
-                      className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
-                    >
-                      {txt("পুরো বাকি", "Full Due")}
-                    </button>
-                  </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-slate-300 font-medium">{txt("পরিশোধ:", "Paid:")}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaidAmount(grandTotal);
+                      if (paymentMethod === "DUE") setPaymentMethod("CASH");
+                    }}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                  >
+                    {txt("পুরো জমা", "Full")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaidAmount(0);
+                      setPaymentMethod("DUE");
+                    }}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
+                  >
+                    {txt("পুরো বাকি", "Due")}
+                  </button>
                 </div>
 
                 <input
@@ -986,39 +1002,38 @@ export default function PosTerminalPage() {
                       setPaymentMethod("CASH");
                     }
                   }}
-                  className="w-28 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right text-xs text-white font-bold focus:outline-none focus:border-indigo-500"
+                  className="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right text-xs text-white font-mono font-bold focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              {dueAmount > 0 && (
-                <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-semibold">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    {txt("অবশিষ্ট বাকি:", "Remaining Due:")}
+              {/* Inline Due / Change badge */}
+              {dueAmount > 0 ? (
+                <div className="flex items-center justify-between text-[11px] px-2 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-semibold">
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    {txt("অবশিষ্ট বাকি:", "Due:")}
                   </span>
-                  <span className="font-bold text-rose-300 font-mono text-sm">{formatCurrency(dueAmount)}</span>
+                  <span className="font-bold text-rose-300 font-mono text-xs">{formatCurrency(dueAmount)}</span>
                 </div>
-              )}
-
-              {changeAmount > 0 && (
-                <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-semibold">
-                  <span>{txt("ফেরত দিন (চেঞ্জ):", "Return Change:")}</span>
-                  <span className="font-bold text-white font-mono text-sm">{formatCurrency(changeAmount)}</span>
+              ) : changeAmount > 0 ? (
+                <div className="flex items-center justify-between text-[11px] px-2 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-semibold">
+                  <span>{txt("ফেরত দিন (চেঞ্জ):", "Change:")}</span>
+                  <span className="font-bold text-white font-mono text-xs">{formatCurrency(changeAmount)}</span>
                 </div>
-              )}
+              ) : null}
 
               {dueAmount > 0 && !selectedCustomer && (
-                <p className="text-[10px] text-amber-400/90 leading-tight">
-                  {txt(`⚠️ সতর্কতা: সাধারণ ক্রেতা। এই ৳${dueAmount} টাকা বাকি খাতায় রেকর্ড করতে উপরে কাস্টমার সিলেক্ট বা যোগ করুন।`, `⚠️ Note: Unregistered customer. To record this ৳${dueAmount} due in customer ledger, please select or add a customer above.`)}
+                <p className="text-[9px] text-amber-400/90 leading-tight">
+                  {txt(`⚠️ বাকি খাতায় রেকর্ড করতে উপরে কাস্টমার সিলেক্ট করুন।`, `⚠️ Select customer above to record due in ledger.`)}
                 </p>
               )}
             </div>
 
-            {/* Checkout Button */}
+            {/* Checkout Action Button */}
             <button
               onClick={handleCheckout}
               disabled={cart.length === 0 || isCheckingOut}
-              className={`w-full py-3 text-white text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-2.5 text-white text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
                 dueAmount > 0 && paidAmount === 0
                   ? "bg-rose-600 hover:bg-rose-500 shadow-rose-600/30"
                   : dueAmount > 0
@@ -1033,7 +1048,7 @@ export default function PosTerminalPage() {
                 ? `${txt("বাকি বিক্রয় সম্পন্ন করুন", "Complete Due Sale")} (${formatCurrency(grandTotal)})`
                 : dueAmount > 0
                 ? `${txt("আংশিক বিক্রয়", "Partial Sale")} (${txt("জমা:", "Paid:")} ${formatCurrency(paidAmount)} · ${txt("বাকি:", "Due:")} ${formatCurrency(dueAmount)})`
-                : `${txt("বিক্রয় সম্পন্ন ও রসিদ প্রিন্ট", "Complete & Print Invoice")} (${formatCurrency(grandTotal)})`}
+                : `${txt("রসিদ প্রিন্ট ও সম্পন্ন", "Complete & Print Invoice")} (${formatCurrency(grandTotal)})`}
             </button>
           </div>
         </div>
