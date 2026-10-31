@@ -12,9 +12,6 @@ import {
   Receipt,
   CheckCircle2,
   AlertCircle,
-  Building2,
-  User,
-  Phone,
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -184,7 +181,7 @@ export function InvoicePrintModal({
 
                   <div className="text-right shrink-0">
                     <span className="inline-block bg-slate-900 text-white font-extrabold px-3 py-1 text-[11px] rounded uppercase tracking-wider mb-2">
-                      {txt("ক্যাশ মেমো ও ট্যাক্স ইনভয়েস", "RETAIL TAX INVOICE")}
+                      {txt("ক্যাশ মেমো ও ইনভয়েস", "RETAIL SALES INVOICE")}
                     </span>
                     <div className="text-[11px] text-slate-700 space-y-0.5">
                       <p>
@@ -223,154 +220,164 @@ export function InvoicePrintModal({
                 </div>
               </div>
 
-              {/* Billed To & Served By Info */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Customer Box */}
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
-                    <User className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>{txt("ক্রেতার তথ্য (Customer)", "Customer Information")}</span>
-                  </div>
-                  <p className="text-sm font-bold text-slate-900">{invoice.customerName}</p>
-                  {invoice.customerPhone ? (
-                    <p className="text-[11px] text-slate-700 font-mono mt-0.5 flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-slate-400" />
-                      {invoice.customerPhone}
-                    </p>
-                  ) : (
-                    <p className="text-[10px] text-slate-500 italic mt-0.5">{txt("কাউন্টার / সাধারণ ক্রেতা", "Counter / Walk-in Sale")}</p>
-                  )}
-                </div>
-
-                {/* Sales Staff / Branch Box */}
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-right">
-                  <div className="flex items-center justify-end gap-1.5 text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1">
-                    <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>{txt("ক্যাশিয়ার ও শাখা", "Store Register & Served By")}</span>
-                  </div>
-                  <p className="text-sm font-bold text-slate-900">{displayCashier}</p>
-                  <p className="text-[11px] text-slate-600 mt-0.5">
-                    {txt("রোল:", "Role:")} <span className="font-semibold uppercase">{invoice.createdByRole || "Admin"}</span>
-                  </p>
-                  {invoice.branchName && (
-                    <p className="text-[10px] text-indigo-700 font-semibold mt-0.5">
-                      {txt("শাখা:", "Branch:")} {invoice.branchName}
-                    </p>
-                  )}
-                </div>
-              </div>
+              {/* Customer & Register Information - Structured Table matching Customer Ledger */}
+              <table className="w-full text-left text-xs border-collapse border border-slate-900">
+                <tbody>
+                  <tr>
+                    <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-slate-900 px-3 py-2 border border-slate-900">
+                      {txt("ক্রেতার নাম:", "Customer Name:")}
+                    </td>
+                    <td className="w-2/6 font-bold text-slate-900 text-xs px-3 py-2 border border-slate-900">
+                      {invoice.customerName}
+                    </td>
+                    <td className="w-1/6 bg-slate-100 font-bold uppercase text-[10px] text-slate-900 px-3 py-2 border border-slate-900">
+                      {txt("ফোন নম্বর:", "Phone Number:")}
+                    </td>
+                    <td className="w-2/6 font-mono font-medium text-slate-900 px-3 py-2 border border-slate-900">
+                      {invoice.customerPhone || txt("কাউন্টার / সাধারণ ক্রেতা", "Walk-in Customer")}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="bg-slate-100 font-bold uppercase text-[10px] text-slate-900 px-3 py-2 border border-slate-900">
+                      {txt("ক্যাশিয়ার / স্টাফ:", "Served By:")}
+                    </td>
+                    <td className="font-medium text-slate-900 text-xs px-3 py-2 border border-slate-900">
+                      <span className="font-bold">{displayCashier}</span>
+                      <span className="text-[10px] text-slate-600 font-normal ml-1">
+                        ({invoice.createdByRole || "Admin"})
+                      </span>
+                    </td>
+                    <td className="bg-slate-100 font-bold uppercase text-[10px] text-slate-900 px-3 py-2 border border-slate-900">
+                      {txt("শাখা / কাউন্টার:", "Branch / Outlet:")}
+                    </td>
+                    <td className="font-medium text-slate-900 px-3 py-2 border border-slate-900">
+                      {invoice.branchName || txt("মূল সেলস কাউন্টার", "Main POS Counter")}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* Items Line Items Table */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-100 border-b border-slate-200 text-slate-800 font-bold uppercase text-[10px]">
-                    <tr>
-                      <th className="py-2.5 px-3 text-center w-10">#</th>
-                      <th className="py-2.5 px-3">{txt("পণ্যের বিবরণ", "Item Description")}</th>
-                      <th className="py-2.5 px-3 text-right">{txt("একক দর", "Unit Price")}</th>
-                      <th className="py-2.5 px-3 text-center">{txt("পরিমাণ", "Qty")}</th>
-                      {Number(invoice.discount) > 0 && (
-                        <th className="py-2.5 px-3 text-right">{txt("ছাড়", "Discount")}</th>
-                      )}
-                      <th className="py-2.5 px-3 text-right">{txt("মোট মূল্য", "Total")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-800">
-                    {invoice.items.map((item, idx) => {
-                      const unitRate = Number(item.unitPrice ?? item.price ?? 0);
-                      const lineTotal = Number(
-                        item.totalPrice ?? item.total ?? unitRate * item.quantity
-                      );
-                      const itemDisc = Number(item.discount ?? 0);
+              <table className="w-full text-left text-xs border-collapse border border-slate-900">
+                <thead className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th className="py-2 px-3 text-center w-10 border border-slate-900">#</th>
+                    <th className="py-2 px-3 border border-slate-900">{txt("পণ্যের বিবরণ", "Item Description")}</th>
+                    <th className="py-2 px-3 text-right border border-slate-900">{txt("একক দর", "Unit Price")}</th>
+                    <th className="py-2 px-3 text-center border border-slate-900">{txt("পরিমাণ", "Qty")}</th>
+                    {Number(invoice.discount) > 0 && (
+                      <th className="py-2 px-3 text-right border border-slate-900">{txt("ছাড়", "Discount")}</th>
+                    )}
+                    <th className="py-2 px-3 text-right border border-slate-900">{txt("মোট মূল্য", "Total")}</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-800">
+                  {invoice.items.map((item, idx) => {
+                    const unitRate = Number(item.unitPrice ?? item.price ?? 0);
+                    const lineTotal = Number(
+                      item.totalPrice ?? item.total ?? unitRate * item.quantity
+                    );
+                    const itemDisc = Number(item.discount ?? 0);
 
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50/50">
-                          <td className="py-2 px-3 text-center text-slate-500 font-mono text-[11px]">
-                            {idx + 1}
+                    return (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="py-2 px-3 text-center text-slate-600 font-mono text-[11px] border border-slate-300">
+                          {idx + 1}
+                        </td>
+                        <td className="py-2 px-3 font-medium text-slate-900 border border-slate-300">
+                          {item.name || item.productName}
+                        </td>
+                        <td className="py-2 px-3 text-right font-mono text-slate-700 border border-slate-300">
+                          {formatCurrency(unitRate)}
+                        </td>
+                        <td className="py-2 px-3 text-center font-bold text-slate-900 border border-slate-300">
+                          {item.quantity}
+                        </td>
+                        {Number(invoice.discount) > 0 && (
+                          <td className="py-2 px-3 text-right text-emerald-700 font-mono border border-slate-300">
+                            {itemDisc > 0 ? `-${formatCurrency(itemDisc)}` : "-"}
                           </td>
-                          <td className="py-2 px-3 font-medium text-slate-900">
-                            {item.name || item.productName}
-                          </td>
-                          <td className="py-2 px-3 text-right font-mono text-slate-700">
-                            {formatCurrency(unitRate)}
-                          </td>
-                          <td className="py-2 px-3 text-center font-bold text-slate-900">
-                            {item.quantity}
-                          </td>
-                          {Number(invoice.discount) > 0 && (
-                            <td className="py-2 px-3 text-right text-emerald-700 font-mono">
-                              {itemDisc > 0 ? `-${formatCurrency(itemDisc)}` : "-"}
-                            </td>
-                          )}
-                          <td className="py-2 px-3 text-right font-bold font-mono text-slate-900">
-                            {formatCurrency(lineTotal)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        )}
+                        <td className="py-2 px-3 text-right font-bold font-mono text-slate-900 border border-slate-300">
+                          {formatCurrency(lineTotal)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
-              {/* Bill Financial Calculations & Totals (Full Row) */}
-              <div className="pt-2 w-full">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 w-full">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3.5 border-b border-slate-200 text-xs">
+              {/* Bill Financial Calculations & Totals (Structured Rows) */}
+              <div className="pt-1 w-full">
+                <div className="bg-slate-50 border border-slate-900 rounded-lg p-4 w-full">
+                  {/* First Row: Subtotal | Discount | Payment Method */}
+                  <div className="grid grid-cols-3 gap-4 pb-3.5 border-b border-slate-300">
                     <div>
-                      <span className="text-[10px] uppercase font-semibold text-slate-500 block">{txt("সাবটোটাল", "Subtotal")}</span>
-                      <span className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(invoice.subtotal)}</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
+                        {txt("সাবটোটাল", "Subtotal")}
+                      </span>
+                      <span className="text-base font-bold text-slate-900 font-mono mt-0.5 block">
+                        {formatCurrency(invoice.subtotal)}
+                      </span>
                     </div>
-                    {Number(invoice.discount) > 0 ? (
-                      <div>
-                        <span className="text-[10px] uppercase font-semibold text-emerald-700 block">{txt("ছাড় / ডিসকাউন্ট", "Discount")}</span>
-                        <span className="text-sm font-bold text-emerald-700 font-mono">-{formatCurrency(invoice.discount)}</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">{txt("ছাড় / ডিসকাউন্ট", "Discount")}</span>
-                        <span className="text-sm font-medium text-slate-500 font-mono">৳ 0</span>
-                      </div>
-                    )}
-                    {Number(invoice.tax) > 0 ? (
-                      <div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-500 block">{txt("ভ্যাট / ট্যাক্স", "VAT / Tax")}</span>
-                        <span className="text-sm font-bold text-slate-900 font-mono">{formatCurrency(invoice.tax)}</span>
-                      </div>
-                    ) : (
-                      <div>
-                        <span className="text-[10px] uppercase font-semibold text-slate-400 block">{txt("ভ্যাট / ট্যাক্স", "VAT / Tax")}</span>
-                        <span className="text-sm font-medium text-slate-500 font-mono">৳ 0</span>
-                      </div>
-                    )}
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-emerald-700 block tracking-wider">
+                        {txt("ছাড় / ডিসকাউন্ট", "Discount")}
+                      </span>
+                      <span className="text-base font-bold text-emerald-700 font-mono mt-0.5 block">
+                        {Number(invoice.discount) > 0 ? `-${formatCurrency(invoice.discount)}` : "৳ 0"}
+                      </span>
+                    </div>
+
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block">{txt("পেমেন্ট মাধ্যম", "Payment Method")}</span>
-                      <span className="text-sm font-extrabold text-slate-900">{invoice.paymentMethod || "CASH"}</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
+                        {txt("পেমেন্ট মাধ্যম", "Payment Method")}
+                      </span>
+                      <span className="text-base font-black text-slate-900 uppercase mt-0.5 block">
+                        {invoice.paymentMethod || "CASH"}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Net Grand Total, Paid & Due Highlight Row */}
-                  <div className="pt-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="flex flex-wrap items-center gap-4 text-xs">
-                      <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">{txt("পরিশোধিত টাকা", "Paid Amount")}</span>
-                        <span className="text-base font-bold text-emerald-700 font-mono">{formatCurrency(invoice.paidAmount)}</span>
-                      </div>
-                      <div className="h-7 w-px bg-slate-200 hidden sm:block" />
-                      <div>
-                        <span className="text-[10px] uppercase font-semibold block text-slate-500">{txt("বকেয়া ব্যালেন্স (বাকি)", "Due Balance (বাকি)")}</span>
-                        {Number(invoice.dueAmount) > 0 ? (
-                          <span className="text-base font-black text-rose-600 font-mono">{formatCurrency(invoice.dueAmount)}</span>
-                        ) : (
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded inline-block">{txt("বাকি নেই (৳ 0)", "Cleared (৳ 0)")}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-slate-300 rounded-xl px-5 py-2 text-right shadow-xs">
-                      <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider block">{txt("সর্বমোট বিল", "Net Grand Total")}</span>
-                      <span className="text-2xl font-black text-indigo-700 font-mono leading-none mt-0.5 block">
+                  {/* Second Row: Below Paid Amount, Net Grand Total & Due Balance */}
+                  <div className="grid grid-cols-3 gap-4 pt-3.5 items-center">
+                    <div>
+                      <span className="text-[10px] uppercase font-extrabold text-indigo-900 block tracking-wider">
+                        {txt("সর্বমোট বিল", "Net Grand Total")}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black text-indigo-700 font-mono mt-0.5 block">
                         {formatCurrency(invoice.grandTotal)}
                       </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
+                        {txt("পরিশোধিত টাকা", "Paid Amount")}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-black text-emerald-700 font-mono mt-0.5 block">
+                        {formatCurrency(invoice.paidAmount)}
+                      </span>
+                      {Number(invoice.paidAmount) > Number(invoice.grandTotal) && (
+                        <span className="text-[10px] text-blue-700 font-bold block mt-0.5">
+                          {txt("ফেরত:", "Change:")} {formatCurrency(Number(invoice.paidAmount) - Number(invoice.grandTotal))}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
+                        {txt("বকেয়া ব্যালেন্স (বাকি)", "Due Balance")}
+                      </span>
+                      {Number(invoice.dueAmount) > 0 ? (
+                        <span className="text-xl sm:text-2xl font-black text-rose-600 font-mono mt-0.5 block">
+                          {formatCurrency(invoice.dueAmount)}
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded inline-block mt-1">
+                          {txt("বাকি নেই (৳ 0)", "Cleared (৳ 0)")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -503,12 +510,6 @@ export function InvoicePrintModal({
                     <div className="flex justify-between text-emerald-700">
                       <span>{txt("ছাড় / ডিসকাউন্ট:", "Discount:")}</span>
                       <span>-{formatCurrency(invoice.discount)}</span>
-                    </div>
-                  )}
-                  {Number(invoice.tax) > 0 && (
-                    <div className="flex justify-between">
-                      <span>{txt("ভ্যাট / ট্যাক্স:", "Vat / Tax:")}</span>
-                      <span>{formatCurrency(invoice.tax)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-300">
