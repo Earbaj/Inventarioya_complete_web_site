@@ -177,7 +177,12 @@ apiClient.interceptors.response.use(
 
     if (error.response && error.response.status === 401) {
       if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
-        // Optional auto-logout on expired session
+        // Clear invalid or expired credentials immediately
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        document.cookie = "inventarioya_auth_token=; path=/; max-age=0; SameSite=Lax";
+        const currentPath = window.location.pathname;
+        window.location.href = `/login?session=expired&redirect=${encodeURIComponent(currentPath)}`;
       }
     }
     return Promise.reject(error);
@@ -189,17 +194,17 @@ apiClient.interceptors.response.use(
 ========================================================================= */
 
 const mockUser: User = {
-  uid: "58c93fae-503c-4570-92e1-94bf2f9b1b96",
-  id: "58c93fae-503c-4570-92e1-94bf2f9b1b96",
-  name: "Earbaj",
-  email: "earbaj@admin.com",
-  phone: "+880 1711-223344",
+  uid: "demo_guest_user",
+  id: "demo_guest_user",
+  name: "Demo Store Owner",
+  email: "demo@inventarioya.com",
+  phone: "+880 1700-000000",
   role: "admin",
-  shopId: "58c93fae-503c-4570-92e1-94bf2f9b1b96",
-  shopName: "Dhaka Mega Superstore",
+  shopId: "demo_shop_001",
+  shopName: "Demo Retail Superstore",
   branchId: "br_001",
   subscriptionTier: "premium",
-  subscriptionExpiresAt: "2026-09-30T07:49:25.819Z",
+  subscriptionExpiresAt: "2026-12-31T23:59:59.000Z",
   permissions: {
     canProcessReturn: true,
     canExportExcel: true,
@@ -449,12 +454,18 @@ export const mockManualPayments: ManualPaymentSubmission[] = [
 ========================================================================= */
 
 export const AuthService = {
+  getToken(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(TOKEN_KEY);
+  },
+
   async login(payload: { email: string; password: string; role?: string }): Promise<AuthResponse> {
     const res = await apiClient.post(ApiEndpoints.login, payload);
     if (res.data?.token) {
       if (typeof window !== "undefined") {
         localStorage.setItem(TOKEN_KEY, res.data.token);
         localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
+        document.cookie = `inventarioya_auth_token=${res.data.token}; path=/; max-age=604800; SameSite=Lax`;
       }
     }
     return res.data;
@@ -466,6 +477,7 @@ export const AuthService = {
       if (typeof window !== "undefined") {
         localStorage.setItem(TOKEN_KEY, res.data.token);
         localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
+        document.cookie = `inventarioya_auth_token=${res.data.token}; path=/; max-age=604800; SameSite=Lax`;
       }
     }
     return res.data;
@@ -509,7 +521,7 @@ export const AuthService = {
         const cached = localStorage.getItem(USER_KEY);
         if (cached) return JSON.parse(cached);
       }
-      return mockUser;
+      return null;
     }
   },
 
@@ -574,6 +586,7 @@ export const AuthService = {
     if (typeof window !== "undefined") {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      document.cookie = "inventarioya_auth_token=; path=/; max-age=0; SameSite=Lax";
       window.location.href = "/login";
     }
   },
@@ -707,7 +720,7 @@ export function normalizeInvoice(data: any): Invoice {
     data.createdByName ||
     data.servedBy?.name ||
     data.cashierName ||
-    "Earbaj";
+    "Cashier";
 
   const dateStr = data.date || data.createdAt || new Date().toISOString();
 

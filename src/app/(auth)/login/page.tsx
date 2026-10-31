@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Boxes, Lock, Mail, ArrowRight, AlertCircle, Globe, Sun, Moon, Eye, EyeOff } from "lucide-react";
@@ -20,6 +20,16 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  // Detect session expiration or redirect messages from URL
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("session") === "expired") {
+        setError(txt("আপনার লগইন সেশনের মেয়াদ শেষ হয়েছে। অনুগ্রহ করে আবার সাইন ইন করুন।", "Your login session has expired. Please sign in again."));
+      }
+    }
+  }, [txt]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
@@ -38,8 +48,10 @@ export default function LoginPage() {
       if (userRole === "superadmin") {
         router.push("/superadmin");
       } else {
-        // "admin" or "manager" navigate to dashboard
-        router.push("/dashboard");
+        const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const redirectParam = params?.get("redirect");
+        const target = redirectParam && redirectParam.startsWith("/") ? redirectParam : "/dashboard";
+        router.push(target);
       }
     } catch (err: any) {
       const serverMsg =

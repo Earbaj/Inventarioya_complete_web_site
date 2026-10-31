@@ -28,18 +28,46 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { locale } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    setMounted(true);
+    const token = AuthService.getToken();
     const currentUser = AuthService.getCurrentUser();
-    setUser(currentUser);
-    if (!currentUser) {
-      router.push("/login");
-    } else if (currentUser.role?.toLowerCase() === "superadmin") {
-      router.push("/superadmin");
+
+    // If not authenticated or token missing, block access and redirect immediately
+    if (!token || !currentUser) {
+      setIsAuthenticated(false);
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [router]);
+
+    // Keep edge/middleware cookie in sync
+    if (typeof document !== "undefined" && !document.cookie.includes("inventarioya_auth_token=")) {
+      document.cookie = `inventarioya_auth_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+    }
+
+    // SuperAdmin role should be in superadmin portal
+    if (currentUser.role?.toLowerCase() === "superadmin") {
+      setIsAuthenticated(false);
+      router.replace("/superadmin");
+      return;
+    }
+
+    setUser(currentUser);
+    setIsAuthenticated(true);
+  }, [router, pathname]);
+
+  // While authenticating, NEVER expose dashboard UI or child components to unauthenticated visitors
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-white">
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-xs text-slate-400 font-medium tracking-wide">
+          {locale === "bn" ? "নিরাপত্তা যাচাই করা হচ্ছে..." : "Verifying authentication..."}
+        </p>
+      </div>
+    );
+  }
 
   const isFreeTier = (user?.subscriptionTier || "free").toLowerCase() === "free";
   const isRestrictedRoute = RESTRICTED_FREE_ROUTES.some(
@@ -51,7 +79,7 @@ export default function DashboardLayout({
       <div className="h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex relative transition-colors duration-200">
         <Sidebar />
         <div className="flex-1 flex flex-col h-screen min-w-0 overflow-y-auto overflow-x-hidden">
-          {mounted && isFreeTier && isRestrictedRoute ? (
+          {isAuthenticated && isFreeTier && isRestrictedRoute ? (
             <div className="flex-1 p-6 flex flex-col items-center justify-center min-h-[75vh] text-center max-w-xl mx-auto">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-5 shadow-lg shadow-amber-500/5">
                 <Lock className="w-8 h-8" />

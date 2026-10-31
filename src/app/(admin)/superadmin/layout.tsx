@@ -26,16 +26,43 @@ export default function SuperAdminLayout({
   const { locale, toggleLocale, txt } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
+    const token = AuthService.getToken();
     const currentUser = AuthService.getCurrentUser();
-    setUser(currentUser);
-    if (!currentUser) {
-      router.push("/login");
-    } else if (currentUser.role?.toLowerCase() !== "superadmin") {
-      router.push("/dashboard");
+
+    if (!token || !currentUser) {
+      setIsAuthenticated(false);
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [router]);
+
+    if (currentUser.role?.toLowerCase() !== "superadmin") {
+      setIsAuthenticated(false);
+      router.replace("/dashboard");
+      return;
+    }
+
+    // Keep edge/middleware cookie in sync
+    if (typeof document !== "undefined" && !document.cookie.includes("inventarioya_auth_token=")) {
+      document.cookie = `inventarioya_auth_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+    }
+
+    setUser(currentUser);
+    setIsAuthenticated(true);
+  }, [router, pathname]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-950 text-white">
+        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-xs text-slate-400 font-medium tracking-wide">
+          {locale === "bn" ? "সুপার অ্যাডমিন অ্যাক্সেস যাচাই করা হচ্ছে..." : "Verifying SuperAdmin access..."}
+        </p>
+      </div>
+    );
+  }
 
   const navItems = [
     { name: txt("প্ল্যাটফর্ম মেট্রিক্স", "Platform Metrics"), href: "/superadmin", icon: LayoutDashboard },

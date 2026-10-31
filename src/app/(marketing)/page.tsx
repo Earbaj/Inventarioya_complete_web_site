@@ -67,13 +67,13 @@ export default function LandingPage() {
               <span>{txt("বিনামূল্যে ট্রায়াল শুরু করুন", "Start Free Trial")}</span>
               <ArrowRight className="w-4 h-4 text-white keep-white" />
             </Link>
-            <Link
-              href="/dashboard/pos"
-              className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+            <a
+              href="#pos"
+              className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{txt("লাইভ পিওএস ডেমো দেখুন", "Try Live POS Demo")}</span>
-            </Link>
+            </a>
           </div>
 
           {/* Trust points */}

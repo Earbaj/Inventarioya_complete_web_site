@@ -490,10 +490,10 @@ export function Sidebar() {
             <div className="flex items-center justify-between px-1 py-0.5">
               <div className="truncate pr-1.5">
                 <p className="text-xs font-semibold text-slate-200 truncate leading-snug">
-                  {user?.name || "Earbaj"}
+                  {user?.name || (locale === "bn" ? "অ্যাডমিন ইউজার" : "Shop Admin")}
                 </p>
                 <p className="text-[10px] text-slate-400 truncate">
-                  {user?.email || "user@admin.com"}
+                  {user?.email || ""}
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
