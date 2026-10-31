@@ -518,6 +518,19 @@ export default function CustomersPage() {
     );
   };
 
+  // Helper to safely parse dates across browsers and formats
+  const parseEntryTime = (dateStr?: string): number | null => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d.getTime();
+    const parts = dateStr.split(/[-/]/);
+    if (parts.length === 3 && parts[2].length === 4) {
+      const parsed = new Date(`${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`);
+      if (!isNaN(parsed.getTime())) return parsed.getTime();
+    }
+    return null;
+  };
+
   // Compute statement financial summary based on active date range
   const computeStatementFinancials = (
     cust: Customer,
@@ -525,38 +538,100 @@ export default function CustomersPage() {
     startDate: string,
     endDate: string
   ) => {
-    let periodEntries = allEntries;
     let periodOpening = Number(cust.openingBalance || 0);
 
-    const startTs = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : null;
-    const endTs = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : null;
+    let startTs: number | null = null;
+    if (startDate) {
+      const parts = startDate.split("-").map(Number);
+      if (parts.length === 3) {
+        startTs = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0).getTime();
+      } else {
+        const d = new Date(startDate);
+        if (!isNaN(d.getTime())) {
+          d.setHours(0, 0, 0, 0);
+          startTs = d.getTime();
+        }
+      }
+    }
+
+    let endTs: number | null = null;
+    if (endDate) {
+      const parts = endDate.split("-").map(Number);
+      if (parts.length === 3) {
+        endTs = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999).getTime();
+      } else {
+        const d = new Date(endDate);
+        if (!isNaN(d.getTime())) {
+          d.setHours(23, 59, 59, 999);
+          endTs = d.getTime();
+        }
+      }
+    }
+
+    // Sort entries chronologically ascending (oldest to newest)
+    const sortedEntries = [...allEntries].sort((a, b) => {
+      const ta = parseEntryTime(a.date || (a as any).createdAt) || 0;
+      const tb = parseEntryTime(b.date || (b as any).createdAt) || 0;
+      return ta - tb;
+    });
+
+    let periodEntries = sortedEntries;
 
     if (startTs !== null || endTs !== null) {
+      // 1. Calculate opening balance before the requested start date
       if (startTs !== null) {
-        const entriesBefore = allEntries.filter((e) => new Date(e.date).getTime() < startTs);
+        const entriesBefore = sortedEntries.filter((e) => {
+          const t = parseEntryTime(e.date || (e as any).createdAt);
+          if (t !== null) return t < startTs!;
+          if (startDate && e.date) return e.date.slice(0, 10) < startDate;
+          return false;
+        });
+
         if (entriesBefore.length > 0) {
           const lastBefore = entriesBefore[entriesBefore.length - 1];
-          const lastBal = Number(lastBefore.newBalance ?? 0);
-          periodOpening = lastBal < 0 ? Math.abs(lastBal) : -lastBal;
+          if (lastBefore.newBalance !== undefined && lastBefore.newBalance !== null && lastBefore.newBalance !== "") {
+            const lastBal = Number(lastBefore.newBalance);
+            periodOpening = lastBal < 0 ? Math.abs(lastBal) : (lastBal > 0 ? lastBal : 0);
+          } else {
+            let running = Number(cust.openingBalance || 0);
+            for (const eb of entriesBefore) {
+              const amt = Number(eb.amount || 0);
+              if (eb.type === "sale" || amt < 0) {
+                running += Math.abs(amt);
+              } else if (eb.type === "payment" || eb.type === "return" || (amt > 0 && eb.type !== "opening")) {
+                running = Math.max(0, running - amt);
+              }
+            }
+            periodOpening = running;
+          }
         } else {
           periodOpening = Number(cust.openingBalance || 0);
         }
       }
 
-      periodEntries = allEntries.filter((e) => {
-        const t = new Date(e.date).getTime();
+      // 2. Filter transactions strictly within the selected date window
+      periodEntries = sortedEntries.filter((e) => {
+        const t = parseEntryTime(e.date || (e as any).createdAt);
+        if (t === null) {
+          const s = (e.date || (e as any).createdAt || "").slice(0, 10);
+          if (startDate && s && s < startDate) return false;
+          if (endDate && s && s > endDate) return false;
+          return true;
+        }
         if (startTs !== null && t < startTs) return false;
         if (endTs !== null && t > endTs) return false;
         return true;
       });
     }
 
+    // 3. Purchases (Debits) in the period
     const totalPurchases = periodEntries.reduce((sum, e) => {
       const amt = Number(e.amount || 0);
       if (e.type === "sale" || amt < 0) return sum + Math.abs(amt);
       return sum;
     }, 0);
 
+    // 4. Payments and Returns (Credits) in the period
     const totalPaid = periodEntries.reduce((sum, e) => {
       const amt = Number(e.amount || 0);
       if (e.type === "return" || e.type === "payment" || (amt > 0 && e.type !== "opening")) {
@@ -565,14 +640,19 @@ export default function CustomersPage() {
       return sum;
     }, 0);
 
+    // 5. Net Outstanding Due at the end of the period
     let outstandingDue = 0;
     if (startTs !== null || endTs !== null) {
       if (periodEntries.length > 0) {
         const lastEntry = periodEntries[periodEntries.length - 1];
-        const bal = Number(lastEntry.newBalance ?? 0);
-        outstandingDue = bal < 0 ? Math.abs(bal) : 0;
+        if (lastEntry.newBalance !== undefined && lastEntry.newBalance !== null && lastEntry.newBalance !== "") {
+          const bal = Number(lastEntry.newBalance);
+          outstandingDue = bal < 0 ? Math.abs(bal) : (bal > 0 ? bal : 0);
+        } else {
+          outstandingDue = Math.max(0, periodOpening + totalPurchases - totalPaid);
+        }
       } else {
-        outstandingDue = periodOpening > 0 ? periodOpening : 0;
+        outstandingDue = periodOpening;
       }
     } else {
       outstandingDue = getDueAmount(cust);
@@ -622,41 +702,73 @@ export default function CustomersPage() {
     setShowPdfModal(true);
     setPdfLedgerLoading(true);
 
+    let entries: CustomerLedgerEntry[] = [];
     try {
+      // Fetch with limit 100 (standard safe API page limit without triggering 400 validation)
       const res = await CustomerService.getCustomerLedger(cust.id, {
-        limit: 1000,
+        page: 1,
+        limit: 100,
         sortBy: "date",
         sortOrder: "asc",
       });
-      const entries = res.data || [];
-      setAllPdfEntries(entries);
+      entries = Array.isArray(res?.data) ? [...res.data] : [];
 
-      const { periodEntries, financials } = computeStatementFinancials(cust, entries, sDate, eDate);
-      setPdfLedgerEntries(periodEntries);
-      setPdfFinancials(financials);
-    } catch (err) {
-      console.error("Failed to load customer ledger for PDF", err);
-      setAllPdfEntries([]);
-      setPdfLedgerEntries([]);
-      setPdfFinancials({
-        openingBalance: Number(cust.openingBalance || 0),
-        totalPurchases: 0,
-        totalPaid: 0,
-        outstandingDue: getDueAmount(cust),
-        periodLabel: "All Time",
-      });
-    } finally {
-      setPdfLedgerLoading(false);
+      // If multiple pages exist, fetch page 2 to have complete statement
+      if (res?.meta?.totalPages && res.meta.totalPages > 1) {
+        try {
+          const res2 = await CustomerService.getCustomerLedger(cust.id, {
+            page: 2,
+            limit: 100,
+            sortBy: "date",
+            sortOrder: "asc",
+          });
+          if (Array.isArray(res2?.data)) {
+            entries.push(...res2.data);
+          }
+        } catch {}
+      }
+    } catch (apiErr) {
+      console.warn("getCustomerLedger error with limit 100, trying fallback limit 20:", apiErr);
+      try {
+        const fallbackRes = await CustomerService.getCustomerLedger(cust.id, {
+          page: 1,
+          limit: 20,
+          sortBy: "date",
+          sortOrder: "asc",
+        });
+        entries = Array.isArray(fallbackRes?.data) ? fallbackRes.data : [];
+      } catch (fErr) {
+        console.warn("Fallback failed:", fErr);
+      }
     }
+
+    // Always fallback to in-memory ledgerEntries if API returned empty or failed
+    if (entries.length === 0 && ledgerEntries.length > 0 && (activeCustomer?.id === cust.id || cust.id)) {
+      entries = [...ledgerEntries];
+    }
+
+    setAllPdfEntries(entries);
+
+    const { periodEntries, financials } = computeStatementFinancials(cust, entries, sDate, eDate);
+    setPdfLedgerEntries(periodEntries);
+    setPdfFinancials(financials);
+    setPdfLedgerLoading(false);
   };
 
   const handleApplyPdfDateFilter = (newStart: string, newEnd: string) => {
     setPdfStartDate(newStart);
     setPdfEndDate(newEnd);
     if (selectedCustomerForPdf) {
+      const sourceEntries =
+        allPdfEntries.length > 0
+          ? allPdfEntries
+          : ledgerEntries.length > 0
+          ? ledgerEntries
+          : [];
+
       const { periodEntries, financials } = computeStatementFinancials(
         selectedCustomerForPdf,
-        allPdfEntries,
+        sourceEntries,
         newStart,
         newEnd
       );
@@ -3006,8 +3118,13 @@ export default function CustomersPage() {
                             <tbody className="divide-y divide-slate-100 text-slate-800">
                               {pdfLedgerEntries.length === 0 ? (
                                 <tr>
-                                  <td colSpan={7} className="py-8 text-center text-slate-400">
-                                    No transactions recorded in this period.
+                                  <td colSpan={7} className="py-8 text-center text-slate-500">
+                                    <p className="font-semibold text-slate-800">
+                                      Opening Balance: {formatCurrency(pdfFinancials.openingBalance)} | Outstanding Due: {formatCurrency(pdfFinancials.outstandingDue)}
+                                    </p>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                      No transactions recorded in this period ({pdfFinancials.periodLabel}).
+                                    </p>
                                   </td>
                                 </tr>
                               ) : (
@@ -3187,8 +3304,9 @@ export default function CustomersPage() {
                           <tbody className="text-black">
                             {pdfLedgerEntries.length === 0 ? (
                               <tr>
-                                <td colSpan={7} className="py-4 text-center text-slate-500 border border-black">
-                                  No transactions in this period.
+                                <td colSpan={7} className="py-4 text-center text-slate-600 border border-black">
+                                  <span className="font-semibold">Opening: {formatCurrency(pdfFinancials.openingBalance)} | Due: {formatCurrency(pdfFinancials.outstandingDue)}</span>
+                                  <span className="block text-[8px] text-slate-500 mt-0.5">No transactions in this period ({pdfFinancials.periodLabel}).</span>
                                 </td>
                               </tr>
                             ) : (
