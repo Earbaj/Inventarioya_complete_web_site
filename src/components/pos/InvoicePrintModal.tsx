@@ -307,78 +307,111 @@ export function InvoicePrintModal({
                 </tbody>
               </table>
 
-              {/* Bill Financial Calculations & Totals (Structured Rows) */}
-              <div className="pt-1 w-full">
-                <div className="bg-slate-50 border border-slate-900 rounded-lg p-4 w-full">
-                  {/* First Row: Subtotal | Discount | Payment Method */}
-                  <div className="grid grid-cols-3 gap-4 pb-3.5 border-b border-slate-300">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
-                        {txt("সাবটোটাল", "Subtotal")}
+              {/* Bill Financial Calculations & Totals */}
+              <div className="pt-2 flex flex-col sm:flex-row justify-between items-start gap-4">
+                {/* Left side: Payment Info & Terms/Notes */}
+                <div className="w-full sm:w-1/2 space-y-3">
+                  <div className="border border-slate-900 rounded-lg p-3 bg-slate-50 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold uppercase text-[10px] text-slate-600 tracking-wider">
+                        {txt("পেমেন্ট মাধ্যম:", "Payment Method:")}
                       </span>
-                      <span className="text-base font-bold text-slate-900 font-mono mt-0.5 block">
-                        {formatCurrency(invoice.subtotal)}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-emerald-700 block tracking-wider">
-                        {txt("ছাড় / ডিসকাউন্ট", "Discount")}
-                      </span>
-                      <span className="text-base font-bold text-emerald-700 font-mono mt-0.5 block">
-                        {Number(invoice.discount) > 0 ? `-${formatCurrency(invoice.discount)}` : "৳ 0"}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
-                        {txt("পেমেন্ট মাধ্যম", "Payment Method")}
-                      </span>
-                      <span className="text-base font-black text-slate-900 uppercase mt-0.5 block">
+                      <span className="font-black uppercase text-slate-900 bg-white border border-slate-300 px-2 py-0.5 rounded text-[11px]">
                         {invoice.paymentMethod || "CASH"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold uppercase text-[10px] text-slate-600 tracking-wider">
+                        {txt("পেমেন্ট স্ট্যাটাস:", "Payment Status:")}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1 ${
+                          isPaid
+                            ? "bg-emerald-100 text-emerald-800"
+                            : isPartial
+                            ? "bg-amber-100 text-amber-800"
+                            : isRefunded
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-rose-100 text-rose-800"
+                        }`}
+                      >
+                        {isPaid ? (
+                          <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                        ) : (
+                          <AlertCircle className="w-3 h-3" />
+                        )}
+                        {isPaid ? txt("পরিশোধিত", "PAID") : isPartial ? txt("আংশিক জমা", "PARTIAL") : txt("বকেয়া", "DUE")}
                       </span>
                     </div>
                   </div>
 
-                  {/* Second Row: Below Paid Amount, Net Grand Total & Due Balance */}
-                  <div className="grid grid-cols-3 gap-4 pt-3.5 items-center">
-                    <div>
-                      <span className="text-[10px] uppercase font-extrabold text-indigo-900 block tracking-wider">
-                        {txt("সর্বমোট বিল", "Net Grand Total")}
+                  <div className="p-3 bg-white border border-slate-300 rounded-lg text-[10px] text-slate-500 space-y-1">
+                    <p className="font-bold text-slate-700 uppercase tracking-wider">{txt("শর্তাবলী / নোট:", "Terms & Conditions:")}</p>
+                    <p>{txt("• বিক্রিত পণ্য ৭ দিনের মধ্যে ক্যাশ মেমো সহ পরিবর্তনযোগ্য।", "• Goods once sold can be exchanged within 7 days with invoice.")}</p>
+                    <p>{txt("• ব্যবহারের পর বা ক্ষতিগ্রস্ত পণ্য ফেরত নেওয়া হয় না।", "• Damaged or used items are not eligible for exchange/refund.")}</p>
+                  </div>
+                </div>
+
+                {/* Right side: Row-by-row Financial Breakdown */}
+                <div className="w-full sm:w-1/2 sm:max-w-md ml-auto">
+                  <div className="border border-slate-900 rounded-lg overflow-hidden text-xs">
+                    {/* Row 1: Subtotal */}
+                    <div className="flex justify-between items-center px-4 py-2 bg-slate-50 border-b border-slate-200">
+                      <span className="font-bold text-slate-700">{txt("সাবটোটাল:", "Subtotal:")}</span>
+                      <span className="font-mono font-bold text-slate-900 text-sm">
+                        {formatCurrency(invoice.subtotal)}
                       </span>
-                      <span className="text-xl sm:text-2xl font-black text-indigo-700 font-mono mt-0.5 block">
+                    </div>
+
+                    {/* Row 2: Discount */}
+                    <div className="flex justify-between items-center px-4 py-2 bg-white border-b border-slate-200">
+                      <span className="font-bold text-emerald-700">{txt("ছাড় / ডিসকাউন্ট:", "Discount:")}</span>
+                      <span className="font-mono font-bold text-emerald-700 text-sm">
+                        {Number(invoice.discount) > 0 ? `-${formatCurrency(invoice.discount)}` : "৳ 0"}
+                      </span>
+                    </div>
+
+                    {/* Row 3: Net Grand Total */}
+                    <div className="flex justify-between items-center px-4 py-2.5 bg-slate-100 border-b-2 border-slate-900">
+                      <span className="font-black text-slate-900 uppercase text-[11px] tracking-wide">
+                        {txt("সর্বমোট বিল:", "Net Grand Total:")}
+                      </span>
+                      <span className="font-mono font-black text-indigo-700 text-lg">
                         {formatCurrency(invoice.grandTotal)}
                       </span>
                     </div>
 
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
-                        {txt("পরিশোধিত টাকা", "Paid Amount")}
-                      </span>
-                      <span className="text-xl sm:text-2xl font-black text-emerald-700 font-mono mt-0.5 block">
+                    {/* Row 4: Paid Amount */}
+                    <div className="flex justify-between items-center px-4 py-2 bg-white border-b border-slate-200">
+                      <span className="font-bold text-slate-700">{txt("পরিশোধিত টাকা:", "Paid Amount:")}</span>
+                      <span className="font-mono font-bold text-emerald-700 text-sm">
                         {formatCurrency(invoice.paidAmount)}
                       </span>
-                      {Number(invoice.paidAmount) > Number(invoice.grandTotal) && (
-                        <span className="text-[10px] text-blue-700 font-bold block mt-0.5">
-                          {txt("ফেরত:", "Change:")} {formatCurrency(Number(invoice.paidAmount) - Number(invoice.grandTotal))}
-                        </span>
-                      )}
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block tracking-wider">
-                        {txt("বকেয়া ব্যালেন্স (বাকি)", "Due Balance")}
-                      </span>
+                    {/* Row 5: Due Balance */}
+                    <div className="flex justify-between items-center px-4 py-2 bg-slate-50">
+                      <span className="font-bold text-slate-700">{txt("বকেয়া ব্যালেন্স (বাকি):", "Due Balance:")}</span>
                       {Number(invoice.dueAmount) > 0 ? (
-                        <span className="text-xl sm:text-2xl font-black text-rose-600 font-mono mt-0.5 block">
+                        <span className="font-mono font-black text-rose-600 text-sm">
                           {formatCurrency(invoice.dueAmount)}
                         </span>
                       ) : (
-                        <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded inline-block mt-1">
+                        <span className="font-bold text-emerald-700 text-xs bg-emerald-100 px-2 py-0.5 rounded">
                           {txt("বাকি নেই (৳ 0)", "Cleared (৳ 0)")}
                         </span>
                       )}
                     </div>
+
+                    {/* Optional: Change Return */}
+                    {Number(invoice.paidAmount) > Number(invoice.grandTotal) && (
+                      <div className="flex justify-between items-center px-4 py-1.5 bg-blue-50 border-t border-blue-200 text-blue-800">
+                        <span className="font-bold text-[11px]">{txt("ফেরত দিন (Change):", "Change Return:")}</span>
+                        <span className="font-mono font-black text-xs">
+                          {formatCurrency(Number(invoice.paidAmount) - Number(invoice.grandTotal))}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
