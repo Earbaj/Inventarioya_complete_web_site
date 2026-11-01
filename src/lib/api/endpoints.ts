@@ -44,11 +44,14 @@ export const ApiEndpoints = {
     `${API_BASE_URL}/api/subscriptions/payments/${id}/reject`,
 
   // ===========================================================================
-  // SUPERADMIN SHOP MANAGEMENT ENDPOINTS
+  // SUPERADMIN SHOP MANAGEMENT & SYSTEM HEALTH ENDPOINTS
   // ===========================================================================
+  adminSystemHealth: `${API_BASE_URL}/api/admin/system/health`,
   adminShops: `${API_BASE_URL}/api/admin/shops`,
   adminShopById: (id: string) => `${API_BASE_URL}/api/admin/shops/${id}`,
   adminShopDelete: (id: string) => `${API_BASE_URL}/api/admin/shops/${id}`,
+  adminShopExportBackup: (id: string) => `${API_BASE_URL}/api/admin/shops/${id}/export-backup`,
+  adminShopRestoreBackup: (id: string) => `${API_BASE_URL}/api/admin/shops/${id}/restore-backup`,
 
   // ===========================================================================
   // INVENTORY & CATEGORY ENDPOINTS
