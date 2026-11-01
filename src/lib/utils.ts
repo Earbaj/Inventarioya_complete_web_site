@@ -5,9 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function round2(num: number | string | undefined | null): number {
+  const parsed = typeof num === "string" ? parseFloat(num) : Number(num);
+  if (isNaN(parsed)) return 0;
+  return Math.round((parsed + Number.EPSILON) * 100) / 100;
+}
+
 export function formatCurrency(amount: number | string | undefined | null, currency: string = "৳"): string {
-  const num = typeof amount === "string" ? parseFloat(amount) : (amount || 0);
-  return `${currency} ${num.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  const safeNum = round2(amount);
+  const hasDecimals = safeNum % 1 !== 0;
+  return `${currency} ${safeNum.toLocaleString("en-US", {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function formatDate(dateString?: string): string {

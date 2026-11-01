@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { InventoryService, SalesService, AuthService, CustomerService } from "@/lib/api/client";
 import { ProductItem, Category, CartItem, Invoice, Customer } from "@/types";
-import { formatCurrency, extractPersonName } from "@/lib/utils";
+import { formatCurrency, extractPersonName, round2 } from "@/lib/utils";
 import { ThermalReceipt } from "@/components/pos/ThermalReceipt";
 import {
   Search,
@@ -211,23 +211,25 @@ export default function PosTerminalPage() {
     });
   }, [products, selectedCategory, searchQuery, categories]);
 
-  // Cart Calculations
+  // Cart Calculations with financial decimal precision
   const subtotal = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.lineTotal, 0);
+    const raw = cart.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
+    return round2(raw);
   }, [cart]);
 
   const discountAmount = useMemo(() => {
     if (!subtotal || !discountPercent || discountPercent <= 0) return 0;
-    const pct = Math.min(100, Math.max(0, discountPercent));
-    return Math.round((subtotal * pct) / 100);
+    const pct = Math.min(100, Math.max(0, Number(discountPercent)));
+    return round2((subtotal * pct) / 100);
   }, [subtotal, discountPercent]);
 
   const taxAmount = useMemo(() => {
-    return Math.round((subtotal * taxRate) / 100);
+    if (!subtotal || !taxRate || taxRate <= 0) return 0;
+    return round2((subtotal * Number(taxRate)) / 100);
   }, [subtotal, taxRate]);
 
   const grandTotal = useMemo(() => {
-    return Math.max(0, subtotal - discountAmount + taxAmount);
+    return round2(Math.max(0, subtotal - discountAmount + taxAmount));
   }, [subtotal, discountAmount, taxAmount]);
 
   // Auto-fill paid amount to match grandTotal initially or 0 when DUE is selected
@@ -239,8 +241,13 @@ export default function PosTerminalPage() {
     }
   }, [grandTotal, paymentMethod]);
 
-  const dueAmount = Math.max(0, grandTotal - paidAmount);
-  const changeAmount = Math.max(0, paidAmount - grandTotal);
+  const dueAmount = useMemo(() => {
+    return round2(Math.max(0, grandTotal - paidAmount));
+  }, [grandTotal, paidAmount]);
+
+  const changeAmount = useMemo(() => {
+    return round2(Math.max(0, paidAmount - grandTotal));
+  }, [grandTotal, paidAmount]);
 
   // Add Item to Cart
   const addToCart = (product: ProductItem) => {
@@ -262,8 +269,8 @@ export default function PosTerminalPage() {
           item.id === product.id
             ? {
                 ...item,
-                cartQuantity: item.cartQuantity + 1,
-                lineTotal: (item.cartQuantity + 1) * item.sellingPrice,
+                cartQuantity: round2(item.cartQuantity + 1),
+                lineTotal: round2((item.cartQuantity + 1) * Number(item.sellingPrice)),
               }
             : item
         );
@@ -274,7 +281,7 @@ export default function PosTerminalPage() {
             ...product,
             cartQuantity: 1,
             discount: 0,
-            lineTotal: product.sellingPrice,
+            lineTotal: round2(Number(product.sellingPrice)),
           },
         ];
       }
@@ -309,18 +316,18 @@ export default function PosTerminalPage() {
     setCart((prev) =>
       prev.map((item) => {
         if (item.id === productId) {
-          const qty = Math.max(0, quantityInput);
+          const qty = round2(Math.max(0, quantityInput));
           if (qty > item.stockQuantity) {
             setStockWarning(
               `Only ${item.stockQuantity} ${item.unit || "pcs"} available in stock for "${item.name}". Set to maximum.`
             );
             const maxQty = item.stockQuantity;
-            return { ...item, cartQuantity: maxQty, lineTotal: maxQty * item.sellingPrice };
+            return { ...item, cartQuantity: maxQty, lineTotal: round2(maxQty * Number(item.sellingPrice)) };
           }
           return {
             ...item,
             cartQuantity: qty,
-            lineTotal: qty * item.sellingPrice,
+            lineTotal: round2(qty * Number(item.sellingPrice)),
           };
         }
         return item;
@@ -365,15 +372,15 @@ export default function PosTerminalPage() {
         items: cart.map((item) => ({
           itemId: item.id,
           name: item.name,
-          quantity: Number(item.cartQuantity),
-          unitPrice: Number(item.sellingPrice),
+          quantity: round2(item.cartQuantity),
+          unitPrice: round2(item.sellingPrice),
         })),
-        subtotal: Number(subtotal),
-        discount: Number(discountAmount),
-        tax: Number(taxAmount),
-        grandTotal: Number(grandTotal),
-        paidAmount: Number(paidAmount),
-        dueAmount: Number(dueAmount),
+        subtotal: round2(subtotal),
+        discount: round2(discountAmount),
+        tax: round2(taxAmount),
+        grandTotal: round2(grandTotal),
+        paidAmount: round2(paidAmount),
+        dueAmount: round2(dueAmount),
         paymentMethod: dueAmount === grandTotal ? "DUE" : paymentMethod,
         cashierName: extractPersonName(currentUser),
         branchId: activeBranchId || currentUser?.branchId || null,
@@ -404,7 +411,7 @@ export default function PosTerminalPage() {
           prevCusts.map((c) => {
             if (c.id === selectedCustomer.id) {
               const currentBal = Number(c.closingBalance || 0);
-              const updatedBal = currentBal - dueAmount;
+              const updatedBal = round2(currentBal - dueAmount);
               return { ...c, closingBalance: updatedBal.toFixed(2) };
             }
             return c;
@@ -854,7 +861,8 @@ export default function PosTerminalPage() {
                     <span className="text-[10px] text-slate-400 font-medium">{txt("পরিমাণ:", "Qty:")}</span>
                     <input
                       type="number"
-                      min="1"
+                      step="any"
+                      min="0.01"
                       max={item.stockQuantity}
                       value={item.cartQuantity === 0 ? "" : item.cartQuantity}
                       onChange={(e) => {
@@ -863,13 +871,13 @@ export default function PosTerminalPage() {
                           setExactQuantity(item.id, 0);
                           return;
                         }
-                        const val = parseInt(raw, 10);
+                        const val = parseFloat(raw);
                         if (!isNaN(val)) setExactQuantity(item.id, val);
                       }}
                       onBlur={() => {
                         if (item.cartQuantity <= 0) setExactQuantity(item.id, 1);
                       }}
-                      className="w-12 h-7 bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 rounded-lg text-center text-xs font-bold text-white focus:outline-none font-mono shadow-inner transition-colors"
+                      className="w-14 h-7 bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 rounded-lg text-center text-xs font-bold text-white focus:outline-none font-mono shadow-inner transition-colors"
                       title={txt("সরাসরি পরিমাণ লিখুন", "Type exact quantity")}
                     />
                   </div>
@@ -940,12 +948,13 @@ export default function PosTerminalPage() {
                   <div className="relative flex items-center">
                     <input
                       type="number"
+                      step="any"
                       min={0}
                       max={100}
                       value={discountPercent === 0 ? "" : discountPercent}
                       onChange={(e) => {
-                        const val = e.target.value === "" ? 0 : Number(e.target.value);
-                        setDiscountPercent(Math.min(100, Math.max(0, val)));
+                        const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                        setDiscountPercent(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
                       }}
                       className="w-16 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-emerald-400 font-mono font-semibold focus:outline-none focus:border-indigo-500 pr-5"
                       placeholder="0"
@@ -997,12 +1006,15 @@ export default function PosTerminalPage() {
 
                 <input
                   type="number"
+                  step="any"
                   min={0}
-                  value={paidAmount}
+                  value={paidAmount === 0 && paymentMethod === "DUE" ? "" : paidAmount}
                   onChange={(e) => {
-                    const val = Number(e.target.value);
-                    setPaidAmount(val);
-                    if (val === 0) {
+                    const raw = e.target.value;
+                    const val = raw === "" ? 0 : parseFloat(raw);
+                    const safeVal = isNaN(val) ? 0 : round2(Math.max(0, val));
+                    setPaidAmount(safeVal);
+                    if (safeVal === 0) {
                       setPaymentMethod("DUE");
                     } else if (paymentMethod === "DUE") {
                       setPaymentMethod("CASH");
