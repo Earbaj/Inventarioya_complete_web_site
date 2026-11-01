@@ -19,6 +19,7 @@ import {
   Search,
   Check,
   CreditCard,
+  LogIn,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { GooglePlayIcon } from "@/components/ui/GooglePlayIcon";
@@ -67,13 +68,13 @@ export default function LandingPage() {
               <span>{txt("বিনামূল্যে ট্রায়াল শুরু করুন", "Start Free Trial")}</span>
               <ArrowRight className="w-4 h-4 text-white keep-white" />
             </Link>
-            <a
-              href="#pos"
+            <Link
+              href="/login"
               className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-800 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
-              <ShoppingCart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{txt("লাইভ পিওএস ডেমো দেখুন", "Try Live POS Demo")}</span>
-            </a>
+              <LogIn className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>{txt("সাইন ইন করুন", "Sign In")}</span>
+            </Link>
           </div>
 
           {/* Trust points */}
