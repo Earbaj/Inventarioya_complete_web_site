@@ -33,6 +33,7 @@ import {
   Eye,
   PackageMinus,
   ArrowDownRight,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -52,7 +53,7 @@ export default function SalesHistoryPage() {
   const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [modalMode, setModalMode] = useState<"a4" | "thermal">("a4");
+  const [modalMode, setModalMode] = useState<"a4" | "compact" | "thermal">("a4");
   const [showSalesReportModal, setShowSalesReportModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -283,7 +284,7 @@ export default function SalesHistoryPage() {
     );
   };
 
-  const handleOpenInvoiceModal = (inv: Invoice, mode: "a4" | "thermal") => {
+  const handleOpenInvoiceModal = (inv: Invoice, mode: "a4" | "compact" | "thermal") => {
     setSelectedInvoice(inv);
     setModalMode(mode);
   };
@@ -740,7 +741,18 @@ export default function SalesHistoryPage() {
                                     className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-indigo-600/20 hover:text-indigo-300 flex items-center gap-2.5 transition-colors cursor-pointer"
                                   >
                                     <FileText className="w-3.5 h-3.5 text-indigo-400" />
-                                    <span>{txt("ইনভয়েস প্রিন্ট / PDF (A4)", "Print A4 Invoice / PDF")}</span>
+                                    <span>{txt("স্ট্যান্ডার্ড ইনভয়েস (A4)", "Standard A4 Invoice")}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      handleOpenInvoiceModal(inv, "compact");
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-blue-600/20 hover:text-blue-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                                  >
+                                    <SlidersHorizontal className="w-3.5 h-3.5 text-blue-400" />
+                                    <span>{txt("কম্প্যাক্ট ইনভয়েস (A4)", "Compact A4 Invoice")}</span>
                                   </button>
                                   <button
                                     type="button"

@@ -429,6 +429,8 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   #printable-customer-report *,
   #printable-invoice,
   #printable-invoice *,
+  #printable-compact-invoice,
+  #printable-compact-invoice *,
   #printable-sales-report,
   #printable-sales-report * {
     visibility: visible;
@@ -449,6 +451,7 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   }
   #printable-customer-report,
   #printable-invoice,
+  #printable-compact-invoice,
   #printable-sales-report {
     position: absolute;
     left: 0;
@@ -472,12 +475,14 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   }
   #printable-customer-report table,
   #printable-invoice table,
+  #printable-compact-invoice table,
   #printable-sales-report table {
     width: 100% !important;
     border-collapse: collapse !important;
   }
   #printable-customer-report tr,
   #printable-invoice tr,
+  #printable-compact-invoice tr,
   #printable-sales-report tr {
     page-break-inside: avoid;
   }

@@ -8,7 +8,7 @@ export { InvoicePrintModal };
 interface ThermalReceiptProps {
   invoice: Invoice;
   onClose: () => void;
-  initialMode?: "a4" | "thermal";
+  initialMode?: "a4" | "compact" | "thermal";
 }
 
 export function ThermalReceipt({ invoice, onClose, initialMode = "thermal" }: ThermalReceiptProps) {
