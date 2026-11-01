@@ -14,6 +14,12 @@ import {
   Calendar,
   Users,
   ChevronLeft,
+  Trash2,
+  AlertTriangle,
+  X,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -22,6 +28,12 @@ export default function AdminShopsPage() {
   const [shops, setShops] = useState<Shop[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Shop Delete States
+  const [shopToDelete, setShopToDelete] = useState<Shop | null>(null);
+  const [confirmNameInput, setConfirmNameInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     async function loadShops() {
@@ -39,6 +51,34 @@ export default function AdminShopsPage() {
     loadShops();
   }, []);
 
+  const handleDeleteShop = async () => {
+    if (!shopToDelete) return;
+    const targetId = shopToDelete.shopId || shopToDelete.id;
+    setIsDeleting(true);
+    try {
+      const res = await SubscriptionsService.deleteAdminShop(targetId);
+      setShops((prev) => prev.filter((s) => s.id !== shopToDelete.id && s.shopId !== shopToDelete.shopId));
+      setFeedback({
+        type: "success",
+        text:
+          res?.message ||
+          txt(
+            `শপ '${shopToDelete.name}' এবং এর সাথে সম্পর্কিত সকল ডাটা স্থায়ীভাবে মুছে ফেলা হয়েছে।`,
+            `Shop '${shopToDelete.name}' and all associated data have been permanently purged.`
+          ),
+      });
+      setShopToDelete(null);
+      setConfirmNameInput("");
+    } catch (err: any) {
+      setFeedback({
+        type: "error",
+        text: err?.message || txt("শপ ডিলিট করতে ব্যর্থ হয়েছে।", "Failed to delete shop."),
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const filtered = shops.filter(
     (s) =>
       s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,6 +88,32 @@ export default function AdminShopsPage() {
 
   return (
     <main className="p-4 sm:p-8 space-y-6 max-w-7xl">
+      {/* Feedback Banner */}
+      {feedback && (
+        <div
+          className={`p-4 rounded-2xl flex items-center justify-between gap-3 text-xs font-semibold shadow-lg ${
+            feedback.type === "success"
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+              : "bg-rose-500/10 border border-rose-500/30 text-rose-400"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {feedback.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            )}
+            <span>{feedback.text}</span>
+          </div>
+          <button
+            onClick={() => setFeedback(null)}
+            className="p-1 hover:opacity-80 transition-opacity"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -82,7 +148,7 @@ export default function AdminShopsPage() {
       {/* Shops Table */}
       <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[750px] text-left text-xs">
+          <table className="w-full min-w-[850px] text-left text-xs">
             <thead className="bg-slate-950/60 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
               <tr>
                 <th className="py-3 px-4">{txt("মার্চেন্ট / শপ", "Merchant / Shop")}</th>
@@ -92,12 +158,13 @@ export default function AdminShopsPage() {
                 <th className="py-3 px-4">{txt("স্টাফ / ম্যানেজার", "Staff / Managers")}</th>
                 <th className="py-3 px-4">{txt("মেয়াদ উত্তীর্ণের তারিখ", "Subscription Expiry")}</th>
                 <th className="py-3 px-4">{txt("নিবন্ধনের তারিখ", "Joined Date")}</th>
+                <th className="py-3 px-4 text-right">{txt("অ্যাকশন", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500">
+                  <td colSpan={8} className="py-8 text-center text-slate-500">
                     {txt("কোনো নিবন্ধিত শপ পাওয়া যায়নি।", "No registered shops found.")}
                   </td>
                 </tr>
@@ -157,6 +224,20 @@ export default function AdminShopsPage() {
                       <td className="py-3 px-4 text-slate-400">
                         {formatDate(shop.createdAt)}
                       </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShopToDelete(shop);
+                            setConfirmNameInput("");
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 transition-all cursor-pointer shadow-sm"
+                          title={txt("শপ চিরতরে ডিলিট করুন", "Permanently Delete Shop")}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{txt("ডিলিট", "Delete")}</span>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -165,6 +246,137 @@ export default function AdminShopsPage() {
           </table>
         </div>
       </div>
+
+      {/* Delete Shop Cascade Confirmation Modal */}
+      {shopToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-rose-500/30 text-slate-100 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col my-auto animate-in fade-in duration-200">
+            {/* Modal Header */}
+            <div className="bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-rose-400">
+                <AlertTriangle className="w-5 h-5 shrink-0 text-rose-500" />
+                <span className="font-bold text-sm">
+                  {txt("শপ সম্পূর্ণ ডিলিট নিশ্চিতকরণ", "Confirm Shop Permanent Deletion")}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeleting) {
+                    setShopToDelete(null);
+                    setConfirmNameInput("");
+                  }
+                }}
+                disabled={isDeleting}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 text-xs">
+              {/* Warning Alert */}
+              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 space-y-2 leading-relaxed">
+                <p className="font-bold flex items-center gap-1.5 text-rose-400">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>
+                    {txt(
+                      "গুরুত্বপূর্ণ সতর্কবার্তা (Cascade Purge):",
+                      "Critical Warning (Cascade Purge):"
+                    )}
+                  </span>
+                </p>
+                <p>
+                  {txt(
+                    "এই শপটি ডিলিট করলে এর অধীনস্থ সকল পণ্য (Inventory Items), ক্যাটাগরি, বিক্রয় ইনভয়েস, পণ্য ফেরত (Returns), কাস্টমার লেজার, সাপ্লায়ার, ব্রাঞ্চ এবং ম্যানেজার ইউজার অ্যাকাউন্ট ডাটাবেজ থেকে চিরতরে মুছে ফেলা হবে।",
+                    "Deleting this shop will permanently purge all inventory items, categories, sales invoices, returns, customer ledgers, suppliers, branches, and manager user accounts from the database."
+                  )}
+                </p>
+                <p className="font-semibold text-rose-200">
+                  {txt("⚠️ এই কাজটি কোনোভাবেই পূর্বাবস্থায় ফিরিয়ে আনা যাবে না।", "⚠️ This action CANNOT be undone.")}
+                </p>
+              </div>
+
+              {/* Shop Target Details Card */}
+              <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>{txt("মার্চেন্ট নাম:", "Merchant Name:")}</span>
+                  <span className="font-bold text-white">{shopToDelete.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>{txt("অ্যাডমিন ইমেইল:", "Admin Email:")}</span>
+                  <span className="font-mono text-slate-200">{shopToDelete.email}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>{txt("শপ আইডি (UUID):", "Shop ID:")}</span>
+                  <span className="font-mono text-[11px] text-slate-400">{shopToDelete.shopId || shopToDelete.id}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>{txt("প্ল্যান / স্ট্যাটাস:", "Plan / Status:")}</span>
+                  <span className="font-semibold text-amber-400 uppercase">{shopToDelete.subscriptionTier || "Free"}</span>
+                </div>
+              </div>
+
+              {/* Confirmation Prompt */}
+              <div className="space-y-2">
+                <label className="block text-slate-300 font-medium">
+                  {txt(
+                    "নিশ্চিত করতে নিচে শপের নাম অথবা DELETE লিখুন:",
+                    "To confirm, type the shop name or DELETE below:"
+                  )}
+                </label>
+                <input
+                  type="text"
+                  value={confirmNameInput}
+                  onChange={(e) => setConfirmNameInput(e.target.value)}
+                  placeholder={txt("DELETE অথবা শপের নাম লিখুন", "Type DELETE or shop name")}
+                  disabled={isDeleting}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-950 px-6 py-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShopToDelete(null);
+                  setConfirmNameInput("");
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {txt("বাতিল", "Cancel")}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteShop}
+                disabled={
+                  isDeleting ||
+                  (confirmNameInput.trim().toUpperCase() !== "DELETE" &&
+                    confirmNameInput.trim().toLowerCase() !== (shopToDelete.name || "").trim().toLowerCase())
+                }
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30 flex items-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{txt("মুছে ফেলা হচ্ছে...", "Deleting...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{txt("স্থায়ীভাবে মুছে ফেলুন", "Permanently Delete")}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

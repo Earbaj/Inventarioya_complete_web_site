@@ -48,6 +48,7 @@ export const ApiEndpoints = {
   // ===========================================================================
   adminShops: `${API_BASE_URL}/api/admin/shops`,
   adminShopById: (id: string) => `${API_BASE_URL}/api/admin/shops/${id}`,
+  adminShopDelete: (id: string) => `${API_BASE_URL}/api/admin/shops/${id}`,
 
   // ===========================================================================
   // INVENTORY & CATEGORY ENDPOINTS

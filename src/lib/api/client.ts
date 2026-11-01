@@ -2072,6 +2072,24 @@ export const SubscriptionsService = {
       return mockShopsList;
     }
   },
+
+  async deleteAdminShop(id: string): Promise<any> {
+    try {
+      const res = await apiClient.delete(ApiEndpoints.adminShopDelete(id));
+      const index = mockShopsList.findIndex((s) => s.id === id || s.shopId === id);
+      if (index !== -1) {
+        mockShopsList.splice(index, 1);
+      }
+      return res.data;
+    } catch (err: any) {
+      const index = mockShopsList.findIndex((s) => s.id === id || s.shopId === id);
+      if (index !== -1) {
+        mockShopsList.splice(index, 1);
+        return { message: "Shop deleted successfully (offline/mock mode)." };
+      }
+      throw new Error(err.response?.data?.message || err.message || "Failed to delete shop");
+    }
+  },
 };
 
 export const TrashService = {
