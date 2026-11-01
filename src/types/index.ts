@@ -196,7 +196,50 @@ export interface Invoice {
   createdAt: string;
   date?: string;
   status: "PAID" | "PARTIAL" | "DUE" | "REFUNDED" | string;
-  isReturned?: "none" | "partial" | "full" | string;
+  isReturned?: "none" | "partial" | "full" | "partially_returned" | "fully_returned" | string;
+}
+
+export interface ReturnedItemDetail {
+  itemId: string;
+  name?: string;
+  quantity: number;
+  refundAmountPerUnit?: number | string;
+  refundAmount?: number | string;
+  unitPrice?: number;
+  effectivePrice?: number;
+}
+
+export interface ReturnRecord {
+  id: string;
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  saleId: string;
+  invoiceNumber: string;
+  originalGrandTotal?: string | number;
+  totalRefunded?: string | number;
+  netGrandTotal?: string | number;
+  returnedItems: ReturnedItemDetail[];
+  totalRefund?: string | number;
+  totalRefundAmount?: string | number;
+  refundMethod: "cash" | "due_adjust" | "bkash" | "nagad" | string;
+  date?: string | Date;
+  createdAt?: string;
+  processedBy?: string;
+  processedByName?: string;
+  branchId?: string;
+  branchName?: string;
+  reason?: string;
+}
+
+export interface ProcessReturnPayload {
+  saleId: string;
+  customerId?: string;
+  refundMethod?: "cash" | "due_adjust" | "bkash" | "nagad" | string;
+  returnedItems: {
+    itemId: string;
+    quantity: number;
+  }[];
 }
 
 export interface Expense {

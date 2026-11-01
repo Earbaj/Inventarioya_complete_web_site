@@ -26,6 +26,7 @@ export const ApiEndpoints = {
   superAdminDashboard: `${API_BASE_URL}/api/dashboard/superadmin`,
   reportsSales: `${API_BASE_URL}/api/reports/sales`,
   sales: `${API_BASE_URL}/api/sales`,
+  returns: `${API_BASE_URL}/api/returns`,
   printInvoice: (invoiceNumber: string) =>
     `${API_BASE_URL}/api/sales/invoice/${invoiceNumber}/print`,
 

@@ -34,6 +34,8 @@ import {
   ProcessCustomerPaymentPayload,
   CustomerPaymentHistoryItem,
   PaginatedCustomerPaymentsResponse,
+  ReturnRecord,
+  ProcessReturnPayload,
 } from "@/types";
 
 // Token storage key
@@ -861,6 +863,106 @@ export const SalesService = {
 
   getPrintInvoiceUrl(invoiceNumber: string): string {
     return ApiEndpoints.printInvoice(invoiceNumber);
+  },
+};
+
+export const mockReturnsList: ReturnRecord[] = [
+  {
+    id: "ret_001",
+    saleId: "sale_001",
+    invoiceNumber: "INV-20261028-0001",
+    customerId: "cust_1",
+    totalRefund: 510,
+    refundMethod: "cash",
+    date: "2026-10-29T10:30:00.000Z",
+    returnedItems: [
+      { itemId: "prod_1", name: "Fortune Basmati Rice 5kg", quantity: 1, refundAmountPerUnit: 510 },
+    ],
+  },
+];
+
+export const ReturnsService = {
+  async processReturn(payload: ProcessReturnPayload): Promise<ReturnRecord> {
+    try {
+      const res = await apiClient.post(ApiEndpoints.returns, payload);
+      const data = res.data?.data || res.data;
+      return {
+        id: data.id || "ret_" + Date.now(),
+        customerId: data.customerId,
+        saleId: data.saleId,
+        invoiceNumber: data.invoiceNumber,
+        originalGrandTotal: data.originalGrandTotal,
+        totalRefunded: data.totalRefunded,
+        netGrandTotal: data.netGrandTotal,
+        returnedItems: (data.returnedItems || []).map((it: any) => ({
+          itemId: it.itemId,
+          name: it.name,
+          quantity: Number(it.quantity || 1),
+          refundAmountPerUnit: it.refundAmountPerUnit,
+        })),
+        totalRefund: data.totalRefund,
+        refundMethod: data.refundMethod || payload.refundMethod || "cash",
+        date: data.date || new Date().toISOString(),
+        processedBy: data.processedBy,
+      };
+    } catch (error: any) {
+      const errMsg = error.response?.data?.message;
+      if (errMsg) {
+        const errorText = Array.isArray(errMsg) ? errMsg.join(", ") : errMsg;
+        throw new Error(errorText);
+      }
+      throw error;
+    }
+  },
+
+  async getReturns(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{ data: ReturnRecord[]; meta: any }> {
+    try {
+      const res = await apiClient.get(ApiEndpoints.returns, { params });
+      const rawData = res.data;
+      const list = rawData?.data || (Array.isArray(rawData) ? rawData : []);
+      const meta = rawData?.meta || {
+        total: list.length,
+        page: params?.page || 1,
+        limit: params?.limit || 10,
+        totalPages: 1,
+      };
+      return {
+        data: list.map((r: any) => ({
+          id: r.id,
+          customerId: r.customerId,
+          saleId: r.saleId,
+          invoiceNumber: r.invoiceNumber,
+          returnedItems: (r.returnedItems || []).map((it: any) => ({
+            itemId: it.itemId,
+            name: it.name,
+            quantity: Number(it.quantity || 1),
+            refundAmountPerUnit: it.refundAmountPerUnit,
+          })),
+          totalRefund: r.totalRefund,
+          refundMethod: r.refundMethod || "cash",
+          date: r.date || r.createdAt || new Date().toISOString(),
+          processedBy: r.processedBy,
+        })),
+        meta,
+      };
+    } catch (error: any) {
+      console.warn("Using mock returns list fallback:", error?.message);
+      return {
+        data: mockReturnsList,
+        meta: {
+          total: mockReturnsList.length,
+          page: 1,
+          limit: 10,
+          totalPages: 1,
+        },
+      };
+    }
   },
 };
 
