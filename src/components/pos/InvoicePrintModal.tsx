@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Invoice } from "@/types";
 import { formatCurrency, formatDate, downloadCsvFile, extractPersonName } from "@/lib/utils";
 import { AuthService } from "@/lib/api/client";
@@ -44,6 +44,21 @@ export function InvoicePrintModal({
     invoice.cashierName !== shopName
       ? invoice.cashierName
       : personName;
+
+  const discountVal = Number(invoice.discount || 0);
+  const subtotalVal = Number(invoice.subtotal || invoice.originalSubtotal || 0);
+
+  const discountPercentage = useMemo(() => {
+    const explicitPct = (invoice as any).discountPercent ?? (invoice as any).discountPercentage;
+    if (explicitPct != null && !isNaN(Number(explicitPct)) && Number(explicitPct) > 0) {
+      return Number(explicitPct);
+    }
+    if (subtotalVal > 0 && discountVal > 0) {
+      const calculated = (discountVal / subtotalVal) * 100;
+      return Math.round(calculated * 10) / 10;
+    }
+    return 0;
+  }, [invoice, discountVal, subtotalVal]);
 
   const handlePrint = () => {
     window.print();
@@ -295,7 +310,23 @@ export function InvoicePrintModal({
                         </td>
                         {Number(invoice.discount) > 0 && (
                           <td className="py-2 px-3 text-right text-emerald-700 font-mono border border-slate-300">
-                            {itemDisc > 0 ? `-${formatCurrency(itemDisc)}` : "-"}
+                            {itemDisc > 0 ? (
+                              <span>
+                                -{formatCurrency(itemDisc)}
+                                {(() => {
+                                  const itemPct =
+                                    (item as any).discountPercent ||
+                                    (item.discountType === "percent" || item.discountType === "percentage"
+                                      ? Number(item.discount)
+                                      : unitRate * item.quantity > 0
+                                      ? Math.round((itemDisc / (unitRate * item.quantity)) * 100 * 10) / 10
+                                      : 0);
+                                  return itemPct > 0 ? ` (${itemPct}%)` : "";
+                                })()}
+                              </span>
+                            ) : (
+                              "-"
+                            )}
                           </td>
                         )}
                         <td className="py-2 px-3 text-right font-bold font-mono text-slate-900 border border-slate-300">
@@ -327,7 +358,18 @@ export function InvoicePrintModal({
                         {txt("ছাড় / ডিসকাউন্ট:", "Discount:")}
                       </td>
                       <td className="py-2 px-3 text-right font-mono font-bold text-emerald-700">
-                        {Number(invoice.discount) > 0 ? `-${formatCurrency(invoice.discount)}` : "৳ 0"}
+                        {discountVal > 0 ? (
+                          <span>
+                            -{formatCurrency(discountVal)}
+                            {discountPercentage > 0 && (
+                              <span className="ml-1 text-[11px] font-semibold text-emerald-700">
+                                ({discountPercentage}%)
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          "৳ 0"
+                        )}
                       </td>
                     </tr>
 
@@ -507,10 +549,13 @@ export function InvoicePrintModal({
                     <span>{txt("সাবটোটাল:", "Subtotal:")}</span>
                     <span>{formatCurrency(invoice.subtotal)}</span>
                   </div>
-                  {Number(invoice.discount) > 0 && (
+                  {discountVal > 0 && (
                     <div className="flex justify-between text-emerald-700">
                       <span>{txt("ছাড় / ডিসকাউন্ট:", "Discount:")}</span>
-                      <span>-{formatCurrency(invoice.discount)}</span>
+                      <span>
+                        -{formatCurrency(discountVal)}
+                        {discountPercentage > 0 && ` (${discountPercentage}%)`}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-300">
