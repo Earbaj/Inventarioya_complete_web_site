@@ -133,7 +133,7 @@ export default function InventoryPage() {
         stockQuantity: 0,
         minStockAlert: 5,
         unit: "Piece",
-        categoryName: categories[0]?.name || "General",
+        categoryName: "General",
       });
     } catch (err: any) {
       console.error("Failed to create product", err);
@@ -855,15 +855,18 @@ export default function InventoryPage() {
                   <label className="block text-slate-300 font-medium mb-1">{txt("ক্যাটাগরি", "Category")}</label>
                   <select
                     aria-label={txt("ক্যাটাগরি নির্বাচন", "Category Selection")}
-                    value={newProduct.categoryName}
+                    value={newProduct.categoryName || "General"}
                     onChange={(e) => setNewProduct({ ...newProduct, categoryName: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
                   >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
+                    <option value="General">General</option>
+                    {categories
+                      .filter((c) => c.name.toLowerCase() !== "general")
+                      .map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>

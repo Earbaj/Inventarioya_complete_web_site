@@ -266,7 +266,7 @@ export default function SuppliersPage() {
       setQuickProduct({
         name: "",
         sku: "",
-        categoryName: categories[0]?.name || "General",
+        categoryName: "General",
         buyPrice: 0,
         sellPrice: 0,
         unit: "Piece",
@@ -1092,18 +1092,18 @@ export default function SuppliersPage() {
                       <div>
                         <label className="block dark:text-slate-400 text-slate-600 text-[11px] mb-0.5">{txt("ক্যাটাগরি", "Category")}</label>
                         <select
-                          value={quickProduct.categoryName}
+                          value={quickProduct.categoryName || "General"}
                           onChange={(e) => setQuickProduct({ ...quickProduct, categoryName: e.target.value })}
                           className="w-full dark:bg-slate-950 bg-slate-50 border dark:border-slate-800 border-slate-300 rounded-lg px-2.5 py-1.5 dark:text-white text-slate-900 focus:border-emerald-500 text-xs"
                         >
-                          {categories.map((c) => (
-                            <option key={c.id} value={c.name}>
-                              {c.name}
-                            </option>
-                          ))}
-                          {!categories.some((c) => c.name === "General") && (
-                            <option value="General">General</option>
-                          )}
+                          <option value="General">General</option>
+                          {categories
+                            .filter((c) => c.name.toLowerCase() !== "general")
+                            .map((c) => (
+                              <option key={c.id} value={c.name}>
+                                {c.name}
+                              </option>
+                            ))}
                         </select>
                       </div>
 
