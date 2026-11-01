@@ -334,7 +334,7 @@ export default function SalesHistoryPage() {
           >
             <Receipt className="w-3.5 h-3.5" />
             <span>{txt("বিক্রয় ইনভয়েস তালিকা", "Sales Invoices")}</span>
-            <span className="px-1.5 py-0.2 rounded-full bg-slate-950/50 text-[10px]">
+            <span className="px-1.5 py-0.2 rounded-full bg-slate-400/50 text-[10px]">
               {filteredInvoices.length}
             </span>
           </button>
