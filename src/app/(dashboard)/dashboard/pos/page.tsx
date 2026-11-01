@@ -73,7 +73,7 @@ export default function PosTerminalPage() {
   // Customer & Billing details
   const [customerName, setCustomerName] = useState("Walk-in Customer");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [taxRate, setTaxRate] = useState<number>(0); // 0% or 5% etc
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "BKASH" | "NAGAD" | "DUE">("CASH");
   const [paidAmount, setPaidAmount] = useState<number>(0);
@@ -216,6 +216,12 @@ export default function PosTerminalPage() {
   const subtotal = useMemo(() => {
     return cart.reduce((sum, item) => sum + item.lineTotal, 0);
   }, [cart]);
+
+  const discountAmount = useMemo(() => {
+    if (!subtotal || !discountPercent || discountPercent <= 0) return 0;
+    const pct = Math.min(100, Math.max(0, discountPercent));
+    return Math.round((subtotal * pct) / 100);
+  }, [subtotal, discountPercent]);
 
   const taxAmount = useMemo(() => {
     return Math.round((subtotal * taxRate) / 100);
@@ -414,7 +420,7 @@ export default function PosTerminalPage() {
       setSelectedCustomer(null);
       setCustomerName("Walk-in Customer");
       setCustomerPhone("");
-      setDiscountAmount(0);
+      setDiscountPercent(0);
       setPaymentMethod("CASH");
       setIsMobileCartOpen(false);
     } catch (err: any) {
@@ -629,6 +635,7 @@ export default function PosTerminalPage() {
                 onClick={() => {
                   if (window.confirm(txt("আপনি কি কার্টের সকল পণ্য মুছে ফেলতে চান?", "Are you sure you want to clear all items in the cart?"))) {
                     setCart([]);
+                    setDiscountPercent(0);
                   }
                 }}
                 className="text-[10px] font-semibold text-rose-400 hover:text-rose-300 px-2 py-1 rounded hover:bg-rose-500/10 transition-colors flex items-center gap-1"
@@ -944,17 +951,31 @@ export default function PosTerminalPage() {
               <div className="flex items-center justify-between text-[11px] text-slate-400">
                 <span>{txt("সাবটোটাল:", "Subtotal:")} <strong className="text-white font-mono">{formatCurrency(subtotal)}</strong></span>
                 <div className="flex items-center gap-1.5">
-                  <span>{txt("ছাড়:", "Disc:")}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={discountAmount}
-                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
-                    className="w-16 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-emerald-400 font-mono font-semibold focus:outline-none focus:border-indigo-500"
-                    placeholder="0"
-                  />
+                  <span className="font-medium text-slate-300">{txt("ছাড় (%):", "Disc (%):")}</span>
+                  <div className="relative flex items-center">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={discountPercent === 0 ? "" : discountPercent}
+                      onChange={(e) => {
+                        const val = e.target.value === "" ? 0 : Number(e.target.value);
+                        setDiscountPercent(Math.min(100, Math.max(0, val)));
+                      }}
+                      className="w-16 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-emerald-400 font-mono font-semibold focus:outline-none focus:border-indigo-500 pr-5"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-1.5 text-[10px] text-slate-400 font-bold pointer-events-none">%</span>
+                  </div>
                 </div>
               </div>
+
+              {discountAmount > 0 && (
+                <div className="flex items-center justify-between text-[11px] text-emerald-400 font-medium px-0.5 pt-0.5 border-t border-slate-800/50">
+                  <span>{txt(`ছাড়ের পরিমাণ (${discountPercent}%):`, `Discount Amount (${discountPercent}%):`)}</span>
+                  <span className="font-mono font-bold">-{formatCurrency(discountAmount)}</span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
                 <span className="text-xs font-bold text-white">{txt("সর্বমোট বিল:", "Grand Total:")}</span>
