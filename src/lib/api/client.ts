@@ -969,7 +969,7 @@ export const ReturnsService = {
 export const InventoryService = {
   async getCategories(): Promise<Category[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.categories);
+      const res = await apiClient.get(ApiEndpoints.categories, { params: { limit: 100 } });
       return res.data?.data || res.data || mockCategories;
     } catch {
       return mockCategories;
@@ -985,11 +985,48 @@ export const InventoryService = {
     }
   },
 
-  async getProducts(): Promise<ProductItem[]> {
+  async getProducts(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+    fetchAll?: boolean;
+  }): Promise<ProductItem[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.items);
-      const rawList = res.data?.data || res.data || mockProducts;
-      if (!Array.isArray(rawList)) return mockProducts;
+      const page = params?.page || 1;
+      const limit = Math.min(100, Math.max(1, params?.limit || 100));
+      const queryParams: any = { page, limit };
+      if (params?.search) queryParams.search = params.search;
+      if (params?.category && params.category !== "ALL") queryParams.category = params.category;
+
+      const res = await apiClient.get(ApiEndpoints.items, { params: queryParams });
+      const rawList: any[] = Array.isArray(res.data?.data)
+        ? [...res.data.data]
+        : Array.isArray(res.data)
+        ? [...res.data]
+        : [...mockProducts];
+
+      // Auto-paginate all remaining items if fetchAll is true OR if called without explicit single page
+      const shouldFetchAll = params?.fetchAll !== false && (!params?.page || params?.fetchAll === true);
+      const totalPages = res.data?.meta?.totalPages || 1;
+
+      if (shouldFetchAll && totalPages > 1) {
+        const extraPromises = [];
+        for (let p = 2; p <= Math.min(totalPages, 20); p++) {
+          extraPromises.push(
+            apiClient.get(ApiEndpoints.items, {
+              params: { ...queryParams, page: p, limit },
+            })
+          );
+        }
+        const extraResults = await Promise.all(extraPromises);
+        for (const extraRes of extraResults) {
+          const extraItems = extraRes.data?.data;
+          if (Array.isArray(extraItems)) {
+            rawList.push(...extraItems);
+          }
+        }
+      }
 
       return rawList.map((raw: any) => {
         const costPrice = Number(raw.buyPrice ?? raw.costPrice ?? 0);
@@ -1447,9 +1484,11 @@ export const PaymentService = {
 
 
 export const ExpensesService = {
-  async getExpenses(): Promise<Expense[]> {
+  async getExpenses(params?: { page?: number; limit?: number; search?: string }): Promise<Expense[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.expenses);
+      const res = await apiClient.get(ApiEndpoints.expenses, {
+        params: { limit: params?.limit || 100, page: params?.page || 1, search: params?.search },
+      });
       return res.data?.data || res.data || mockExpenses;
     } catch {
       return mockExpenses;
@@ -1541,7 +1580,7 @@ function formatSupplier(raw: any): Supplier {
 export const SuppliersService = {
   async getSuppliers(): Promise<Supplier[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.suppliers);
+      const res = await apiClient.get(ApiEndpoints.suppliers, { params: { limit: 100 } });
       const list = res.data?.data || res.data;
       if (Array.isArray(list)) {
         return list.map(formatSupplier);
@@ -1569,7 +1608,7 @@ export const SuppliersService = {
 
   async getPurchaseOrders(): Promise<PurchaseOrder[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.purchaseOrders);
+      const res = await apiClient.get(ApiEndpoints.purchaseOrders, { params: { limit: 100 } });
       const list = res.data?.data || res.data;
       if (Array.isArray(list)) {
         return list.map(formatPurchaseOrder);
@@ -1689,7 +1728,7 @@ function formatStaff(raw: any): StaffMember {
 export const StaffService = {
   async getStaff(): Promise<StaffMember[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.staff);
+      const res = await apiClient.get(ApiEndpoints.staff, { params: { limit: 100 } });
       const list = res.data?.data || res.data;
       if (Array.isArray(list)) {
         return list.map(formatStaff);
@@ -2017,7 +2056,7 @@ export const SubscriptionsService = {
 
   async getMyPayments(): Promise<ManualPaymentSubmission[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.myPayments);
+      const res = await apiClient.get(ApiEndpoints.myPayments, { params: { limit: 100 } });
       const rawList = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
@@ -2032,7 +2071,7 @@ export const SubscriptionsService = {
   // SuperAdmin Endpoints
   async getPendingPayments(): Promise<ManualPaymentSubmission[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.pendingPayments);
+      const res = await apiClient.get(ApiEndpoints.pendingPayments, { params: { limit: 100 } });
       const rawList = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
@@ -2066,7 +2105,7 @@ export const SubscriptionsService = {
 
   async getAdminShops(): Promise<Shop[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.adminShops);
+      const res = await apiClient.get(ApiEndpoints.adminShops, { params: { limit: 100 } });
       return res.data?.data || res.data || mockShopsList;
     } catch {
       return mockShopsList;
@@ -2095,7 +2134,7 @@ export const SubscriptionsService = {
 export const TrashService = {
   async getTrash(): Promise<TrashItem[]> {
     try {
-      const res = await apiClient.get(ApiEndpoints.trash);
+      const res = await apiClient.get(ApiEndpoints.trash, { params: { limit: 100 } });
       return res.data?.data || res.data || mockTrashItems;
     } catch {
       return mockTrashItems;
