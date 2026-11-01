@@ -12,7 +12,6 @@ import {
   ShoppingCart,
   Trash2,
   Plus,
-  Minus,
   CheckCircle2,
   Printer,
   CreditCard,
@@ -308,28 +307,24 @@ export default function PosTerminalPage() {
   // Set Cart Item Quantity directly via text/number input
   const setExactQuantity = (productId: string, quantityInput: number) => {
     setCart((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === productId) {
-            if (quantityInput <= 0) {
-              return null; // Remove item if quantity is 0 or negative
-            }
-            if (quantityInput > item.stockQuantity) {
-              setStockWarning(
-                `Only ${item.stockQuantity} ${item.unit || "pcs"} available in stock for "${item.name}". Set to maximum.`
-              );
-              const maxQty = item.stockQuantity;
-              return { ...item, cartQuantity: maxQty, lineTotal: maxQty * item.sellingPrice };
-            }
-            return {
-              ...item,
-              cartQuantity: quantityInput,
-              lineTotal: quantityInput * item.sellingPrice,
-            };
+      prev.map((item) => {
+        if (item.id === productId) {
+          const qty = Math.max(0, quantityInput);
+          if (qty > item.stockQuantity) {
+            setStockWarning(
+              `Only ${item.stockQuantity} ${item.unit || "pcs"} available in stock for "${item.name}". Set to maximum.`
+            );
+            const maxQty = item.stockQuantity;
+            return { ...item, cartQuantity: maxQty, lineTotal: maxQty * item.sellingPrice };
           }
-          return item;
-        })
-        .filter(Boolean) as CartItem[]
+          return {
+            ...item,
+            cartQuantity: qty,
+            lineTotal: qty * item.sellingPrice,
+          };
+        }
+        return item;
+      })
     );
   };
 
@@ -342,14 +337,16 @@ export default function PosTerminalPage() {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
 
-    // Validate that no item in cart is out of stock or exceeds available stock
+    // Validate that no item in cart is out of stock, has 0 quantity, or exceeds available stock
     const invalidItem = cart.find(
-      (item) => item.stockQuantity <= 0 || item.cartQuantity > item.stockQuantity
+      (item) => item.stockQuantity <= 0 || item.cartQuantity <= 0 || item.cartQuantity > item.stockQuantity
     );
     if (invalidItem) {
       setStockWarning(
         invalidItem.stockQuantity <= 0
           ? `"${invalidItem.name}" is out of stock and cannot be sold!`
+          : invalidItem.cartQuantity <= 0
+          ? `Please specify a valid quantity for "${invalidItem.name}".`
           : `"${invalidItem.name}" quantity exceeds available stock (${invalidItem.stockQuantity} available)!`
       );
       return;
@@ -852,41 +849,29 @@ export default function PosTerminalPage() {
                     </div>
                   </div>
 
-                  {/* Quantity Controls Stepper */}
-                  <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="w-5 h-5 rounded bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                      title={txt("পরিমাণ ১ কমান", "Decrease quantity by 1")}
-                    >
-                      <Minus className="w-2.5 h-2.5" />
-                    </button>
+                  {/* Quantity Input Field */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[10px] text-slate-400 font-medium">{txt("পরিমাণ:", "Qty:")}</span>
                     <input
                       type="number"
                       min="1"
                       max={item.stockQuantity}
-                      value={item.cartQuantity}
+                      value={item.cartQuantity === 0 ? "" : item.cartQuantity}
                       onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
+                        const raw = e.target.value;
+                        if (raw === "") {
+                          setExactQuantity(item.id, 0);
+                          return;
+                        }
+                        const val = parseInt(raw, 10);
                         if (!isNaN(val)) setExactQuantity(item.id, val);
                       }}
-                      onBlur={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        if (isNaN(val) || val <= 0) setExactQuantity(item.id, 1);
+                      onBlur={() => {
+                        if (item.cartQuantity <= 0) setExactQuantity(item.id, 1);
                       }}
-                      className="w-8 h-5 bg-transparent text-center text-[11px] font-bold text-white focus:outline-none font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-12 h-7 bg-slate-900 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 rounded-lg text-center text-xs font-bold text-white focus:outline-none font-mono shadow-inner transition-colors"
                       title={txt("সরাসরি পরিমাণ লিখুন", "Type exact quantity")}
                     />
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, 1)}
-                      disabled={item.cartQuantity >= item.stockQuantity}
-                      className="w-5 h-5 rounded bg-slate-800/80 hover:bg-slate-700 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                      title={item.cartQuantity >= item.stockQuantity ? txt("সর্বোচ্চ মজুত পৌঁছে গেছে", "Max stock reached") : txt("পরিমাণ ১ বৃদ্ধি করুন", "Increase quantity")}
-                    >
-                      <Plus className="w-2.5 h-2.5" />
-                    </button>
                   </div>
 
                   {/* Line Total & Single Item Delete Trash Button */}
