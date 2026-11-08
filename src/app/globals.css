@@ -432,7 +432,9 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   #printable-compact-invoice,
   #printable-compact-invoice *,
   #printable-sales-report,
-  #printable-sales-report * {
+  #printable-sales-report *,
+  #printable-challan,
+  #printable-challan * {
     visibility: visible;
   }
   #thermal-receipt {
@@ -452,7 +454,8 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   #printable-customer-report,
   #printable-invoice,
   #printable-compact-invoice,
-  #printable-sales-report {
+  #printable-sales-report,
+  #printable-challan {
     position: absolute;
     left: 0;
     top: 0;
@@ -476,14 +479,16 @@ html:not(.dark) .fixed.inset-0.bg-black\/60 {
   #printable-customer-report table,
   #printable-invoice table,
   #printable-compact-invoice table,
-  #printable-sales-report table {
+  #printable-sales-report table,
+  #printable-challan table {
     width: 100% !important;
     border-collapse: collapse !important;
   }
   #printable-customer-report tr,
   #printable-invoice tr,
   #printable-compact-invoice tr,
-  #printable-sales-report tr {
+  #printable-sales-report tr,
+  #printable-challan tr {
     page-break-inside: avoid;
   }
   @page {

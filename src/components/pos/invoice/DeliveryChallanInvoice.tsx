@@ -2,254 +2,196 @@
 
 import React from "react";
 import { Invoice } from "@/types";
-import { formatDate } from "@/lib/utils";
-import { useLanguage } from "@/context/LanguageContext";
-import { Truck, CheckCircle2, PackageCheck } from "lucide-react";
 
 export interface DeliveryChallanInvoiceProps {
   activeInv: Invoice;
   shopName: string;
   shopAddress: string;
   shopPhone: string;
-  shopEmail: string;
+  shopEmail?: string;
   logoUrl?: string;
-  displayCashier: string;
+  displayCashier?: string;
+}
+
+/**
+ * Helper to format date strictly matching the sample waybill format:
+ * e.g., "5 November 2026, 08:24 AM"
+ */
+function formatWaybillDate(dateString?: string): string {
+  if (!dateString) return "N/A";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    const day = d.getDate();
+    const month = d.toLocaleString("en-US", { month: "long" });
+    const year = d.getFullYear();
+    const time = d.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${day} ${month} ${year}, ${time}`;
+  } catch {
+    return dateString;
+  }
 }
 
 /**
  * ডেলিভারি চালান ও ওয়েবিল টেমপ্লেট (Delivery Challan & Waybill Template)
- * কোনো মূল্য, রেট, ডিসকাউন্ট বা সাবটোটাল ব্যতিরেকে কেবল ক্রমিক নং, পণ্যের বিবরণ,
- * পরিমাণ এবং রিসিভারের প্রাপ্তিস্বীকার ও স্বাক্ষর প্রিন্ট করে।
+ * ইউজার প্রদত্ত স্যাম্পল ফরম্যাট হুবহু অনুসরণ করে তৈরি:
+ * - সেন্টারড শপ হেডার ও ডিভাইডার
+ * - মেটাডাটা (Invoice #, Date, Customer Name, Phone)
+ * - টেবিল (SL, Code, Description, Qty) — কোনো রেট বা আর্থিক কলাম নেই
+ * - টোটাল কোয়ান্টিটি ব্লক
+ * - কাস্টমার ও ওনার স্বাক্ষর
  */
 export function DeliveryChallanInvoice({
   activeInv,
   shopName,
   shopAddress,
   shopPhone,
-  shopEmail,
   logoUrl,
-  displayCashier,
 }: DeliveryChallanInvoiceProps) {
-  const { txt } = useLanguage();
-
   const totalQuantity = (activeInv.items || []).reduce(
     (acc, it) => acc + Number(it.quantity || 0),
     0
   );
 
+  const invoiceNumber =
+    activeInv.invoiceNumber || activeInv.invoiceNo || (activeInv as any).id || "N/A";
+  const formattedDate = formatWaybillDate(activeInv.createdAt || activeInv.date);
+  const customerName = activeInv.customerName || "Walk-in Customer";
+  const customerPhone = activeInv.customerPhone || "N/A";
+
   return (
     <div
       id="printable-challan"
-      className="bg-white text-slate-900 p-8 sm:p-10 rounded-xl shadow-xl mx-auto max-w-3xl min-h-[700px] text-xs font-sans space-y-6 print:shadow-none print:rounded-none print:p-4 print:max-w-none border border-slate-200 print:border-none"
+      className="bg-white text-slate-900 p-8 sm:p-12 rounded-xl shadow-xl mx-auto max-w-3xl min-h-[920px] text-xs font-sans flex flex-col justify-between border border-slate-200 print:border-none print:shadow-none print:p-6 print:m-0 print:max-w-none print:min-h-screen"
     >
-      {/* ১. হেডার ও চালান তথ্য */}
-      <div className="border-b-2 border-slate-900 pb-5">
-        <div className="flex justify-between items-start gap-4">
-          {/* দোকান বিবরণ */}
-          <div className="flex items-start gap-3.5">
-            {logoUrl && (
+      <div>
+        {/* ১. হেডার সেকশন (সেন্টারড শপ বিবরণী) */}
+        <div className="text-center pb-3">
+          {logoUrl && (
+            <div className="flex justify-center mb-2 print:mb-1">
               <img
                 src={logoUrl}
                 alt={shopName}
-                className="w-14 h-14 rounded-lg object-contain border border-slate-200 shrink-0"
+                className="h-10 w-auto max-w-[120px] object-contain"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = "none";
                 }}
               />
-            )}
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
-                {shopName}
-              </h1>
-              <p className="text-[11px] text-slate-700 font-semibold mt-0.5">
-                {txt("পণ্য সরবরাহ ও ডেলিভারি চালান", "Goods Delivery & Dispatch Document")}
-              </p>
-              <p className="text-[11px] text-slate-600 mt-1">
-                {shopAddress || txt("ঢাকা, বাংলাদেশ", "Dhaka, Bangladesh")}
-              </p>
-              <p className="text-[11px] text-slate-600">
-                {txt("মোবাইল:", "Phone:")} {shopPhone || "+880 1700-000000"}
-              </p>
-              {shopEmail && (
-                <p className="text-[10px] text-slate-500">
-                  {txt("ইমেইল:", "Email:")} {shopEmail}
-                </p>
-              )}
             </div>
-          </div>
-
-          {/* চালান ব্যাজ ও রেফারেন্স */}
-          <div className="text-right shrink-0">
-            <span className="inline-block bg-emerald-700 text-white font-extrabold px-3 py-1 text-[11px] rounded uppercase tracking-wider mb-2">
-              {txt("ডেলিভারি চালান / ওয়েবিল", "DELIVERY CHALLAN / WAYBILL")}
-            </span>
-            <div className="text-[11px] text-slate-700 space-y-0.5">
-              <p>
-                <span className="font-semibold text-slate-900">
-                  {txt("চালান নং:", "Challan No:")}
-                </span>{" "}
-                <span className="font-mono font-bold text-emerald-800">
-                  CHL-{activeInv.invoiceNumber || activeInv.invoiceNo || "N/A"}
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold text-slate-900">
-                  {txt("ইনভয়েস রেফারেন্স:", "Invoice Ref:")}
-                </span>{" "}
-                <span className="font-mono text-slate-800">
-                  #{activeInv.invoiceNumber || activeInv.invoiceNo}
-                </span>
-              </p>
-              <p>
-                <span className="font-semibold text-slate-900">
-                  {txt("তারিখ ও সময়:", "Date & Time:")}
-                </span>{" "}
-                {formatDate(activeInv.createdAt || activeInv.date)}
-              </p>
-              <p>
-                <span className="font-semibold text-slate-900">
-                  {txt("প্রেরক / সরবরাহকারী:", "Dispatched By:")}
-                </span>{" "}
-                {displayCashier}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ২. গ্রাহক ও ডেলিভারি ঠিকানা তথ্য */}
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5">
-        <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <Truck className="w-3.5 h-3.5 text-emerald-700" />
-          <span>{txt("প্রাপক / ডেলিভারি গ্রহীতা:", "Ship To / Consignee:")}</span>
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase block">
-              {txt("কাস্টমার নাম", "Customer Name")}
-            </span>
-            <span className="font-bold text-slate-900">{activeInv.customerName}</span>
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase block">
-              {txt("মোবাইল নম্বর", "Contact Phone")}
-            </span>
-            <span className="font-mono text-slate-800">
-              {activeInv.customerPhone || txt("সাধারণ খরিদ্দার", "Walk-in Customer")}
-            </span>
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-500 uppercase block">
-              {txt("গন্তব্য / ডেলিভারি ঠিকানা", "Delivery Address")}
-            </span>
-            <span className="text-slate-800">
-              {(activeInv as any).address || (activeInv as any).shippingAddress || txt("গ্রাহকের প্রদত্ত ঠিকানা", "Customer Address")}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* ৩. চালান পণ্য তালিকা টেবিল (কোনো মূল্য বা রেট থাকবে না) */}
-      <div className="border border-slate-300 rounded-lg overflow-hidden">
-        <table className="w-full text-left text-xs border-collapse">
-          <thead className="bg-slate-100 text-slate-800 font-bold uppercase text-[10px] border-b border-slate-300">
-            <tr>
-              <th className="py-2.5 px-3 text-center w-12 border-r border-slate-200">
-                {txt("ক্রমিক", "SL")}
-              </th>
-              <th className="py-2.5 px-3 border-r border-slate-200">
-                {txt("পণ্যের নাম ও বিবরণ", "Item Description")}
-              </th>
-              <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200">
-                {txt("একক", "Unit")}
-              </th>
-              <th className="py-2.5 px-3 text-center w-28 border-r border-slate-200">
-                {txt("পরিমাণ", "Quantity")}
-              </th>
-              <th className="py-2.5 px-3 text-center w-36">
-                {txt("মন্তব্য / অবস্থা", "Remarks")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 text-slate-900">
-            {(activeInv.items || []).map((it, idx) => (
-              <tr key={idx} className={idx % 2 === 1 ? "bg-slate-50/50" : ""}>
-                <td className="py-2 px-3 text-center font-mono text-[11px] text-slate-600 border-r border-slate-200">
-                  {idx + 1}
-                </td>
-                <td className="py-2 px-3 font-medium border-r border-slate-200">
-                  <p className="font-semibold text-slate-900">{it.name || it.productName}</p>
-                  {it.sku && (
-                    <span className="text-[10px] font-mono text-slate-500">
-                      SKU: {it.sku}
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 px-3 text-center font-medium text-slate-700 border-r border-slate-200">
-                  {it.unit || txt("টি / পিস", "Piece")}
-                </td>
-                <td className="py-2 px-3 text-center font-mono font-bold text-slate-900 text-sm border-r border-slate-200">
-                  {it.quantity}
-                </td>
-                <td className="py-2 px-3 text-center text-[10px] text-slate-500 italic">
-                  {txt("সঠিক ও অক্ষত", "Intact / Verified")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot className="bg-slate-100 font-bold border-t-2 border-slate-400">
-            <tr>
-              <td colSpan={3} className="py-2.5 px-3 text-right uppercase text-[10px] text-slate-800">
-                {txt("সর্বমোট সরবরাহকৃত আইটেম ও সংখ্যা:", "Total Dispatched Volume:")}
-              </td>
-              <td className="py-2.5 px-3 text-center font-mono font-black text-sm text-emerald-900">
-                {totalQuantity}
-              </td>
-              <td className="py-2.5 px-3 text-center text-[10px] font-semibold text-slate-700">
-                {(activeInv.items || []).length} {txt("টি পণ্য পদ", "item lines")}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      {/* ৪. ঘোষণা ও প্রাপ্তিস্বীকার বার্তা */}
-      <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-lg p-3 text-[11px] text-emerald-950 flex items-start gap-2">
-        <PackageCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong>{txt("প্রাপ্তিস্বীকার ঘোষণা:", "Receipt Declaration:")}</strong>{" "}
-          {txt(
-            "চালানে উল্লেখিত সকল পণ্য ও পরিমাণ সঠিকভাবে গণনাপূর্বক সম্পূর্ণ অক্ষত অবস্থায় বুঝিয়া পাইলাম।",
-            "The items listed above have been accurately verified, counted, and received in good and intact condition."
           )}
-        </p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-950 uppercase">
+            {shopName || "JTT Bright Electric & Accessories"}
+          </h1>
+          {shopAddress && (
+            <p className="text-sm text-slate-700 mt-1 font-normal">
+              {shopAddress}
+            </p>
+          )}
+          {shopPhone && (
+            <p className="text-sm text-slate-800 mt-0.5 font-normal">
+              Phone: {shopPhone}
+            </p>
+          )}
+        </div>
+
+        {/* হেডার ডিভাইডার লাইন */}
+        <div className="border-b border-black mt-3 mb-4" />
+
+        {/* ২. চালান মেটাডাটা (২টি সুবিন্যস্ত সারি) */}
+        <div className="space-y-1.5 mb-5 text-sm text-slate-900">
+          <div className="flex justify-between items-center">
+            <span className="font-bold">
+              WAYBILL (Invoice #: {invoiceNumber})
+            </span>
+            <span className="text-slate-800 font-normal">
+              Date: {formattedDate}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="font-bold">
+              Customer Name:{" "}
+              <span className="font-semibold">{customerName}</span>
+            </span>
+            <span className="text-slate-900">
+              <span className="font-normal">Phone: </span>
+              <span className="font-medium font-mono">{customerPhone}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* ৩. আইটেম টেবিল (SL, Code, Description, Qty) */}
+        <div className="rounded-md border border-slate-300 overflow-hidden">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-100/90 border-b border-slate-300 text-slate-900 font-bold">
+                <th className="py-2.5 px-3 text-center w-12 border-r border-slate-300">
+                  SL
+                </th>
+                <th className="py-2.5 px-3 text-left w-24 border-r border-slate-300">
+                  Code
+                </th>
+                <th className="py-2.5 px-3 text-left border-r border-slate-300">
+                  Description
+                </th>
+                <th className="py-2.5 px-4 text-center w-20">
+                  Qty
+                </th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-900 divide-y divide-slate-200">
+              {(activeInv.items || []).map((it, idx) => {
+                const code =
+                  it.sku ||
+                  (it as any).code ||
+                  (it as any).productCode ||
+                  (it as any).barcode ||
+                  it.itemId ||
+                  "-";
+                const desc = it.name || it.productName || (it as any).description || "Item";
+
+                return (
+                  <tr key={idx} className="hover:bg-slate-50/50">
+                    <td className="py-2.5 px-3 text-center font-mono border-r border-slate-300">
+                      {idx + 1}
+                    </td>
+                    <td className="py-2.5 px-3 text-left font-mono border-r border-slate-300">
+                      {code}
+                    </td>
+                    <td className="py-2.5 px-3 text-left border-r border-slate-300 font-medium">
+                      {desc}
+                    </td>
+                    <td className="py-2.5 px-4 text-center font-mono font-semibold">
+                      {it.quantity}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ৪. টোটাল কোয়ান্টিটি ব্লক */}
+        <div className="rounded-md border border-slate-300 p-3 flex justify-between items-center text-sm font-bold text-slate-900 mt-4">
+          <span>Total Quantity</span>
+          <span className="font-mono text-base">{totalQuantity} pcs</span>
+        </div>
       </div>
 
-      {/* ৫. স্বাক্ষর ও ডেলিভারি স্ট্যাম্প সেকশন */}
-      <div className="pt-12 grid grid-cols-3 gap-6 text-center text-[10px] text-slate-700">
-        <div>
-          <div className="border-t border-slate-400 mx-auto w-36 pt-1 font-semibold text-slate-800">
-            {txt("প্রস্তুতকারক / প্রেরকের স্বাক্ষর", "Prepared / Dispatched By")}
+      {/* ৫. ফুটার স্বাক্ষর (পেজের নিচে কাস্টমার ও ওনার সিগনেচার) */}
+      <div className="pt-32 pb-4 grid grid-cols-2 text-center text-xs text-slate-900 font-semibold print:pt-40">
+        <div className="w-48 sm:w-56 mx-auto">
+          <div className="border-t border-black pt-1.5">
+            Customer Signature
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">{shopName}</span>
         </div>
-
-        <div>
-          <div className="border-t border-slate-400 mx-auto w-36 pt-1 font-semibold text-slate-800">
-            {txt("সরবরাহকারী / ড্রাইভারের স্বাক্ষর", "Carrier / Driver Signature")}
+        <div className="w-48 sm:w-56 mx-auto">
+          <div className="border-t border-black pt-1.5">
+            Owner Signature
           </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">
-            {txt("ডেলিভারি পরিবহন", "Transport / Courier")}
-          </span>
-        </div>
-
-        <div>
-          <div className="border-t border-slate-900 mx-auto w-40 pt-1 font-bold text-slate-900">
-            {txt("গ্রহণকারীর স্বাক্ষর ও সীল", "Receiver's Signature & Seal")}
-          </div>
-          <span className="text-[9px] text-slate-500 block mt-0.5">
-            {txt("তারিখ ও মোবাইল নম্বর সহ", "With Date & Phone")}
-          </span>
         </div>
       </div>
     </div>
