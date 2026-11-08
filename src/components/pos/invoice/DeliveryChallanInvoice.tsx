@@ -41,7 +41,7 @@ function formatWaybillDate(dateString?: string): string {
  * ইউজার প্রদত্ত স্যাম্পল ফরম্যাট হুবহু অনুসরণ করে তৈরি:
  * - সেন্টারড শপ হেডার ও ডিভাইডার
  * - মেটাডাটা (Invoice #, Date, Customer Name, Phone)
- * - টেবিল (SL, Code, Description, Qty) — কোনো রেট বা আর্থিক কলাম নেই
+ * - টেবিল (SL, Description, Qty) — কোনো কোড, রেট বা আর্থিক কলাম নেই
  * - টোটাল কোয়ান্টিটি ব্লক
  * - কাস্টমার ও ওনার স্বাক্ষর
  */
@@ -123,7 +123,7 @@ export function DeliveryChallanInvoice({
           </div>
         </div>
 
-        {/* ৩. আইটেম টেবিল (SL, Code, Description, Qty) */}
+        {/* ৩. আইটেম টেবিল (SL, Description, Qty) */}
         <div className="rounded-md border border-slate-300 overflow-hidden">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
@@ -131,35 +131,22 @@ export function DeliveryChallanInvoice({
                 <th className="py-2.5 px-3 text-center w-12 border-r border-slate-300">
                   SL
                 </th>
-                <th className="py-2.5 px-3 text-left w-24 border-r border-slate-300">
-                  Code
-                </th>
                 <th className="py-2.5 px-3 text-left border-r border-slate-300">
                   Description
                 </th>
-                <th className="py-2.5 px-4 text-center w-20">
+                <th className="py-2.5 px-4 text-center w-24">
                   Qty
                 </th>
               </tr>
             </thead>
             <tbody className="text-slate-900 divide-y divide-slate-200">
               {(activeInv.items || []).map((it, idx) => {
-                const code =
-                  it.sku ||
-                  (it as any).code ||
-                  (it as any).productCode ||
-                  (it as any).barcode ||
-                  it.itemId ||
-                  "-";
                 const desc = it.name || it.productName || (it as any).description || "Item";
 
                 return (
                   <tr key={idx} className="hover:bg-slate-50/50">
                     <td className="py-2.5 px-3 text-center font-mono border-r border-slate-300">
                       {idx + 1}
-                    </td>
-                    <td className="py-2.5 px-3 text-left font-mono border-r border-slate-300">
-                      {code}
                     </td>
                     <td className="py-2.5 px-3 text-left border-r border-slate-300 font-medium">
                       {desc}

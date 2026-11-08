@@ -59,8 +59,8 @@ function formatInvoiceDate(dateString?: string): string {
  * ইউজার প্রদত্ত স্যাম্পল ফরম্যাট হুবহু অনুসরণ করে তৈরি:
  * - সেন্টারড শপ হেডার ও অনুভূমিক ডিভাইডার
  * - মেটাডাটা (Invoice #, Date, Customer Name, Phone)
- * - টেবিল (SL, Code, Description, Qty, Price, Total)
- * - সামারি বক্স (Subtotal, Discount, Total Amount)
+ * - টেবিল (SL, Description, Qty, Price, Total) — কোনো কোড কলাম নেই
+ * - সামারি বক্স (Subtotal, Discount, Total Amount) — কোনো ডিউ বা বকেয়া টেক্সট নেই
  * - কাস্টমার ও ওনার স্বাক্ষর
  */
 export function StandardA4Invoice({
@@ -82,8 +82,6 @@ export function StandardA4Invoice({
   const totalAmountVal = Number(
     activeInv.grandTotal || (activeInv as any).total || subtotalVal - discountNum
   );
-  const paidAmountVal = Number(activeInv.paidAmount || 0);
-  const dueAmountVal = Number(activeInv.dueAmount || 0);
 
   return (
     <div
@@ -145,7 +143,7 @@ export function StandardA4Invoice({
           </div>
         </div>
 
-        {/* ৩. আইটেম টেবিল (SL, Code, Description, Qty, Price, Total) */}
+        {/* ৩. আইটেম টেবিল (SL, Description, Qty, Price, Total) */}
         <div className="rounded-md border border-slate-300 overflow-hidden">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
@@ -153,32 +151,22 @@ export function StandardA4Invoice({
                 <th className="py-2.5 px-3 text-center w-12 border-r border-slate-300">
                   SL
                 </th>
-                <th className="py-2.5 px-3 text-left w-24 border-r border-slate-300">
-                  Code
-                </th>
                 <th className="py-2.5 px-3 text-left border-r border-slate-300">
                   Description
                 </th>
                 <th className="py-2.5 px-3 text-center w-16 border-r border-slate-300">
                   Qty
                 </th>
-                <th className="py-2.5 px-3 text-right w-24 border-r border-slate-300">
+                <th className="py-2.5 px-3 text-right w-28 border-r border-slate-300">
                   Price
                 </th>
-                <th className="py-2.5 px-3 text-right w-28">
+                <th className="py-2.5 px-3 text-right w-32">
                   Total
                 </th>
               </tr>
             </thead>
             <tbody className="text-slate-900 divide-y divide-slate-200">
               {(activeInv.items || []).map((it, idx) => {
-                const code =
-                  it.sku ||
-                  (it as any).code ||
-                  (it as any).productCode ||
-                  (it as any).barcode ||
-                  it.itemId ||
-                  "-";
                 const desc = it.name || it.productName || (it as any).description || "Item";
                 const unitRate = Number(it.unitPrice ?? it.price ?? 0);
                 const lineTotal = Number(
@@ -189,9 +177,6 @@ export function StandardA4Invoice({
                   <tr key={idx} className="hover:bg-slate-50/50">
                     <td className="py-2.5 px-3 text-center font-mono border-r border-slate-300">
                       {idx + 1}
-                    </td>
-                    <td className="py-2.5 px-3 text-left font-mono border-r border-slate-300">
-                      {code}
                     </td>
                     <td className="py-2.5 px-3 text-left border-r border-slate-300 font-medium">
                       {desc}
@@ -228,18 +213,6 @@ export function StandardA4Invoice({
             <span>Total Amount</span>
             <span className="font-mono">{formatTk(totalAmountVal)}</span>
           </div>
-
-          {/* বকেয়া বা আংশিক পেমেন্ট থাকলে পরিচ্ছন্নভাবে প্রদর্শন */}
-          {dueAmountVal > 0 && (
-            <div className="border-t border-slate-200 pt-2 mt-2 flex justify-between items-center text-xs text-rose-600 font-semibold">
-              <span>Due Balance: {formatTk(dueAmountVal)}</span>
-              {paidAmountVal > 0 && (
-                <span className="text-slate-600 font-normal">
-                  Paid: {formatTk(paidAmountVal)}
-                </span>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
