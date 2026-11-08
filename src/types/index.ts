@@ -153,6 +153,8 @@ export interface InvoiceItem {
   itemId?: string;
   productName?: string;
   name?: string;
+  sku?: string;
+  unit?: string;
   quantity: number;
   price?: number;
   unitPrice?: number | string;

@@ -22,7 +22,7 @@ export interface ReturnsLogTableProps {
   setReturnsSearchQuery: (q: string) => void;
   onRefresh: () => void;
   invoices: Invoice[];
-  onOpenInvoice: (inv: Invoice, mode: "a4" | "compact" | "thermal") => void;
+  onOpenInvoice: (inv: Invoice, mode: "a4" | "compact" | "thermal" | "challan") => void;
 }
 
 /**

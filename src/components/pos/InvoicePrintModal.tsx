@@ -9,16 +9,17 @@ import { InvoiceControlBar } from "./invoice/InvoiceControlBar";
 import { StandardA4Invoice } from "./invoice/StandardA4Invoice";
 import { CompactA4Invoice } from "./invoice/CompactA4Invoice";
 import { Thermal80mmReceipt } from "./invoice/Thermal80mmReceipt";
+import { DeliveryChallanInvoice } from "./invoice/DeliveryChallanInvoice";
 
 export interface InvoicePrintModalProps {
   invoice: Invoice;
   onClose: () => void;
-  initialMode?: "a4" | "compact" | "thermal";
+  initialMode?: "a4" | "compact" | "thermal" | "challan";
 }
 
 /**
  * ইনভয়েস প্রিন্ট ও প্রিভিউ মডাল (Invoice Print & Preview Modal)
- * তিনটি ফরম্যাট (Standard A4, Compact A4, 80mm POS) রেন্ডার করে
+ * চারটি ফরম্যাট (Standard A4, Compact A4, 80mm POS, Delivery Challan) রেন্ডার করে
  * এবং ডেমো প্রিভিউ টগল সুবিধা প্রদান করে।
  */
 export function InvoicePrintModal({
@@ -26,7 +27,7 @@ export function InvoicePrintModal({
   onClose,
   initialMode = "a4",
 }: InvoicePrintModalProps) {
-  const [printMode, setPrintMode] = useState<"a4" | "compact" | "thermal">(initialMode);
+  const [printMode, setPrintMode] = useState<"a4" | "compact" | "thermal" | "challan">(initialMode);
   const [isDemoData, setIsDemoData] = useState<boolean>(false);
 
   // Active invoice: use demo data when toggled
@@ -134,6 +135,16 @@ export function InvoicePrintModal({
               displayCashier={displayCashier}
               discountVal={discountVal}
               discountPercentage={discountPercentage}
+            />
+          ) : printMode === "challan" ? (
+            <DeliveryChallanInvoice
+              activeInv={activeInv}
+              shopName={shopName}
+              shopAddress={shopAddress}
+              shopPhone={shopPhone}
+              shopEmail={shopEmail}
+              logoUrl={logoUrl}
+              displayCashier={displayCashier}
             />
           ) : (
             <Thermal80mmReceipt

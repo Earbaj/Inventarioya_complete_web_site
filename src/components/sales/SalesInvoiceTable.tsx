@@ -12,6 +12,7 @@ import {
   RotateCcw,
   CheckCircle2,
   MoreVertical,
+  Truck,
 } from "lucide-react";
 
 export interface SalesInvoiceTableProps {
@@ -19,7 +20,7 @@ export interface SalesInvoiceTableProps {
   loading: boolean;
   activeMenuId: string | null;
   setActiveMenuId: (id: string | null) => void;
-  onOpenInvoice: (inv: Invoice, mode: "a4" | "compact" | "thermal") => void;
+  onOpenInvoice: (inv: Invoice, mode: "a4" | "compact" | "thermal" | "challan") => void;
   canProcessReturn: boolean;
   onOpenReturnModal: (inv: Invoice) => void;
 }
@@ -171,11 +172,7 @@ export function SalesInvoiceTable({
                                 : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                             }`}
                           >
-                            {status === "PAID"
-                              ? txt("পরিশোধিত", "PAID")
-                              : status === "PARTIAL"
-                              ? txt("আংশিক", "PARTIAL")
-                              : txt("বাকি", "DUE")}
+                            {status === "PAID" ? txt("পরিশোধিত", "PAID") : status === "PARTIAL" ? txt("আংশিক", "PARTIAL") : txt("বাকি", "DUE")}
                           </span>
                           <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-amber-500/10 text-amber-300">
                             {txt("আংশিক ফেরত", "Partial Ret.")}
@@ -193,13 +190,7 @@ export function SalesInvoiceTable({
                               : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                           }`}
                         >
-                          {status === "PAID"
-                            ? txt("পরিশোধিত", "PAID")
-                            : status === "PARTIAL"
-                            ? txt("আংশিক", "PARTIAL")
-                            : status === "REFUNDED"
-                            ? txt("রিফান্ড", "REFUNDED")
-                            : txt("বাকি", "DUE")}
+                          {status === "PAID" ? txt("পরিশোধিত", "PAID") : status === "PARTIAL" ? txt("আংশিক", "PARTIAL") : status === "REFUNDED" ? txt("রিফান্ড", "REFUNDED") : txt("বাকি", "DUE")}
                         </span>
                       )}
                     </td>
@@ -251,6 +242,17 @@ export function SalesInvoiceTable({
                               >
                                 <Receipt className="w-3.5 h-3.5 text-emerald-400" />
                                 <span>{txt("থার্মাল স্লিপ প্রিন্ট (POS)", "Print POS Thermal Slip")}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuId(null);
+                                  onOpenInvoice(inv, "challan");
+                                }}
+                                className="w-full px-3 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-emerald-600/20 hover:text-emerald-300 flex items-center gap-2.5 transition-colors cursor-pointer"
+                              >
+                                <Truck className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>{txt("ডেলিভারি চালান / ওয়েবিল", "Delivery Challan / Waybill")}</span>
                               </button>
                             </div>
 

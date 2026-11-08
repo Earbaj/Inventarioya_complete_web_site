@@ -9,12 +9,13 @@ import {
   Receipt,
   SlidersHorizontal,
   Sparkles,
+  Truck,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export interface InvoiceControlBarProps {
-  printMode: "a4" | "compact" | "thermal";
-  setPrintMode: (mode: "a4" | "compact" | "thermal") => void;
+  printMode: "a4" | "compact" | "thermal" | "challan";
+  setPrintMode: (mode: "a4" | "compact" | "thermal" | "challan") => void;
   isDemoData: boolean;
   setIsDemoData: (val: boolean | ((prev: boolean) => boolean)) => void;
   onExportCsv: () => void;
@@ -39,7 +40,7 @@ export function InvoiceControlBar({
 
   return (
     <div className="bg-slate-950 px-4 sm:px-6 py-3.5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 print:hidden shrink-0">
-      {/* Format Toggle (3 Formats: Standard A4, Compact A4, 80mm POS) */}
+      {/* Format Toggle (4 Formats: Standard A4, Compact A4, 80mm POS, Delivery Challan) */}
       <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
         <button
           type="button"
@@ -78,6 +79,19 @@ export function InvoiceControlBar({
         >
           <Receipt className="w-3.5 h-3.5" />
           <span>{txt("৮০মিমি পিওএস", "80mm POS")}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setPrintMode("challan")}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+            printMode === "challan"
+              ? "bg-emerald-600 text-white shadow-sm font-bold"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <Truck className="w-3.5 h-3.5" />
+          <span>{txt("ডেলিভারি চালান", "Challan / Waybill")}</span>
         </button>
       </div>
 

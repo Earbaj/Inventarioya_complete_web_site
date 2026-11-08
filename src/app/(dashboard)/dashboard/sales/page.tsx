@@ -38,7 +38,7 @@ export default function SalesHistoryPage() {
 
   // মোডাল ও সক্রিয় ইন্টারঅ্যাকশন স্টেট
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [modalMode, setModalMode] = useState<"a4" | "compact" | "thermal">("a4");
+  const [modalMode, setModalMode] = useState<"a4" | "compact" | "thermal" | "challan">("a4");
   const [showSalesReportModal, setShowSalesReportModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -201,7 +201,10 @@ export default function SalesHistoryPage() {
     );
   };
 
-  const handleOpenInvoiceModal = (inv: Invoice, mode: "a4" | "compact" | "thermal") => {
+  const handleOpenInvoiceModal = (
+    inv: Invoice,
+    mode: "a4" | "compact" | "thermal" | "challan"
+  ) => {
     setSelectedInvoice(inv);
     setModalMode(mode);
   };
